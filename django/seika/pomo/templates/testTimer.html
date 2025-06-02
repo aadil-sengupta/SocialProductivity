@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timer</title>
+</head>
+<body>
+    <button onclick="startTimer()">Start</button>
+</body>
+<script>
+    let url = `ws://${window.location.host}/ws/pomo/`;
+    let startTimer = () => {
+        let ws = new WebSocket(url);
+        ws.onopen = () => {
+            console.log("WebSocket connection established");
+            ws.send(JSON.stringify({ action: "start" }));
+        };
+        ws.onmessage = (event) => {
+            let data = JSON.parse(event.data);
+            console.log("Received:", data);
+        };
+        ws.onclose = () => {
+            console.log("WebSocket connection closed");
+        };
+    }
+</script>
+</html>
