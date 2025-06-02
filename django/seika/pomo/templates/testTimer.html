@@ -6,12 +6,70 @@
     <title>Timer</title>
 </head>
 <body>
+    <h1 id="timerMain" >00:00</h1>
     <button onclick="startTimer()">Start</button>
+    <button onclick="ws.send(JSON.stringify({ action: 'pause' }))">Pause</button>
+    <button onclick="ws.send(JSON.stringify({ action: 'resume' }))">Resume</button>
+    <!-- The Pause/Resume button is removed as per the request for separate functions. -->
+    <!-- <button onclick="pauseResumeTimer()">Pause/Resume</button> -->
+
+    <br> <br> <br>
+    <input type="text" id="tokenInput" placeholder="Enter token">
+    <button onclick="window.localStorage.setItem('token', document.getElementById('tokenInput').value)">Save Token</button>
 </body>
 <script>
-    let url = `ws://${window.location.host}/ws/pomo/`;
-    let startTimer = () => {
-        let ws = new WebSocket(url);
+    let timerInterval;
+    let seconds = 0;
+    let isRunning = false;
+    const timerDisplay = document.getElementById('timerMain');
+
+    function updateTimerDisplay() {
+        const minutes = Math.floor(seconds / 60);
+        const remainderSeconds = seconds % 60;
+        timerDisplay.textContent = 
+            `${minutes < 10 ? '0' : ''}${minutes}:${remainderSeconds < 10 ? '0' : ''}${remainderSeconds}`;
+    }
+
+    function pauseTimer() {
+        if (isRunning) {
+            clearInterval(timerInterval);
+            isRunning = false;
+            console.log("Timer paused");
+        } else {
+            console.log("Timer is not running.");
+        }
+    }
+
+    function resumeTimer() {
+        if (!isRunning) {
+            // Check if it's a fresh start or resuming after a pause
+            if (seconds === 0 && timerInterval === undefined) {
+                 // This condition might need adjustment based on how startTimer initializes
+                 // For now, assume startTimer will set things up before calling resume,
+                 // or resume is called when timer was paused.
+            }
+            timerInterval = setInterval(() => {
+                seconds++;
+                updateTimerDisplay();
+            }, 1000);
+            isRunning = true;
+            console.log("Timer resumed/started");
+        } else {
+            console.log("Timer is already running.");
+        }
+    }
+    let ws;
+    function startTimer() {
+        // Reset timer
+        clearInterval(timerInterval); 
+        seconds = 0;
+        isRunning = false; 
+        updateTimerDisplay(); // Show 00:00
+    
+
+        // Websocket logic (untouched)
+        let url = `ws://${window.location.host}/ws/pomo/?token=${window.localStorage.getItem("token")}`;
+        ws = new WebSocket(url);
         ws.onopen = () => {
             console.log("WebSocket connection established");
             ws.send(JSON.stringify({ action: "start" }));
@@ -19,10 +77,23 @@
         ws.onmessage = (event) => {
             let data = JSON.parse(event.data);
             console.log("Received:", data);
+            if (data.type === "connected") {
+                resumeTimer(); 
+            } else if (data.type == "timer") {
+                if (data.action == "pause") {
+                    console.log("Pausing timer from server");
+                    pauseTimer(); // Pause the local timer
+                } else if (data.action === "resume") {
+                    resumeTimer(); // Resume the local timer
+                }
+            }
         };
         ws.onclose = () => {
-            console.log("WebSocket connection closed");
+            alert("Network error. WebSocket connection closed.");
+
         };
+
+
     }
 </script>
 </html>

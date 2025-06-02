@@ -55,26 +55,26 @@ class PomoSession(models.Model):
             return f"Session {self.sessionId} ({current_status}) - No users"
         return f"Session {self.sessionId} ({current_status}) for Users: {user_list}"
 
-    def pause_session(self):
+    async def pause_session(self):
         """Pauses the session if it is currently running."""
         if self.isRunning:
             self.isRunning = False
             self.last_pause_start_time = timezone.now()
-            self.save()
+            await self.asave()
 
-    def resume_session(self):
+    async def resume_session(self):
         """Resumes the session if it is paused."""
         if not self.isRunning and self.last_pause_start_time:
             pause_duration = timezone.now() - self.last_pause_start_time
             self.accumulated_pause_duration += pause_duration
             self.last_pause_start_time = None
             self.isRunning = True
-            self.save()
+            await self.asave()
         elif not self.isRunning and self.endTime is None: # If it was stopped but not formally paused via last_pause_start_time
             self.isRunning = True # Simply mark as running
-            self.save()
+            await self.asave()
 
-    def end_session(self):
+    async def end_session(self):
         """Ends the session, marking it as completed."""
         if self.isRunning or self.last_pause_start_time:
             if self.last_pause_start_time:
@@ -85,4 +85,4 @@ class PomoSession(models.Model):
             self.isRunning = False
             self.totalTime = self.endTime - self.startTime
             self.activeTime = self.totalTime - self.accumulated_pause_duration
-            self.save()
+            await self.asave()
