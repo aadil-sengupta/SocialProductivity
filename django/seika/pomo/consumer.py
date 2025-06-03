@@ -12,18 +12,24 @@ class PomoConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
         await self.accept()
-        if 'query_string' not in self.scope:
-            await self.close()
-            return
-        query_string = self.scope['query_string']
-        token = await Token.objects.aget(key=parse_qs(query_string)[b'token'][0].decode('ascii'))
-        self.user = await User.objects.aget(id=token.user_id)
-
-        if not self.user.is_authenticated:
-            await self.close()
-            return
         
-
+        # Try to get token authentication first
+        if 'query_string' in self.scope and b'token' in parse_qs(self.scope['query_string']):
+            try:
+                token_key = parse_qs(self.scope['query_string'])[b'token'][0].decode('ascii')
+                token = await Token.objects.aget(key=token_key)
+                self.user = await User.objects.aget(id=token.user_id)
+                self.is_authenticated = True
+            except Exception as e:
+                # Token authentication failed, fall back to anonymous
+                self.user = None
+                self.is_authenticated = False
+        else:
+            # No token provided, use anonymous session
+            self.user = None
+            self.is_authenticated = False
+            
+        # Don't close connection for unauthenticated users
 
     async def disconnect(self, close_code):
         if self.session:

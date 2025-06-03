@@ -15,7 +15,8 @@ def generate_unique_session_id():
 class PomoSession(models.Model):
     id = models.AutoField(primary_key=True) # Auto-incrementing primary key
     #users = models.ManyToManyField(User, related_name='pomo_sessions')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='pomo_sessions')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='pomo_sessions', null=True, blank=True) # ForeignKey to User, allowing null for anonymous sessions
+    anonymousId = models.CharField(max_length=100, unique=True, blank=True, null=True) # Unique ID for anonymous sessions
     startTime = models.DateTimeField(auto_now_add=True) # Time the session entry was created
     endTime = models.DateTimeField(null=True, blank=True) # Time the overall session is marked as ended
     isRunning = models.BooleanField(default=True) # True if currently active, False if paused or ended

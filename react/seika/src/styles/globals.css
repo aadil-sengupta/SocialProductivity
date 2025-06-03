@@ -1,0 +1,36 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  margin: 0;
+  height: 100%;
+  font-family: "Poppins", sans-serif;
+}
+
+/* CSS Variables for light/dark mode */
+:root {
+  --main-bg: #ececec;
+  --item-hover: #f1f1f1;
+  --secondary-bg: #2e2e2e;
+  --main-container-bg: #fff;
+  --container-shadow: rgba(111, 111, 111, 0.2) 0px 7px 29px 0px;
+  --text-color: #1a1a1a;
+}
+
+body.dark {
+  --main-bg: #131313;
+  --item-hover: #303030;
+  --secondary-bg: #595959;
+  --main-container-bg: #000000;
+  --text-color: #fff;
+  --tooltip-bg: #242424;
+  --container-shadow: rgba(19, 28, 49, 0.2) 0px 7px 29px 0px;
+}
