@@ -6,7 +6,7 @@ from django.utils import timezone
 # Create your models here.
 class UserData(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    sessions = models.ForeignKey(PomoSession, verbose_name=(""), on_delete=models.CASCADE)
+    
     
 
     def isStudying(self):
