@@ -6,6 +6,7 @@ interface ColorPickerProps {
   className?: string;
 }
 
+
 export default function ColorPicker({ className }: ColorPickerProps) {
   const { accentColor, setAccentColor, presetColors } = useAccentColorManager();
 

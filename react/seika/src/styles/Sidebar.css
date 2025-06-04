@@ -40,11 +40,15 @@ body.dark {
   background-color: var(--main-container-bg);
   /* box-shadow: var(--container-shadow); */
   border-radius: 10px;
-  padding: 16px;
+  /* padding: 16px; */
   transition: width 0.3s ease-in-out;
   position: relative;
   width: 240px;
   height: 100vh;
+  padding: 16px 0;
+  padding-left: 10px;
+  /* display: flex;
+  justify-content: center; */
   /* max-height: 600px; */
 }
 
@@ -253,13 +257,14 @@ body.dark {
   align-items: center;
   margin-top: auto;
   border: 1px solid var(--item-hover);
-  padding: 8px 10px;
-  border-radius: 28px;
+  border-radius: 7px;
   overflow: hidden;
-  height: 60px;
+  height: 75px;
+  width: 235px;
   flex-shrink: 0;
-  transition: background 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;
   cursor: pointer;
+  background-color: var(--main-bg);
 }
 
 .sidebar-profileSection:hover {
@@ -267,11 +272,10 @@ body.dark {
 }
 
 .sidebar-profileSection img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  width: 65px;
+  border-radius: 10%;
   object-fit: cover;
-  margin-right: 8px;
+  margin: 5px;
   flex-shrink: 0;
 }
 
@@ -280,14 +284,18 @@ body.dark {
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--text-color);
+  transition: all 0.3s ease-in-out;
+  width: 100%;
 }
 
 .shrink .sidebar-profileSection span {
-  display: none;
+  width: 0%;
+  transition: all 0.3s ease-in-out;
 }
 
 .shrink .sidebar-profileSection {
-  border-radius: 50%;
+  border-radius: 10%;
+  width: 75px;
 }
 
 /* List item text styles */

@@ -185,9 +185,9 @@ const Timer: React.ForwardRefRenderFunction<TimerRef, TimerProps> = (
       </div>
         <style>{`
             @font-face {
-            font-family: "The Bold Font";
-            src: local("The Bold Font"),
-            url("/fonts/TheBoldFont.otf") format("opentype");
+            font-family: "Marmelat Black";
+            src: local("Marmelat Black"),
+            url("/fonts/Marmelat Black.woff") format("woff");
             font-weight: bold;
             }
         `}</style>
