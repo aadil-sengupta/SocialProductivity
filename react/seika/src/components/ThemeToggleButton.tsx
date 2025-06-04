@@ -1,12 +1,12 @@
 import React from 'react';
-import { useTheme } from '../context/ThemeContext';
+import { useDarkMode } from '../contexts/DarkModeContext';
 
 type ThemeToggleButtonProps = {
   className?: string;
 };
 
 const ThemeToggleButton: React.FC<ThemeToggleButtonProps> = ({ className = '' }) => {
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { isDarkMode, toggleTheme } = useDarkMode();
 
   return (
     <button 

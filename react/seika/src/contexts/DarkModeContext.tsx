@@ -1,23 +1,23 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type ThemeContextType = {
+type DarkModeContextType = {
   isDarkMode: boolean;
   toggleTheme: () => void;
   setTheme: (theme: 'light' | 'dark') => void;
 };
 
 // Create a context with a default value
-const ThemeContext = createContext<ThemeContextType>({
+const DarkModeContext = createContext<DarkModeContextType>({
   isDarkMode: false,
   toggleTheme: () => {},
   setTheme: () => {},
 });
 
-// Custom hook to use the theme context
-export const useTheme = () => useContext(ThemeContext);
+// Custom hook to use the dark mode context
+export const useDarkMode = () => useContext(DarkModeContext);
 
-// Theme provider component
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+// Dark mode provider component
+export const DarkModeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Get the initial theme from localStorage or default to light mode
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     // Check if we're in the browser environment
@@ -61,8 +61,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   return (
-    <ThemeContext.Provider value={contextValue}>
+    <DarkModeContext.Provider value={contextValue}>
       {children}
-    </ThemeContext.Provider>
+    </DarkModeContext.Provider>
   );
 };

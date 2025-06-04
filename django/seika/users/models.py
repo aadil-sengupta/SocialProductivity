@@ -6,8 +6,9 @@ from django.utils import timezone
 # Create your models here.
 class UserData(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    
-    
+    wallpaper = models.CharField(max_length=255, blank=True, null=True)
+    countUp = models.BooleanField(default=True)
+    font = models.CharField(max_length=100, default='Arial')
 
     def isStudying(self):
         """

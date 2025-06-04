@@ -1,10 +1,10 @@
 import React from "react";
 import "../styles/Sidebar.css";
-import { useTheme } from "../context/ThemeContext";
+import { useDarkMode } from "../contexts/DarkModeContext";
 
 const SideBar = () => {
   const [isShrinkView, setIsShrinkView] = React.useState(true);
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { isDarkMode, toggleTheme } = useDarkMode();
 
   const handleSidebarView = () => {
     setIsShrinkView(!isShrinkView);

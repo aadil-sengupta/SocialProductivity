@@ -1,12 +1,12 @@
 import React from 'react';
-import { useTheme } from '@/context/ThemeContext';
+import { useDarkMode } from '@/contexts/DarkModeContext';
 
 interface ThemeAwareComponentProps {
   children?: React.ReactNode;
 }
 
 const ThemeAwareComponent: React.FC<ThemeAwareComponentProps> = ({ children }) => {
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { isDarkMode, toggleTheme } = useDarkMode();
 
   return (
     <div className="p-4 rounded-lg bg-[var(--main-container-bg)] shadow-md text-[var(--text-color)] transition-colors duration-200">

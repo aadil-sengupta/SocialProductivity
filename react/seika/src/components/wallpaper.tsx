@@ -1,11 +1,14 @@
+import { useDarkMode } from '@/contexts/DarkModeContext';
+
 export default function Wallpaper() {
     // Logic to select wallpaper from user settings
+    const { isDarkMode, toggleTheme } = useDarkMode();
 
   return (
     <div className="absolute inset-0 z-0">
       <style>{`
         .wallpaper-container {
-          border: 10px solid white;
+          border: 12px solid ${isDarkMode ? 'black' : 'white'};
           border-radius: 12px;
           overflow: hidden;
         }
@@ -18,7 +21,7 @@ export default function Wallpaper() {
       `}</style>
       <div className="wallpaper-container absolute inset-0">
         <img
-          src="/public/wallpapers/purple-gradient.jpg"
+          src="/wallpapers/purple-gradient.jpg"
           alt="Wallpaper"
           className="wallpaper-image"
         />

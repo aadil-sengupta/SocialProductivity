@@ -23,6 +23,34 @@ html, body {
   --main-container-bg: #fff;
   --container-shadow: rgba(111, 111, 111, 0.2) 0px 7px 29px 0px;
   --text-color: #1a1a1a;
+  
+  /* Default accent colors (blue) - will be overridden by ThemeProvider */
+  --accent-50: #eff6ff;
+  --accent-100: #dbeafe;
+  --accent-200: #bfdbfe;
+  --accent-300: #93c5fd;
+  --accent-400: #60a5fa;
+  --accent-500: #3b82f6;
+  --accent-600: #2563eb;
+  --accent-700: #1d4ed8;
+  --accent-800: #1e40af;
+  --accent-900: #1e3a8a;
+  --accent-DEFAULT: #3b82f6;
+  --accent-foreground: #ffffff;
+  
+  /* Alias for primary colors */
+  --color-primary-50: var(--accent-50);
+  --color-primary-100: var(--accent-100);
+  --color-primary-200: var(--accent-200);
+  --color-primary-300: var(--accent-300);
+  --color-primary-400: var(--accent-400);
+  --color-primary-500: var(--accent-500);
+  --color-primary-600: var(--accent-600);
+  --color-primary-700: var(--accent-700);
+  --color-primary-800: var(--accent-800);
+  --color-primary-900: var(--accent-900);
+  --color-primary-DEFAULT: var(--accent-DEFAULT);
+  --color-primary-foreground: var(--accent-foreground);
 }
 
 body.dark {
@@ -33,4 +61,87 @@ body.dark {
   --text-color: #fff;
   --tooltip-bg: #242424;
   --container-shadow: rgba(19, 28, 49, 0.2) 0px 7px 29px 0px;
+}
+
+/* Utility classes for accent colors */
+@layer utilities {
+  .bg-accent {
+    background-color: var(--accent-DEFAULT);
+  }
+  
+  .bg-accent-50 { background-color: var(--accent-50); }
+  .bg-accent-100 { background-color: var(--accent-100); }
+  .bg-accent-200 { background-color: var(--accent-200); }
+  .bg-accent-300 { background-color: var(--accent-300); }
+  .bg-accent-400 { background-color: var(--accent-400); }
+  .bg-accent-500 { background-color: var(--accent-500); }
+  .bg-accent-600 { background-color: var(--accent-600); }
+  .bg-accent-700 { background-color: var(--accent-700); }
+  .bg-accent-800 { background-color: var(--accent-800); }
+  .bg-accent-900 { background-color: var(--accent-900); }
+  .bg-accent-DEFAULT { background-color: var(--accent-DEFAULT); }
+  
+  .text-accent {
+    color: var(--accent-DEFAULT);
+  }
+  
+  .text-accent-50 { color: var(--accent-50); }
+  .text-accent-100 { color: var(--accent-100); }
+  .text-accent-200 { color: var(--accent-200); }
+  .text-accent-300 { color: var(--accent-300); }
+  .text-accent-400 { color: var(--accent-400); }
+  .text-accent-500 { color: var(--accent-500); }
+  .text-accent-600 { color: var(--accent-600); }
+  .text-accent-700 { color: var(--accent-700); }
+  .text-accent-800 { color: var(--accent-800); }
+  .text-accent-900 { color: var(--accent-900); }
+  .text-accent-DEFAULT { color: var(--accent-DEFAULT); }
+  .text-accent-foreground { color: var(--accent-foreground); }
+  
+  .border-accent {
+    border-color: var(--accent-DEFAULT);
+  }
+  
+  .border-accent-50 { border-color: var(--accent-50); }
+  .border-accent-100 { border-color: var(--accent-100); }
+  .border-accent-200 { border-color: var(--accent-200); }
+  .border-accent-300 { border-color: var(--accent-300); }
+  .border-accent-400 { border-color: var(--accent-400); }
+  .border-accent-500 { border-color: var(--accent-500); }
+  .border-accent-600 { border-color: var(--accent-600); }
+  .border-accent-700 { border-color: var(--accent-700); }
+  .border-accent-800 { border-color: var(--accent-800); }
+  .border-accent-900 { border-color: var(--accent-900); }
+  .border-accent-DEFAULT { border-color: var(--accent-DEFAULT); }
+  
+  .ring-accent {
+    --tw-ring-color: var(--accent-DEFAULT);
+  }
+  
+  .ring-accent-50 { --tw-ring-color: var(--accent-50); }
+  .ring-accent-100 { --tw-ring-color: var(--accent-100); }
+  .ring-accent-200 { --tw-ring-color: var(--accent-200); }
+  .ring-accent-300 { --tw-ring-color: var(--accent-300); }
+  .ring-accent-400 { --tw-ring-color: var(--accent-400); }
+  .ring-accent-500 { --tw-ring-color: var(--accent-500); }
+  .ring-accent-600 { --tw-ring-color: var(--accent-600); }
+  .ring-accent-700 { --tw-ring-color: var(--accent-700); }
+  .ring-accent-800 { --tw-ring-color: var(--accent-800); }
+  .ring-accent-900 { --tw-ring-color: var(--accent-900); }
+  .ring-accent-DEFAULT { --tw-ring-color: var(--accent-DEFAULT); }
+}
+
+/* Custom component styles that use accent colors */
+.accent-button {
+  background-color: var(--accent-DEFAULT);
+  color: var(--accent-foreground);
+  transition: background-color 0.2s ease;
+}
+
+.accent-button:hover {
+  background-color: var(--accent-600);
+}
+
+.accent-button:active {
+  background-color: var(--accent-700);
 }

@@ -3,7 +3,7 @@ import { VisuallyHidden } from "@react-aria/visually-hidden";
 import { SwitchProps, useSwitch } from "@heroui/switch";
 import clsx from "clsx";
 import { useTheme as useHeroUITheme } from "@heroui/use-theme";
-import { useTheme } from "@/context/ThemeContext";
+import { useDarkMode } from "@/contexts/DarkModeContext";
 
 import { SunFilledIcon, MoonFilledIcon } from "@/components/icons";
 
@@ -19,7 +19,7 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
   const [isMounted, setIsMounted] = useState(false);
 
   // Use our global theme context
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { isDarkMode, toggleTheme } = useDarkMode();
   
   // Keep HeroUI theme in sync with our global theme
   const { setTheme: setHeroUITheme } = useHeroUITheme();

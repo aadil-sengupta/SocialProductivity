@@ -78,8 +78,10 @@ class PomoConsumer(AsyncWebsocketConsumer):
                 }))
             elif data["action"] == 'pause':
                 await self.session.pause_session()
+                print(f"Session paused: {self.session}")
             elif data["action"] == 'resume':
                 await self.session.resume_session()
+            print(data["action"])
             await self.send(text_data=json.dumps({
                 'type': 'timer',
                 'action': data["action"],

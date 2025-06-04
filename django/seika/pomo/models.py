@@ -39,7 +39,6 @@ class PomoSession(models.Model):
 
 
     def __str__(self):
-        user_list = ", ".join(user.username for user in self.users.all())
         
         current_status = "Unknown"
         if self.endTime:
@@ -51,9 +50,9 @@ class PomoSession(models.Model):
         else: # Not running, no end time, not explicitly paused (could be pending or stopped before first pause)
             current_status = "Stopped/Pending"
 
-        if not user_list:
-            return f"Session {self.sessionId} ({current_status}) - No users"
-        return f"Session {self.sessionId} ({current_status}) for Users: {user_list}"
+        if not self.user:
+            return f"{current_status} - No user"
+        return f"{current_status} for User: {self.user}"
 
     async def pause_session(self):
         """Pauses the session if it is currently running."""

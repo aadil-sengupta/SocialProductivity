@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
 // Define base API configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/';
 
 // Default config for axios instance
 const axiosConfig: AxiosRequestConfig = {
