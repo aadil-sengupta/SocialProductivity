@@ -6,9 +6,9 @@ const SideBar = () => {
   const [isShrinkView, setIsShrinkView] = React.useState(true);
   const { isDarkMode, toggleTheme } = useDarkMode();
 
-  const handleSidebarView = () => {
-    setIsShrinkView(!isShrinkView);
-  };
+  // const handleSidebarView = () => {
+  //   setIsShrinkView(!isShrinkView);
+  // };
 
   return (
     <div className={`sidebar-container${isShrinkView ? " shrink" : ""} z-10`} onMouseEnter={() => setIsShrinkView(false)} onMouseLeave={() => setIsShrinkView(true)}>

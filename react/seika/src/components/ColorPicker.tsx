@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { useAccentColorManager } from '@/contexts/AccentColorContext';
 import { cn } from '@heroui/react';
 

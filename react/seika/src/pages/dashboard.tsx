@@ -5,7 +5,7 @@ import { Button } from "@heroui/button";
 import SettingsModal from "@/components/SettingsModal";
 import { IoSettingsOutline } from "react-icons/io5";
 import { useSearchParams } from "react-router-dom";
-import { useAccentColor } from "@/contexts/AccentColorContext";
+
 import { MdOutlineTimerOff } from "react-icons/md";
 import { IoTimer, IoRefreshSharp } from "react-icons/io5";
 import { Tabs, Tab } from "@heroui/react";
@@ -13,7 +13,6 @@ import { Tabs, Tab } from "@heroui/react";
 export default function DashboardPage() {
   const timerRef = useRef<TimerRef>(null);
   const [searchParams, setSearchParams] = useSearchParams();
-  const accentColors = useAccentColor();
   const [started, setStarted] = useState(false);
   const [running, setRunning] = useState(false);
 

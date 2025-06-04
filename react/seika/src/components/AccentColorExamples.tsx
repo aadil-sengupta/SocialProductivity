@@ -1,4 +1,3 @@
-import React from 'react';
 import { useAccentColorManager, useAccentColor } from '@/contexts/AccentColorContext';
 import { Button } from '@heroui/button';
 import { Card, CardBody, Badge } from '@heroui/react';

@@ -5,7 +5,7 @@ import { Button } from "@heroui/button";
 import FormOption from "@/components/FormOption";
 import ColorPicker from "@/components/ColorPicker";
 import { useDarkMode } from "@/contexts/DarkModeContext";
-import { useAccentColor } from "@/contexts/AccentColorContext";
+
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -19,7 +19,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
   const [soundNotifications, setSoundNotifications] = React.useState(true);
   const [desktopNotifications, setDesktopNotifications] = React.useState(false);
   const { isDarkMode, toggleTheme } = useDarkMode();
-  const { accentColor } = useAccentColor();
+  
 
   const handleSave = () => {
     // Here you would typically save the settings to localStorage, context, or API

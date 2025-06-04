@@ -2,7 +2,7 @@ import { useDarkMode } from '@/contexts/DarkModeContext';
 
 export default function Wallpaper() {
     // Logic to select wallpaper from user settings
-    const { isDarkMode, toggleTheme } = useDarkMode();
+    const { isDarkMode } = useDarkMode();
 
   return (
     <div className="absolute inset-0 z-0">
