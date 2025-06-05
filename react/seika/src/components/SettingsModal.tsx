@@ -5,7 +5,7 @@ import { Button } from "@heroui/button";
 import FormOption from "@/components/FormOption";
 import ColorPicker from "@/components/ColorPicker";
 import { useDarkMode } from "@/contexts/DarkModeContext";
-
+import { apiClient } from "@/services/apiClient";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -19,7 +19,22 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
   const [soundNotifications, setSoundNotifications] = React.useState(true);
   const [desktopNotifications, setDesktopNotifications] = React.useState(false);
   const { isDarkMode, toggleTheme } = useDarkMode();
-  
+
+    // Fetch initial settings from API or context
+    React.useEffect(() => {
+      const fetchData = async () => {
+        try {
+          const response = await apiClient.get('/users/settings');
+        //   const settings = response.data;
+
+            console.log("Fetched settings:", response);
+        } catch (error) {
+          console.error("Failed to fetch settings:", error);
+        }
+      };
+
+      fetchData();
+    }, []);
 
   const handleSave = () => {
     // Here you would typically save the settings to localStorage, context, or API
