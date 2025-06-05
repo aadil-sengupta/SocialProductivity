@@ -85,36 +85,36 @@ const SideBar = () => {
           </label>
         </div>
         <div className="sidebar-list">
-          <div className="sidebar-profileSection" style={{ marginTop: "16px" }} >
+            <div className="sidebar-profileSection bg-transparent" style={{ marginTop: "6px" }}>
           <img
             src="https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_6.png"
             width="40"
             height="40"
             alt="Aadil Sengupta"
           />
-          <div style={{ marginLeft: "8px" }}>
-          <span>Thomas</span>
-          <p className="text-gray-500 text-sm m-[-2]" >7 hrs 18 mins</p>
-          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-            <div className="bg-gray-600 w-3 h-3 rounded-full" ></div>
-            <p className="text-gray-600 text-sm mt-[0.9]" >Offline</p>
+          <div style={{ padding: "10px 0px 10px 8px" }} >
+          <span>Aadil Sengupta</span>
+          <p className="text-gray-500 text-sm/0" >4 hrs 22 mins</p>
+          <div className="flex items-center gap-1 mt-[-2px]" >
+            <div className="bg-green-600 w-3 h-3 rounded-full" ></div>
+            <p className="text-green-600 text-sm w-auto" >Online</p>
           </div>
           </div>
         </div>
 
-          <div className="sidebar-profileSection" style={{ marginTop: "6px" }}>
+          <div className="sidebar-profileSection  bg-transparent" style={{ marginTop: "6px" }}>
           <img
             src="https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_7.png"
             width="40"
             height="40"
             alt="Aadil Sengupta"
           />
-          <div style={{ marginLeft: "8px" }}>
+          <div style={{ padding: "10px 0px 10px 8px" }} >
           <span>Aadil Sengupta</span>
-          <p className="text-gray-500 text-sm m-[-2]" >4 hrs 22 mins</p>
-          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          <p className="text-gray-500 text-sm/0" >4 hrs 22 mins</p>
+          <div className="flex items-center gap-1" >
             <div className="bg-green-600 w-3 h-3 rounded-full" ></div>
-            <p className="text-green-600 text-sm mt-[0.9]" >Online</p>
+            <p className="text-green-600 text-sm h-5" >Online</p>
           </div>
           </div>
         </div>

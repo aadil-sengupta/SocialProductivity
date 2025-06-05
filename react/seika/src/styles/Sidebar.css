@@ -41,19 +41,19 @@ body.dark {
   /* box-shadow: var(--container-shadow); */
   border-radius: 10px;
   /* padding: 16px; */
-  transition: width 0.3s ease-in-out;
+  transition: width 0.3s ;
   position: relative;
-  width: 240px;
+  width: 200px;
   height: 100vh;
   padding: 16px 0;
-  padding-left: 10px;
+  padding-left: 7.5px;
   /* display: flex;
   justify-content: center; */
   /* max-height: 600px; */
 }
 
 .sidebar-container.shrink {
-  width: 92px;
+  width: 75px;
 }
 
 /* Theme input styles */
@@ -166,7 +166,7 @@ body.dark {
   align-items: center;
   padding: 0;
   cursor: pointer;
-  transition: 0.3s ease-in-out;
+  transition: 0.2s;
   color: #fff;
   box-shadow: var(--container-shadow);
   background-color: var(--secondary-bg);
@@ -256,15 +256,16 @@ body.dark {
   display: flex;
   align-items: center;
   margin-top: auto;
-  border: 1px solid var(--item-hover);
+  /* border: 1px solid var(--item-hover); */
   border-radius: 7px;
   overflow: hidden;
-  height: 75px;
-  width: 235px;
+  height: 60px;
+  width: 180px;
   flex-shrink: 0;
   transition: all 0.3s ease-in-out;
   cursor: pointer;
   background-color: var(--main-bg);
+
 }
 
 .sidebar-profileSection:hover {
@@ -272,10 +273,10 @@ body.dark {
 }
 
 .sidebar-profileSection img {
-  width: 65px;
-  border-radius: 10%;
+  width: 55px;
+  border-radius: 10px;
   object-fit: cover;
-  margin: 5px;
+  margin: 2.5px;
   flex-shrink: 0;
 }
 
@@ -286,7 +287,21 @@ body.dark {
   color: var(--text-color);
   transition: all 0.3s ease-in-out;
   width: 100%;
+  font-size: 12px;
+  font-weight: bold;
 }
+.sidebar-profileSection p {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* secondary text colour */
+  /* color: var(--text-secondary-color); */
+  transition: all 0.3s ease-in-out;
+  font-size: 10px;
+  margin-top: -2.6px;
+  line-height: 1.5;
+}
+
 
 .shrink .sidebar-profileSection span {
   width: 0%;
@@ -294,8 +309,8 @@ body.dark {
 }
 
 .shrink .sidebar-profileSection {
-  border-radius: 10%;
-  width: 75px;
+  border-radius: 11px;
+  width: 60px;
 }
 
 /* List item text styles */

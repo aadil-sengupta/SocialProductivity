@@ -23,6 +23,8 @@ html, body {
   --main-container-bg: #fff;
   --container-shadow: rgba(111, 111, 111, 0.2) 0px 7px 29px 0px;
   --text-color: #1a1a1a;
+  --text-secondary-color: #4a4a4a;
+
   
   /* Default accent colors (blue) - will be overridden by ThemeProvider */
   --accent-50: #eff6ff;
@@ -59,6 +61,7 @@ body.dark {
   --secondary-bg: #595959;
   --main-container-bg: #000000;
   --text-color: #fff;
+  --text-secondary-color: #b3b3b3;
   --tooltip-bg: #242424;
   --container-shadow: rgba(19, 28, 49, 0.2) 0px 7px 29px 0px;
 }

@@ -9,6 +9,7 @@ export default function Wallpaper() {
       <style>{`
         .wallpaper-container {
           border: 12px solid ${isDarkMode ? 'black' : 'white'};
+          border-left: 0;
           border-radius: 12px;
           overflow: hidden;
         }
