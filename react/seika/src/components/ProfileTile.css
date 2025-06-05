@@ -1,0 +1,195 @@
+/* ProfileTile.css */
+
+.profile-tile {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  padding: 0;
+}
+
+.profile-image-container {
+  position: relative;
+  flex-shrink: 0;
+  width: 55px;
+  height: 55px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+              height 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.profile-image {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  object-fit: cover;
+  transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+              height 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform: scale(1);
+}
+
+.profile-status-bubble {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid white;
+  transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+              height 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              border-width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform: scale(1);
+}
+
+.profile-status-bubble.online {
+  background-color: #10b981;
+}
+
+.profile-status-bubble.offline {
+  background-color: #9ca3af;
+}
+
+.profile-info {
+  padding: 10px 0px 10px 12px;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              padding 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.profile-name {
+  font-size: 0.86rem; /* 24px - increased from 22px */
+  font-weight: 600;
+  color: var(--text-color);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+  margin-bottom: 2px;
+  transition: font-size 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.profile-activity {
+  font-size: 0.8rem; /* 22px - increased from 20px */
+  color: #6b7280;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+  margin-bottom: 2px;
+  transition: font-size 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.profile-status {
+  font-size: 0.76rem; /* 22px - increased from 20px */
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+  font-weight: 500;
+  transition: font-size 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.profile-status.online {
+  color: #10b981;
+}
+
+.profile-status.offline {
+  color: #6b7280;
+}
+
+/* Hover effects for expanded state */
+.profile-tile:hover .profile-image {
+  transform: scale(1.05);
+}
+
+.profile-tile:hover .profile-status-bubble {
+  transform: scale(1.1);
+}
+
+/* Shrink state styles */
+.shrink .profile-tile {
+  justify-content: center;
+  padding: 0;
+}
+
+.shrink .profile-info {
+  opacity: 0;
+  width: 0;
+  padding: 0;
+  overflow: hidden;
+  transform: translateX(-10px);
+}
+
+.shrink .profile-image-container {
+  width: 50px;
+  height: 50px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shrink .profile-image {
+  width: 50px;
+  height: 50px;
+  /* Remove conflicting transform */
+}
+
+.shrink .profile-status-bubble {
+  width: 14px;
+  height: 14px;
+  border-width: 1.5px;
+  bottom: 1px;
+  right: 1px;
+  /* Remove conflicting transform */
+}
+
+/* Hover effects for shrunk state */
+.shrink .profile-tile:hover .profile-image {
+  transform: scale(1.08);
+}
+
+.shrink .profile-tile:hover .profile-status-bubble {
+  transform: scale(1.15);
+}
+
+/* Dark mode support */
+body.dark .profile-activity {
+  color: #9ca3af;
+}
+
+body.dark .profile-status.offline {
+  color: #9ca3af;
+}
+
+/* Smooth entrance animation */
+.profile-tile {
+  animation: profileEnter 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes profileEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

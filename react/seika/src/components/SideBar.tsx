@@ -1,17 +1,45 @@
 import React from "react";
 import "../styles/Sidebar.css";
-import { useDarkMode } from "../contexts/DarkModeContext";
+import ProfileTile, { User } from "./ProfileTile";
+import RadialThemeSwitcher from "./RadialThemeSwitcher";
 
 const SideBar = () => {
   const [isShrinkView, setIsShrinkView] = React.useState(true);
-  const { isDarkMode, toggleTheme } = useDarkMode();
+
+  // Sample user data - in a real app, this would come from props or context
+  const users: User[] = [
+    {
+      id: "1",
+      name: "Aadil Sengupta",
+      avatar: "https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_6.png",
+      activityTime: "4 hrs 22 mins",
+      isOnline: true,
+      altText: "Aadil Sengupta"
+    },
+    {
+      id: "2",
+      name: "Aadil Sengupta",
+      avatar: "https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_7.png",
+      activityTime: "4 hrs 22 mins",
+      isOnline: true,
+      altText: "Aadil Sengupta"
+    },
+    {
+      id: "3",
+      name: "Aadil Sengupta",
+      avatar: "https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_3.png",
+      activityTime: "4 hrs 22 mins",
+      isOnline: true,
+      altText: "Aadil Sengupta"
+    }
+  ];
 
   // const handleSidebarView = () => {
   //   setIsShrinkView(!isShrinkView);
   // };
 
   return (
-    <div className={`sidebar-container${isShrinkView ? " shrink" : ""} z-10`} onMouseEnter={() => setIsShrinkView(false)} onMouseLeave={() => setIsShrinkView(true)}>
+    <div className={`sidebar-container ${isShrinkView ? "shrink" : ""} z-10`} onMouseEnter={() => setIsShrinkView(false)} onMouseLeave={() => setIsShrinkView(true)}>
       {/* <button
         className="sidebar-viewButton"
         type="button"
@@ -35,109 +63,21 @@ const SideBar = () => {
         </svg>
       </button> */}
       <div className="sidebar-wrapper">
-        <div className="sidebar-themeContainer">
-          <label
-            htmlFor="theme-toggle"
-            className={`sidebar-themeLabel${isDarkMode ? " switched" : ""}`}
-          >
-            <input
-              className="sidebar-themeInput"
-              type="checkbox"
-              id="theme-toggle"
-              checked={isDarkMode}
-              onChange={toggleTheme}
-            />
-            <div className="sidebar-themeType light">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="sidebar-listIcon"
-              >
-                <circle cx="12" cy="12" r="5" />
-                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-              </svg>
-              <span className="sidebar-themeInputText">Light</span>
-            </div>
-            <div className="sidebar-themeType dark">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="sidebar-listIcon"
-              >
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              </svg>
-              <span className="sidebar-themeInputText">Dark</span>
-            </div>
-          </label>
-        </div>
-        <div className="sidebar-list">
-            <div className="sidebar-profileSection bg-transparent" style={{ marginTop: "6px" }}>
-          <img
-            src="https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_6.png"
-            width="40"
-            height="40"
-            alt="Aadil Sengupta"
-          />
-          <div style={{ padding: "10px 0px 10px 8px" }} >
-          <span>Aadil Sengupta</span>
-          <p className="text-gray-500 text-sm/0" >4 hrs 22 mins</p>
-          <div className="flex items-center gap-1 mt-[-2px]" >
-            <div className="bg-green-600 w-3 h-3 rounded-full" ></div>
-            <p className="text-green-600 text-sm w-auto" >Online</p>
+        <div className="sidebar-list flex flex-col justify-between h-full">
+          <div>
+          {users.map(user => (
+            <ProfileTile key={user.id} user={user} />
+          ))}
           </div>
-          </div>
-        </div>
-
-          <div className="sidebar-profileSection  bg-transparent" style={{ marginTop: "6px" }}>
-          <img
-            src="https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_7.png"
-            width="40"
-            height="40"
-            alt="Aadil Sengupta"
-          />
-          <div style={{ padding: "10px 0px 10px 8px" }} >
-          <span>Aadil Sengupta</span>
-          <p className="text-gray-500 text-sm/0" >4 hrs 22 mins</p>
-          <div className="flex items-center gap-1" >
-            <div className="bg-green-600 w-3 h-3 rounded-full" ></div>
-            <p className="text-green-600 text-sm h-5" >Online</p>
-          </div>
-          </div>
-        </div>
-
-      </div>
-        
-        <div className="sidebar-profileSection">
-          <img
-            src="https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_3.png"
-            width="40"
-            height="40"
-            alt="Aadil Sengupta"
-          />
-          <div style={{ marginLeft: "8px" }}>
-          <span>Aadil Sengupta</span>
-          <p className="text-gray-500 text-sm m-[-2]" >4 hrs 22 mins</p>
-          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-            <div className="bg-green-600 w-3 h-3 rounded-full" ></div>
-            <p className="text-green-600 text-sm mt-[0.9]" >Online</p>
+          <div>
+          <ProfileTile user={users[0]} />
+          <div className="radial-theme-container">
+            <RadialThemeSwitcher />
           </div>
           </div>
         </div>
       </div>
+      
     </div>
   );
 };
