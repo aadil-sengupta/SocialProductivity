@@ -91,7 +91,7 @@ class PomoSessionData(models.Model):
     endTime = models.DateTimeField(auto_now_add=True)
     totalTime = models.DurationField(default=timezone.timedelta(seconds=0))
     activeTime = models.DurationField(default=timezone.timedelta(seconds=0))
-
+    startTime = models.DateTimeField() # Time the session started
 
     def __str__(self):
         return f"Session data for {self.user.username} - End Time: {self.endTime}, Total Time: {self.totalTime}, Active Time: {self.activeTime}"

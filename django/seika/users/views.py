@@ -17,8 +17,8 @@ def userSettings(request):
     # get user model - Django automatically sets request.user from the token
     
     userDataModel = UserData.objects.filter(user=request.user).first()
-
     if userDataModel:
         serializer = UserDataSerializer(userDataModel)
         return Response(serializer.data)
+    
     return Response({"message": "User settings not found."}, status=404)

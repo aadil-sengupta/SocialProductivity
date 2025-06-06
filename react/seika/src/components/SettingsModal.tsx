@@ -5,6 +5,7 @@ import { Button } from "@heroui/button";
 import FormOption from "@/components/FormOption";
 import ColorPicker from "@/components/ColorPicker";
 import { useDarkMode } from "@/contexts/DarkModeContext";
+import { useAccentColorManager } from "@/contexts/AccentColorContext";
 import { apiClient } from "@/services/apiClient";
 
 interface SettingsModalProps {
@@ -18,28 +19,79 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
   const [autoStart, setAutoStart] = React.useState(false);
   const [soundNotifications, setSoundNotifications] = React.useState(true);
   const [desktopNotifications, setDesktopNotifications] = React.useState(false);
+  const [font, setFont] = React.useState("Poppins");
+  const [wallpaper, setWallpaper] = React.useState("purple-gradient.jpg");
+  
   const { isDarkMode, toggleTheme } = useDarkMode();
+  const { accentColor } = useAccentColorManager();
 
-    // Fetch initial settings from API or context
-    React.useEffect(() => {
-      const fetchData = async () => {
-        try {
-          const response = await apiClient.get('/users/settings');
-        //   const settings = response.data;
+  // Load settings from localStorage on component mount
+  React.useEffect(() => {
+    const loadSettings = () => {
+      const savedCountUp = localStorage.getItem('countUp');
+      const savedAutoStart = localStorage.getItem('autoStart');
+      const savedSoundNotifications = localStorage.getItem('soundNotifications');
+      const savedDesktopNotifications = localStorage.getItem('desktopNotifications');
+      const savedFont = localStorage.getItem('font');
+      const savedWallpaper = localStorage.getItem('wallpaper');
 
-            console.log("Fetched settings:", response);
-        } catch (error) {
-          console.error("Failed to fetch settings:", error);
-        }
-      };
+      if (savedCountUp !== null) setCountUp(savedCountUp === 'true');
+      if (savedAutoStart !== null) setAutoStart(savedAutoStart === 'true');
+      if (savedSoundNotifications !== null) setSoundNotifications(savedSoundNotifications === 'true');
+      if (savedDesktopNotifications !== null) setDesktopNotifications(savedDesktopNotifications === 'true');
+      if (savedFont) setFont(savedFont);
+      if (savedWallpaper) setWallpaper(savedWallpaper);
+    };
 
-      fetchData();
-    }, []);
+    loadSettings();
+  }, []);
 
-  const handleSave = () => {
-    // Here you would typically save the settings to localStorage, context, or API
-    // For now, we'll just call the onSave callback
-    onSave();
+  // Effects to update localStorage when state changes
+  React.useEffect(() => {
+    localStorage.setItem('countUp', countUp.toString());
+  }, [countUp]);
+
+  React.useEffect(() => {
+    localStorage.setItem('autoStart', autoStart.toString());
+  }, [autoStart]);
+
+  React.useEffect(() => {
+    localStorage.setItem('soundNotifications', soundNotifications.toString());
+  }, [soundNotifications]);
+
+  React.useEffect(() => {
+    localStorage.setItem('desktopNotifications', desktopNotifications.toString());
+  }, [desktopNotifications]);
+
+  React.useEffect(() => {
+    localStorage.setItem('font', font);
+  }, [font]);
+
+  React.useEffect(() => {
+    localStorage.setItem('wallpaper', wallpaper);
+  }, [wallpaper]);
+
+  const handleSave = async () => {
+    try {
+      // POST settings to API
+      await apiClient.post('/users/settings', {
+        countUp,
+        autoStart,
+        soundNotifications,
+        desktopNotifications,
+        font,
+        accentColor,
+        wallpaper,
+        darkMode: isDarkMode
+      });
+      
+      console.log("Settings saved successfully");
+      onSave();
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+      // Still call onSave to close modal even if API fails, since localStorage is already updated
+      onSave();
+    }
   };
 
   return (

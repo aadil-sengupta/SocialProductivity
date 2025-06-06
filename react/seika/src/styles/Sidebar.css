@@ -101,7 +101,7 @@ body.dark {
 
 .sidebar-themeContainer {
   padding: 4px;
-  border-radius: 4px;
+  border-radius: 11px;
   color: var(--text-color);
   overflow: hidden;
   background-color: var(--main-container-bg);
@@ -144,7 +144,7 @@ body.dark {
   display: inline-block;
   width: calc(50% - 2px);
   height: calc(100% - 4px);
-  border-radius: 4px;
+  border-radius: 9px;
   background-color: var(--main-bg);
   left: 2px;
   top: 50%;

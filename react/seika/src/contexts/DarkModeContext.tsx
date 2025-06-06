@@ -22,10 +22,10 @@ export const DarkModeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     // Check if we're in the browser environment
     if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('theme');
+      const savedDarkMode = localStorage.getItem('darkMode');
       // Check if user previously selected dark mode or if they prefer dark mode
-      return savedTheme === 'dark' || 
-        (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      return savedDarkMode === 'true' || 
+        (savedDarkMode === null && window.matchMedia('(prefers-color-scheme: dark)').matches);
     }
     return false; // Default to light mode for SSR
   });
@@ -45,10 +45,10 @@ export const DarkModeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (typeof window !== 'undefined') {
       if (isDarkMode) {
         document.body.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
+        localStorage.setItem('darkMode', 'true');
       } else {
         document.body.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
+        localStorage.setItem('darkMode', 'false');
       }
     }
   }, [isDarkMode]);
