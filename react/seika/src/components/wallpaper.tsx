@@ -1,8 +1,10 @@
 import { useDarkMode } from '@/contexts/DarkModeContext';
+import { useWallpaper } from '@/contexts/WallpaperContext';
 
 export default function Wallpaper() {
     // Logic to select wallpaper from user settings
     const { isDarkMode } = useDarkMode();
+    const { selectedWallpaper, wallpaperBlur } = useWallpaper();
 
   return (
     <div className="absolute inset-0 z-0">
@@ -22,9 +24,10 @@ export default function Wallpaper() {
       `}</style>
       <div className="wallpaper-container absolute inset-0">
         <img
-          src="/wallpapers/purple-gradient.jpg"
+          src={`/wallpapers/${selectedWallpaper}`}
           alt="Wallpaper"
-          className="wallpaper-image"
+          className={`wallpaper-image transition-all duration-500`}
+          style={{ filter: wallpaperBlur ? 'blur(3.5px)' : 'none' }}
         />
       </div>
       {/* <div className="absolute inset-0 bg-black opacity-50" /> */}

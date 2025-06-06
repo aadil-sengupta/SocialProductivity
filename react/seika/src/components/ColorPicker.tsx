@@ -6,6 +6,9 @@ interface ColorPickerProps {
   className?: string;
 }
 
+function capitalizeFirstLetter(val) {
+    return String(val).charAt(0).toUpperCase() + String(val).slice(1);
+}
 
 export default function ColorPicker({ className }: ColorPickerProps) {
   const { accentColor, setAccentColor, presetColors } = useAccentColorManager();
@@ -36,7 +39,7 @@ export default function ColorPicker({ className }: ColorPickerProps) {
           className="w-3 h-3 rounded-full" 
           style={{ backgroundColor: accentColor }}
         />
-        <span>Current: {Object.entries(presetColors).find(([_, color]) => color === accentColor)?.[0] || 'Custom'}</span>
+        <span>Current: {capitalizeFirstLetter(Object.entries(presetColors).find(([_, color]) => color === accentColor)?.[0]) || 'Custom'}</span>
       </div>
     </div>
   );

@@ -7,6 +7,7 @@ import ColorPicker from "@/components/ColorPicker";
 import { useDarkMode } from "@/contexts/DarkModeContext";
 import { useAccentColorManager } from "@/contexts/AccentColorContext";
 import { apiClient } from "@/services/apiClient";
+import WallpaperPicker from "@/components/WallpaperPicker";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -114,6 +115,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
                 isSelected={isDarkMode}
                 onChange={toggleTheme}
               />
+              <WallpaperPicker />
               <ColorPicker />
             </div>
           </div>

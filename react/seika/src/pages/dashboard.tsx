@@ -11,6 +11,8 @@ import { IoTimer, IoRefreshSharp } from "react-icons/io5";
 import { Tabs, Tab } from "@heroui/react";
 
 export default function DashboardPage() {
+  document.title = "Dashboard | Seika";
+
   const timerRef = useRef<TimerRef>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [started, setStarted] = useState(false);
