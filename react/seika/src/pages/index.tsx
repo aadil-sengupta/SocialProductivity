@@ -9,6 +9,10 @@ import { GithubIcon } from "@/components/icons";
 import DefaultLayout from "@/layouts/default";
 
 export default function IndexPage() {
+  // automatically redirect users to dashboard if they are logged in
+  if (typeof window !== "undefined") {
+    window.location.href = "/dashboard";
+  }
   return (
     <DefaultLayout>
       <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
