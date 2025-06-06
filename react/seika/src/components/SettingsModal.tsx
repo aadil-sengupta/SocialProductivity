@@ -241,7 +241,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
                     <div className="flex items-center gap-3">
                       <span className="text-lg">{category.icon}</span>
                       <div>
-                        <div className={`font-medium ${selectedCategory === category.id ? 'text-accent-foreground' : ''}`}>
+                        <div className="font-medium">
                           {category.name}
                         </div>
                         <div className={`text-xs ${

@@ -53,7 +53,7 @@ export const generateColorVariations = (baseColor: string) => {
     800: hslToHex(h, Math.min(s + 30, 100), Math.max(l - 30, 15)),
     900: hslToHex(h, Math.min(s + 40, 100), Math.max(l - 40, 10)),
     DEFAULT: baseColor,
-    foreground: l > 50 ? '#000000' : '#ffffff',
+    foreground: '#ffffff',
   };
 };
 

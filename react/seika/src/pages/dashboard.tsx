@@ -68,10 +68,11 @@ export default function DashboardPage() {
               onPress={handleOpenSettings}
               variant="light"
               isIconOnly={true}
+              className="hover:bg-white/10 hover:scale-105 transition-all duration-200"
             >
               <IoSettingsOutline color="white" size={38} />
             </Button>
-                        <Button
+            <Button
               onPress={()=> {
                 timerRef.current?.reset();
                 setStarted(false);
@@ -79,22 +80,37 @@ export default function DashboardPage() {
               }}
               variant="light"
               isIconOnly={true}
+              className="hover:bg-white/10 hover:scale-105 transition-all duration-200"
             >
               <IoRefreshSharp color="white" size={42} />
             </Button>
             
             <Button
               onPress={started ? (running ? handlePause : handleResume) : handleStart}
-              variant={started ? (running ? "ghost" : "shadow") : "shadow"}
-
-              color={started ? (running ? "default" : "secondary") : "secondary"}
+              variant={started ? (running ? "ghost" : "solid") : "solid"}
+              color="primary"
               size="lg"
               radius="full"
               style={{fontSize: '1.65rem', padding: '1.78rem 2.5rem'}}
-              className="text-white border-white"
+              className={`
+                ${started && running 
+                  ? 'border-2 border-primary-400/50 text-white bg-transparent hover:bg-primary-500/20 hover:border-primary-400/70' 
+                  : 'relative overflow-hidden'
+                }
+                transition-all duration-300 ease-out
+                hover:scale-[1.01] hover:shadow-sm hover:shadow-primary-500/20
+                active:scale-95
+                ${!started || !running ? `
+                  before:absolute before:inset-0 before:bg-gradient-to-r before:from-white/10 before:to-transparent 
+                  before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300 before:pointer-events-none
+                ` : ''}
+              `}
             >
+            
               {started ? (running ? 'Pause' : 'Resume') : 'Start'}
             </Button>
+
+            {/* <Button
 
             {/* <Button
               onPress={handlePause}
