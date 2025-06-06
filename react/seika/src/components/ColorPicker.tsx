@@ -6,7 +6,7 @@ interface ColorPickerProps {
   className?: string;
 }
 
-function capitalizeFirstLetter(val) {
+function capitalizeFirstLetter(val?: string) { // val is string
     return String(val).charAt(0).toUpperCase() + String(val).slice(1);
 }
 
