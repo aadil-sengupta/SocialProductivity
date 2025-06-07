@@ -6,6 +6,7 @@ import FormOption from "@/components/FormOption";
 import ColorPicker from "@/components/ColorPicker";
 import { useDarkMode } from "@/contexts/DarkModeContext";
 import { useAccentColorManager } from "@/contexts/AccentColorContext";
+import { useTimer } from "@/contexts/TimerContext";
 import { apiClient } from "@/services/apiClient";
 import WallpaperPicker from "@/components/WallpaperPicker";
 
@@ -28,6 +29,16 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
   
   const { isDarkMode, toggleTheme } = useDarkMode();
   const { accentColor } = useAccentColorManager();
+  const { 
+    pomodoroMinutes, 
+    shortBreakMinutes, 
+    longBreakMinutes, 
+    longBreakInterval,
+    setPomodoroMinutes,
+    setShortBreakMinutes,
+    setLongBreakMinutes,
+    setLongBreakInterval
+  } = useTimer();
 
   const categories = [
    {
@@ -123,14 +134,36 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
   const renderCategoryContent = () => {
     switch (selectedCategory) {
         case "profile":
-            return (
-            <div className="space-y-6">
-                <h3 className="text-primary text-lg font-semibold mb-6">
-                Profile Settings
+          return (
+            <div className="space-y-8">
+              <div className="text-center mb-8">
+                <h3 className="text-primary text-2xl font-bold mb-2">
+                  👤 Profile Settings
                 </h3>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Customize your profile and privacy settings
+                </p>
+              </div>
+              
+              {/* Profile Card */}
+              <div className={`p-8 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
+                isDarkMode ? 'bg-gradient-to-br from-gray-900/50 to-gray-800/30 border-gray-700 hover:border-accent/50' : 'bg-gradient-to-br from-gray-50/50 to-white/50 border-gray-200 hover:border-accent/50'
+              }`}>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
+                    <span className="text-2xl">🎭</span>
+                  </div>
+                  <div>
+                    <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                      Profile Information
+                    </h4>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Update your avatar and display name
+                    </p>
+                  </div>
+                </div>
                 
-                {/* Profile Photo and Name Section */}
-                <div className="flex flex-col items-center space-y-3 py-6">
+                <div className="flex flex-col items-center space-y-6">
                   {/* Profile Photo Picker */}
                   <div 
                     className="relative cursor-pointer group"
@@ -152,108 +185,686 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
                       input.click();
                     }}
                   >
-                    <img 
-                      src={profilePhoto} 
-                      alt="Profile" 
-                      className="w-20 h-20 object-cover transition-transform duration-200 group-hover:scale-105"
-                      style={{ borderRadius: '15px' }}
-                    />
+                    <div className="relative">
+                      <img 
+                        src={profilePhoto} 
+                        alt="Profile" 
+                        className="w-24 h-24 object-cover transition-all duration-300 group-hover:scale-105 shadow-lg"
+                        style={{ borderRadius: '20px' }}
+                      />
+                      <div className={`absolute inset-0 rounded-[20px] bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center`}>
+                        <span className="text-white text-sm font-medium">Change Photo</span>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Name Field */}
-                  <div className="w-full max-w-[200px]">
+                  <div className="w-full max-w-sm">
+                    <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      Display Name
+                    </label>
                     <input
                       type="text"
                       value={userName}
                       onChange={(e) => setUserName(e.target.value)}
-                      className={`w-full px-3 py-2 rounded-md border transition-all duration-200 text-center mt-1 text-large font-medium ${
+                      className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 text-center text-lg font-medium ${
                         isDarkMode 
-                          ? 'bg-gray-800 border-gray-700 text-white focus:border-accent' 
-                          : 'bg-white border-gray-300 text-gray-900 focus:border-accent'
-                      } focus:outline-none focus:ring-1 focus:ring-accent/30`}
+                          ? 'bg-gray-800/50 border-gray-700 text-white focus:border-accent focus:bg-gray-800' 
+                          : 'bg-white/50 border-gray-300 text-gray-900 focus:border-accent focus:bg-white'
+                      } focus:outline-none focus:ring-2 focus:ring-accent/20 hover:border-accent/50`}
                       placeholder="Enter your name"
                     />
                   </div>
                 </div>
+              </div>
 
-                <div className="space-y-4">
-                <FormOption
+              {/* Privacy Settings */}
+              <div className={`p-6 rounded-2xl border ${
+                isDarkMode ? 'bg-gray-900/30 border-gray-700' : 'bg-gray-50/30 border-gray-200'
+              }`}>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <span className="text-xl">🔒</span>
+                  </div>
+                  <div>
+                    <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                      Privacy Settings
+                    </h4>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Control what others can see about you
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormOption
                     title="Time Spent Studying"
                     description="Display time spent studying today to other users"
-                    isSelected={true} // Placeholder, implement actual logic
+                    isSelected={true}
                     onChange={() => {}}
-                />
-                <FormOption
+                  />
+                  <FormOption
                     title="Show Online Status"
                     description="Display your online status to other users"
-                    isSelected={false} // Placeholder, implement actual logic
+                    isSelected={false}
                     onChange={() => {}}
-                />
+                  />
                 </div>
+              </div>
             </div>
-            );
+          );
       case "appearance":
         return (
-          <div className="space-y-4">
-            <h3 className="text-primary text-lg font-semibold mb-4">
-              Appearance Settings
-            </h3>
-            <div className="space-y-4">
+          <div className="space-y-8">
+            <div className="text-center mb-8">
+              <h3 className="text-primary text-2xl font-bold mb-2">
+                🎨 Appearance Settings
+              </h3>
+              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Customize your visual experience and theme preferences
+              </p>
+            </div>
+            
+            {/* Theme Settings Card */}
+            <div className={`p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
+              isDarkMode ? 'bg-gray-900/50 border-gray-700 hover:border-accent/50' : 'bg-gray-50/50 border-gray-200 hover:border-accent/50'
+            }`}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
+                  <span className="text-2xl">🌙</span>
+                </div>
+                <div>
+                  <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                    Theme Mode
+                  </h4>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Switch between light and dark appearance
+                  </p>
+                </div>
+              </div>
+              
               <FormOption
                 title="Dark Mode"
-                description="Switch between light and dark theme"
+                description="Use dark theme for better visibility in low light"
                 isSelected={isDarkMode}
                 onChange={toggleTheme}
               />
+            </div>
+
+            {/* Wallpaper Settings Card */}
+            <div className={`p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
+              isDarkMode ? 'bg-gray-900/50 border-gray-700 hover:border-accent/50' : 'bg-gray-50/50 border-gray-200 hover:border-accent/50'
+            }`}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                  <span className="text-2xl">🖼️</span>
+                </div>
+                <div>
+                  <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                    Background
+                  </h4>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Choose your workspace background
+                  </p>
+                </div>
+              </div>
+              
               <WallpaperPicker />
+            </div>
+
+            {/* Color Scheme Card */}
+            <div className={`p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
+              isDarkMode ? 'bg-gray-900/50 border-gray-700 hover:border-accent/50' : 'bg-gray-50/50 border-gray-200 hover:border-accent/50'
+            }`}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-pink-500/10 flex items-center justify-center">
+                  <span className="text-2xl">🎯</span>
+                </div>
+                <div>
+                  <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                    Accent Color
+                  </h4>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Personalize your interface with custom colors
+                  </p>
+                </div>
+              </div>
+              
               <ColorPicker />
             </div>
           </div>
         );
-      
-      case "timer":
+       case "timer":
         return (
-          <div className="space-y-4">
-            <h3 className="text-primary text-lg font-semibold mb-4">
-              Timer Settings
-            </h3>
-            <div className="space-y-4">
-              <FormOption
-                title="Count Up"
-                description="Start the timer from 0 and count up to a specified duration"
-                isSelected={countUp}
-                onChange={setCountUp}
-              />
+          <div className="space-y-8">
+            <div className="text-center mb-8">
+              <h3 className="text-primary text-2xl font-bold mb-2">
+                ⏱️ Timer Settings
+              </h3>
+              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Customize your focus sessions and break intervals
+              </p>
+            </div>
+            
+            {/* Duration Settings Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Focus Duration Card */}
+              <div className={`p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
+                isDarkMode ? 'bg-gray-900/50 border-gray-700 hover:border-accent/50' : 'bg-gray-50/50 border-gray-200 hover:border-accent/50'
+              }`}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
+                    <span className="text-2xl">🎯</span>
+                  </div>
+                  <div>
+                    <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                      Focus Session
+                    </h4>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Deep work time
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-4">
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    size="lg"
+                    onPress={() => {
+                      if (pomodoroMinutes > 1) setPomodoroMinutes(pomodoroMinutes - 1);
+                    }}
+                    className={`${isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'} transition-colors`}
+                  >
+                    <span className="text-xl font-bold">−</span>
+                  </Button>
+                  
+                  <div className="flex-1 text-center">
+                    <div className={`text-4xl font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                      {pomodoroMinutes}
+                    </div>
+                    <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      minutes
+                    </div>
+                  </div>
+                  
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    size="lg"
+                    onPress={() => {
+                      if (pomodoroMinutes < 120) setPomodoroMinutes(pomodoroMinutes + 1);
+                    }}
+                    className={`${isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'} transition-colors`}
+                  >
+                    <span className="text-xl font-bold">+</span>
+                  </Button>
+                </div>
+                
+                <div className="mt-4 flex gap-2">
+                  {[15, 25, 45, 60].map((preset) => (
+                    <Button
+                      key={preset}
+                      size="sm"
+                      variant={pomodoroMinutes === preset ? "solid" : "bordered"}
+                      color={pomodoroMinutes === preset ? "primary" : "default"}
+                      onPress={() => setPomodoroMinutes(preset)}
+                      className={`flex-1 ${pomodoroMinutes === preset ? 'bg-accent text-accent-foreground' : ''}`}
+                    >
+                      {preset}m
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Short Break Card */}
+              <div className={`p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
+                isDarkMode ? 'bg-gray-900/50 border-gray-700 hover:border-accent/50' : 'bg-gray-50/50 border-gray-200 hover:border-accent/50'
+              }`}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
+                    <span className="text-2xl">☕</span>
+                  </div>
+                  <div>
+                    <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                      Short Break
+                    </h4>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Quick refresh
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-4">
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    size="lg"
+                    onPress={() => {
+                      if (shortBreakMinutes > 1) setShortBreakMinutes(shortBreakMinutes - 1);
+                    }}
+                    className={`${isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'} transition-colors`}
+                  >
+                    <span className="text-xl font-bold">−</span>
+                  </Button>
+                  
+                  <div className="flex-1 text-center">
+                    <div className={`text-4xl font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                      {shortBreakMinutes}
+                    </div>
+                    <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      minutes
+                    </div>
+                  </div>
+                  
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    size="lg"
+                    onPress={() => {
+                      if (shortBreakMinutes < 30) setShortBreakMinutes(shortBreakMinutes + 1);
+                    }}
+                    className={`${isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'} transition-colors`}
+                  >
+                    <span className="text-xl font-bold">+</span>
+                  </Button>
+                </div>
+                
+                <div className="mt-4 flex gap-2">
+                  {[3, 5, 10, 15].map((preset) => (
+                    <Button
+                      key={preset}
+                      size="sm"
+                      variant={shortBreakMinutes === preset ? "solid" : "bordered"}
+                      color={shortBreakMinutes === preset ? "primary" : "default"}
+                      onPress={() => setShortBreakMinutes(preset)}
+                      className={`flex-1 ${shortBreakMinutes === preset ? 'bg-accent text-accent-foreground' : ''}`}
+                    >
+                      {preset}m
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Long Break Card */}
+              <div className={`p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
+                isDarkMode ? 'bg-gray-900/50 border-gray-700 hover:border-accent/50' : 'bg-gray-50/50 border-gray-200 hover:border-accent/50'
+              }`}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                    <span className="text-2xl">🌴</span>
+                  </div>
+                  <div>
+                    <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                      Long Break
+                    </h4>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Extended rest
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-4">
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    size="lg"
+                    onPress={() => {
+                      if (longBreakMinutes > 1) setLongBreakMinutes(longBreakMinutes - 1);
+                    }}
+                    className={`${isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'} transition-colors`}
+                  >
+                    <span className="text-xl font-bold">−</span>
+                  </Button>
+                  
+                  <div className="flex-1 text-center">
+                    <div className={`text-4xl font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                      {longBreakMinutes}
+                    </div>
+                    <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      minutes
+                    </div>
+                  </div>
+                  
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    size="lg"
+                    onPress={() => {
+                      if (longBreakMinutes < 60) setLongBreakMinutes(longBreakMinutes + 1);
+                    }}
+                    className={`${isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'} transition-colors`}
+                  >
+                    <span className="text-xl font-bold">+</span>
+                  </Button>
+                </div>
+                
+                <div className="mt-4 flex gap-2">
+                  {[15, 20, 30, 45].map((preset) => (
+                    <Button
+                      key={preset}
+                      size="sm"
+                      variant={longBreakMinutes === preset ? "solid" : "bordered"}
+                      color={longBreakMinutes === preset ? "primary" : "default"}
+                      onPress={() => setLongBreakMinutes(preset)}
+                      className={`flex-1 ${longBreakMinutes === preset ? 'bg-accent text-accent-foreground' : ''}`}
+                    >
+                      {preset}m
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Break Interval Card */}
+              <div className={`p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
+                isDarkMode ? 'bg-gray-900/50 border-gray-700 hover:border-accent/50' : 'bg-gray-50/50 border-gray-200 hover:border-accent/50'
+              }`}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                    <span className="text-2xl">🔄</span>
+                  </div>
+                  <div>
+                    <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                      Break Cycle
+                    </h4>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Sessions before long break
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-4">
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    size="lg"
+                    onPress={() => {
+                      if (longBreakInterval > 2) setLongBreakInterval(longBreakInterval - 1);
+                    }}
+                    className={`${isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'} transition-colors`}
+                  >
+                    <span className="text-xl font-bold">−</span>
+                  </Button>
+                  
+                  <div className="flex-1 text-center">
+                    <div className={`text-4xl font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                      {longBreakInterval}
+                    </div>
+                    <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      sessions
+                    </div>
+                  </div>
+                  
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    size="lg"
+                    onPress={() => {
+                      if (longBreakInterval < 10) setLongBreakInterval(longBreakInterval + 1);
+                    }}
+                    className={`${isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'} transition-colors`}
+                  >
+                    <span className="text-xl font-bold">+</span>
+                  </Button>
+                </div>
+                
+                <div className="mt-4 flex gap-2">
+                  {[3, 4, 5, 6].map((preset) => (
+                    <Button
+                      key={preset}
+                      size="sm"
+                      variant={longBreakInterval === preset ? "solid" : "bordered"}
+                      color={longBreakInterval === preset ? "primary" : "default"}
+                      onPress={() => setLongBreakInterval(preset)}
+                      className={`flex-1 ${longBreakInterval === preset ? 'bg-accent text-accent-foreground' : ''}`}
+                    >
+                      {preset}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Presets Section */}
+            <div className={`p-6 rounded-2xl border ${
+              isDarkMode ? 'bg-gradient-to-r from-gray-900/30 to-gray-800/30 border-gray-700' : 'bg-gradient-to-r from-gray-50/30 to-gray-100/30 border-gray-200'
+            }`}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
+                  <span className="text-xl">⚡</span>
+                </div>
+                <div>
+                  <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                    Quick Presets
+                  </h4>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Popular timer configurations
+                  </p>
+                </div>
+              </div>
               
-              <FormOption
-                title="Auto Start Next Timer"
-                description="Automatically start the next timer session when current one ends"
-                isSelected={autoStart}
-                onChange={setAutoStart}
-              />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Button
+                  variant="bordered"
+                  size="lg"
+                  onPress={() => {
+                    setPomodoroMinutes(25);
+                    setShortBreakMinutes(5);
+                    setLongBreakMinutes(15);
+                    setLongBreakInterval(4);
+                  }}
+                  className={`h-20 flex-col gap-1 ${isDarkMode ? 'border-gray-600 hover:border-accent text-gray-300 hover:bg-gray-800/50' : 'border-gray-300 hover:border-accent text-gray-700 hover:bg-gray-50'} transition-all hover:scale-105`}
+                >
+                  <div className="font-bold text-lg">Classic Pomodoro</div>
+                  <div className="text-xs opacity-70">25 • 5 • 15 • 4</div>
+                </Button>
+                
+                <Button
+                  variant="bordered"
+                  size="lg"
+                  onPress={() => {
+                    setPomodoroMinutes(50);
+                    setShortBreakMinutes(10);
+                    setLongBreakMinutes(20);
+                    setLongBreakInterval(3);
+                  }}
+                  className={`h-20 flex-col gap-1 ${isDarkMode ? 'border-gray-600 hover:border-accent text-gray-300 hover:bg-gray-800/50' : 'border-gray-300 hover:border-accent text-gray-700 hover:bg-gray-50'} transition-all hover:scale-105`}
+                >
+                  <div className="font-bold text-lg">Deep Work</div>
+                  <div className="text-xs opacity-70">50 • 10 • 20 • 3</div>
+                </Button>
+                
+                <Button
+                  variant="bordered"
+                  size="lg"
+                  onPress={() => {
+                    setPomodoroMinutes(15);
+                    setShortBreakMinutes(3);
+                    setLongBreakMinutes(10);
+                    setLongBreakInterval(4);
+                  }}
+                  className={`h-20 flex-col gap-1 ${isDarkMode ? 'border-gray-600 hover:border-accent text-gray-300 hover:bg-gray-800/50' : 'border-gray-300 hover:border-accent text-gray-700 hover:bg-gray-50'} transition-all hover:scale-105`}
+                >
+                  <div className="font-bold text-lg">Sprint Mode</div>
+                  <div className="text-xs opacity-70">15 • 3 • 10 • 4</div>
+                </Button>
+              </div>
+            </div>
+
+            {/* Timer Behavior Section */}
+            <div className={`p-6 rounded-2xl border ${
+              isDarkMode ? 'bg-gray-900/30 border-gray-700' : 'bg-gray-50/30 border-gray-200'
+            }`}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
+                  <span className="text-xl">⚙️</span>
+                </div>
+                <div>
+                  <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                    Timer Behavior
+                  </h4>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Customize how your timer works
+                  </p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormOption
+                  title="Count Up Timer"
+                  description="Start from 0 and count up to the target duration"
+                  isSelected={countUp}
+                  onChange={setCountUp}
+                />
+                
+                <FormOption
+                  title="Auto Start Next Session"
+                  description="Automatically begin the next timer when current one ends"
+                  isSelected={autoStart}
+                  onChange={setAutoStart}
+                />
+              </div>
             </div>
           </div>
         );
       
       case "notifications":
         return (
-          <div className="space-y-4">
-            <h3 className="text-primary text-lg font-semibold mb-4">
-              Notification Settings
-            </h3>
-            <div className="space-y-4">
-              <FormOption
-                title="Sound Notifications"
-                description="Play sound when timer starts, pauses, and ends"
-                isSelected={soundNotifications}
-                onChange={setSoundNotifications}
-              />
+          <div className="space-y-8">
+            <div className="text-center mb-8">
+              <h3 className="text-primary text-2xl font-bold mb-2">
+                🔔 Notification Settings
+              </h3>
+              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Control how you receive updates and reminders
+              </p>
+            </div>
+
+            {/* Timer Notifications Card */}
+            <div className={`p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
+              isDarkMode ? 'bg-gray-900/50 border-gray-700 hover:border-accent/50' : 'bg-gray-50/50 border-gray-200 hover:border-accent/50'
+            }`}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                  <span className="text-2xl">⏰</span>
+                </div>
+                <div>
+                  <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                    Timer Alerts
+                  </h4>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Receive notifications when timers complete
+                  </p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <FormOption
+                  title="Desktop Notifications"
+                  description="Show notifications when timer sessions end"
+                  isSelected={desktopNotifications}
+                  onChange={setDesktopNotifications}
+                />
+                <FormOption
+                  title="Play Sound"
+                  description="Play alert sound when timer completes"
+                  isSelected={soundNotifications}
+                  onChange={setSoundNotifications}
+                />
+              </div>
+            </div>
+
+            {/* Break Reminders Card */}
+            <div className={`p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
+              isDarkMode ? 'bg-gray-900/50 border-gray-700 hover:border-accent/50' : 'bg-gray-50/50 border-gray-200 hover:border-accent/50'
+            }`}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
+                  <span className="text-2xl">🧘</span>
+                </div>
+                <div>
+                  <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                    Break Reminders
+                  </h4>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Get reminded to take healthy breaks
+                  </p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <FormOption
+                  title="Break Time Notifications"
+                  description="Remind me when it's time for a break"
+                  isSelected={true}
+                  onChange={() => {}}
+                />
+                <FormOption
+                  title="Stand Up Reminders"
+                  description="Gentle reminders to stretch and move"
+                  isSelected={false}
+                  onChange={() => {}}
+                />
+              </div>
+            </div>
+
+            {/* Focus Alerts Card */}
+            <div className={`p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
+              isDarkMode ? 'bg-gray-900/50 border-gray-700 hover:border-accent/50' : 'bg-gray-50/50 border-gray-200 hover:border-accent/50'
+            }`}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center">
+                  <span className="text-2xl">🎯</span>
+                </div>
+                <div>
+                  <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                    Focus Mode
+                  </h4>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Minimize distractions during work sessions
+                  </p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <FormOption
+                  title="Block Distracting Apps"
+                  description="Temporarily block social media and entertainment"
+                  isSelected={false}
+                  onChange={() => {}}
+                />
+                <FormOption
+                  title="Minimize Notifications"
+                  description="Reduce system notifications during focus time"
+                  isSelected={true}
+                  onChange={() => {}}
+                />
+              </div>
+            </div>
+
+            {/* Notification Schedule Card */}
+            <div className={`p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
+              isDarkMode ? 'bg-gray-900/50 border-gray-700 hover:border-accent/50' : 'bg-gray-50/50 border-gray-200 hover:border-accent/50'
+            }`}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                  <span className="text-2xl">📅</span>
+                </div>
+                <div>
+                  <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                    Schedule
+                  </h4>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Control when notifications are active
+                  </p>
+                </div>
+              </div>
               
               <FormOption
-                title="Desktop Notifications"
-                description="Show browser notifications for timer events"
-                isSelected={desktopNotifications}
-                onChange={setDesktopNotifications}
+                title="Do Not Disturb Hours"
+                description="Automatically disable notifications during specified hours"
+                isSelected={false}
+                onChange={() => {}}
               />
             </div>
           </div>

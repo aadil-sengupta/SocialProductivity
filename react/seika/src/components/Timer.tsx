@@ -89,6 +89,8 @@ const Timer: React.ForwardRefRenderFunction<TimerRef, TimerProps> = (
       }
       
       setTime(currentTime);
+      // set title to formatted time
+      document.title = `${formatTime(currentTime)} | Seika`;
       onTimeUpdate?.(currentTime);
       
       if (shouldEnd) {

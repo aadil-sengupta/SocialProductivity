@@ -7,12 +7,14 @@ interface AnimatedModeSwitcherProps {
   defaultSelected?: 'pomo' | 'free';
   onSelectionChange?: (mode: 'pomo' | 'free') => void;
   className?: string;
+  disabled?: boolean;
 }
 
 export default function AnimatedModeSwitcher({
   defaultSelected = 'pomo',
   onSelectionChange,
-  className = ''
+  className = '',
+  disabled
 }: AnimatedModeSwitcherProps) {
   const [selectedMode, setSelectedMode] = useState<'pomo' | 'free'>(defaultSelected);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -20,7 +22,7 @@ export default function AnimatedModeSwitcher({
   const { colorVariations } = useAccentColorManager();
 
   const handleModeSwitch = (newMode: 'pomo' | 'free') => {
-    if (newMode === selectedMode || isAnimating) return;
+    if (disabled || newMode === selectedMode || isAnimating) return;
     
     setIsAnimating(true);
     
@@ -43,7 +45,9 @@ export default function AnimatedModeSwitcher({
 
   return (
     <div 
-      className={`relative inline-flex items-center justify-center ${className}`}
+      className={`relative inline-flex items-center justify-center ${className} ${
+        disabled ? 'opacity-50 pointer-events-none' : ''
+      }`}
       style={dynamicStyle}
     >
       {/* Background glow effect - fixed sizing */}
@@ -106,14 +110,19 @@ export default function AnimatedModeSwitcher({
           {/* Pomodoro Mode */}
           <button
             onClick={() => handleModeSwitch('pomo')}
+            disabled={disabled}
             className={`
               flex items-center justify-center gap-2 px-5 py-2.5 rounded-full
               transition-all duration-300 ease-out
               text-base font-medium relative overflow-hidden
               min-w-[136px]
+              ${disabled 
+                ? 'cursor-not-allowed' 
+                : ''
+              }
               ${selectedMode === 'pomo' 
                 ? 'text-white z-10' 
-                : 'text-white/70 hover:text-white/90'
+                : `text-white/70 ${disabled ? '' : 'hover:text-white/90'}`
               }
             `}
             style={{
@@ -144,14 +153,19 @@ export default function AnimatedModeSwitcher({
           {/* Free Mode */}
           <button
             onClick={() => handleModeSwitch('free')}
+            disabled={disabled}
             className={`
               flex items-center justify-center gap-2 px-5 py-2.5 rounded-full
               transition-all duration-300 ease-out
               text-base font-medium relative overflow-hidden
               min-w-[136px]
+              ${disabled 
+                ? 'cursor-not-allowed' 
+                : ''
+              }
               ${selectedMode === 'free' 
                 ? 'text-white z-10' 
-                : 'text-white/70 hover:text-white/90'
+                : `text-white/70 ${disabled ? '' : 'hover:text-white/90'}`
               }
             `}
             style={{

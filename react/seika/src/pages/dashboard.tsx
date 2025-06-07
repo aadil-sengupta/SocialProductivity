@@ -7,9 +7,10 @@ import AnimatedIconButton from "@/components/AnimatedIconButton";
 import { IoSettingsOutline } from "react-icons/io5";
 import { useSearchParams } from "react-router-dom";
 import { useAccentColorManager } from "@/contexts/AccentColorContext";
-
+import { useTimer } from "@/contexts/TimerContext";
 import { IoRefreshSharp } from "react-icons/io5";
 import AnimatedModeSwitcher from "@/components/AnimatedModeSwitcher";
+import AnimatedTimerStatus from "@/components/AnimatedTimerStatus";
 
 export default function DashboardPage() {
   document.title = "Dashboard | Seika";
@@ -20,7 +21,20 @@ export default function DashboardPage() {
   const [running, setRunning] = useState(false);
   const [selectedTab, setSelectedTab] = useState("pomo");
   const [showBlur, setShowBlur] = useState(false);
+  const [timerMode, setTimerMode] = useState<'countup' | 'countdown'>('countdown'); // New timer mode state
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const { colorVariations } = useAccentColorManager();
+  const { 
+      pomodoroMinutes, 
+      mode: timerContextMode,
+      // shortBreakMinutes, 
+      // longBreakMinutes, 
+      // longBreakInterval,
+      // setPomodoroMinutes,
+      // setShortBreakMinutes,
+      // setLongBreakMinutes,
+      // setLongBreakInterval
+    } = useTimer();
 
   // Check if settings modal should be open based on URL
   const isSettingsOpen = searchParams.get('modal') === 'settings';
@@ -36,15 +50,56 @@ export default function DashboardPage() {
     }
   }, [showBlur]);
 
+  // Reset timer when pomodoro duration changes
+  useEffect(() => {
+    if (timerRef.current) {
+      timerRef.current.reset();
+      setStarted(false);
+      setRunning(false);
+    }
+  }, [pomodoroMinutes]);
+
+  // Reset document title when component unmounts or timer stops
+  useEffect(() => {
+    return () => {
+      document.title = "Dashboard | Seika";
+    };
+  }, []);
+
+  // Reset document title when timer is not running
+  useEffect(() => {
+    if (!running) {
+      document.title = "Dashboard | Seika";
+    }
+  }, [running]);
+
   const handleModeSwitch = (mode: string) => {
     setSelectedTab(mode);
     setShowBlur(true); // Trigger temporary blur
   };
 
   const handleStart = () => {
-    timerRef.current?.start(300); // Start 5-minute timer
-    setStarted(true);
-    setRunning(true);
+    setIsTransitioning(true);
+    
+    // Small delay to allow transition animation to begin
+    setTimeout(() => {
+      setStarted(true);
+      setRunning(true);
+      
+      // Use pomodoroMinutes for duration (convert to seconds)
+      const durationInSeconds = pomodoroMinutes * 60;
+      
+      if (timerMode === 'countdown') {
+        timerRef.current?.start(durationInSeconds); // Start countdown timer
+      } else {
+        timerRef.current?.start(durationInSeconds); // Start countup timer with end value
+      }
+      
+      // Reset transition state after animation completes
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 500);
+    }, 200);
   };
 
   const handlePause = () => {
@@ -55,6 +110,47 @@ export default function DashboardPage() {
   const handleResume = () => {
     timerRef.current?.resume();
     setRunning(true);
+  };
+
+  const handleEnd = () => {
+    setIsTransitioning(true);
+    
+    // Small delay to allow transition animation to begin
+    setTimeout(() => {
+      // Reset timer state
+      setStarted(false);
+      setRunning(false);
+      
+      // Reset the timer component
+      timerRef.current?.reset();
+      
+      // Show completion notification
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Timer Complete!', {
+          body: `Your ${selectedTab === 'pomo' ? 'focus session' : 'timer'} has finished.`,
+          icon: '/favicon.ico',
+          tag: 'timer-complete'
+        });
+      }
+      
+      // Play completion sound (if audio element exists)
+      const audio = document.getElementById('timer-complete-sound') as HTMLAudioElement;
+      if (audio) {
+        audio.play().catch(e => console.warn('Could not play completion sound:', e));
+      }
+      
+      // Optional: Show browser notification if page is not visible
+      if (document.hidden) {
+        document.title = '⏰ Timer Complete! - Seika';
+      }
+      
+      console.log('Timer completed successfully');
+      
+      // Reset transition state after animation completes
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 500);
+    }, 200);
   };
 
   const handleOpenSettings = () => {
@@ -73,19 +169,87 @@ export default function DashboardPage() {
     handleCloseSettings();
   };
 
+  // Map timer context mode to AnimatedTimerStatus mode
+  const getAnimatedStatusMode = () => {
+    if (selectedTab === 'free') return 'free';
+    // For pomodoro mode, use the context mode if available
+    switch (timerContextMode) {
+      case 'shortBreak': return 'shortBreak';
+      case 'longBreak': return 'longBreak';
+      case 'pomodoro':
+      default: return 'pomo';
+    }
+  };
+
   return (
     <MainLayout>
       <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10 z-20 h-full relative">
         <div className="justify-center flex flex-col">
           
-          <AnimatedModeSwitcher
-            defaultSelected="pomo"
-            onSelectionChange={handleModeSwitch}
+          {/* Animated transition container for mode switcher and timer status */}
+          <div className="relative h-16 mb-[-1.2rem] z-10 overflow-visible">
+            {/* Mode Switcher */}
+            <div 
+              className={`
+                absolute inset-0 transition-all duration-700 ease-in-out
+                ${!started && !isTransitioning 
+                  ? 'opacity-100 transform translate-y-0 scale-100' 
+                  : 'opacity-0 transform translate-y-4 scale-95 pointer-events-none'
+                }
+              `}
+            >
+              <AnimatedModeSwitcher
+                defaultSelected="pomo"
+                onSelectionChange={handleModeSwitch}
+                disabled={started || isTransitioning}
+                className="w-full"
+              />
+            </div>
+            
+            {/* Timer Status */}
+            <div 
+              className={`
+                absolute inset-0 transition-all duration-700 ease-in-out
+                ${started && !isTransitioning 
+                  ? 'opacity-100 transform translate-y-0 scale-100' 
+                  : 'opacity-0 transform -translate-y-4 scale-95 pointer-events-none'
+                }
+              `}
+            >
+              <AnimatedTimerStatus
+                mode={getAnimatedStatusMode()}
+                isRunning={running}
+                className="w-full"
+              />
+            </div>
+            
+            {/* Transition Effect Overlay */}
+            <div 
+              className={`
+                absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent
+                transition-all duration-500 ease-in-out pointer-events-none
+                ${isTransitioning 
+                  ? 'opacity-100 transform translate-x-full' 
+                  : 'opacity-0 transform -translate-x-full'
+                }
+              `}
+              style={{
+                background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%)',
+                animation: isTransitioning ? 'shimmer 0.8s ease-in-out' : 'none',
+              }}
+            />
+          </div>
 
-            className="mb-[-1.2rem] z-10"
+          <Timer 
+            ref={timerRef} 
+            displayClassName="font-bold text-white"  
+            style={{ fontFamily: "Marmelat Black", fontSize: "10.5rem", margin: '-2rem 0' }} 
+            displayStyle={{ textShadow: '0 4px 30px rgba(0, 0, 0, 0.35), 0 12px 30px rgba(0, 0, 0, 0.4)'}} 
+            countUp={timerMode === 'countup'}
+            initialTime={timerMode === 'countdown' ? pomodoroMinutes * 60 : 0}
+            endValue={timerMode === 'countup' ? pomodoroMinutes * 60 : undefined}
+            onTimerEnd={handleEnd}
           />
-
-          <Timer ref={timerRef} displayClassName="font-bold text-white"  style={{ fontFamily: "Marmelat Black", fontSize: "10.5rem", margin: '-2rem 0' }} displayStyle={{ textShadow: '0 4px 30px rgba(0, 0, 0, 0.35), 0 12px 30px rgba(0, 0, 0, 0.4)'}} />
 
           
 
@@ -96,6 +260,7 @@ export default function DashboardPage() {
               variant="settings"
               size={38}
             />
+            
             <AnimatedIconButton
               onClick={() => {
                 timerRef.current?.reset();
@@ -229,6 +394,18 @@ export default function DashboardPage() {
         onClose={handleCloseSettings}
         onSave={handleSaveSettings}
       />
+      
+      {/* CSS for shimmer animation */}
+      <style>{`
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+      `}</style>
     </MainLayout>
   );
 }
