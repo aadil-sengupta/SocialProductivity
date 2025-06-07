@@ -23,11 +23,19 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
   const [font, setFont] = React.useState("Poppins");
   const [wallpaper, setWallpaper] = React.useState("purple-gradient.jpg");
   const [selectedCategory, setSelectedCategory] = React.useState("appearance");
+  const [profilePhoto, setProfilePhoto] = React.useState("https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_6.png");
+  const [userName, setUserName] = React.useState("Aadil Sengupta");
   
   const { isDarkMode, toggleTheme } = useDarkMode();
   const { accentColor } = useAccentColorManager();
 
   const categories = [
+   {
+      id: "profile",
+      name: "Profile",
+      icon: "👤",
+      description: "User account settings"
+    },
     {
       id: "appearance",
       name: "Appearance",
@@ -58,6 +66,8 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
       const savedFont = localStorage.getItem('font');
       const savedWallpaper = localStorage.getItem('wallpaper');
       const savedCategory = localStorage.getItem('selectedSettingsCategory');
+      const savedProfilePhoto = localStorage.getItem('profilePhoto');
+      const savedUserName = localStorage.getItem('userName');
 
       if (savedCountUp !== null) setCountUp(savedCountUp === 'true');
       if (savedAutoStart !== null) setAutoStart(savedAutoStart === 'true');
@@ -66,6 +76,8 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
       if (savedFont) setFont(savedFont);
       if (savedWallpaper) setWallpaper(savedWallpaper);
       if (savedCategory) setSelectedCategory(savedCategory);
+      if (savedProfilePhoto) setProfilePhoto(savedProfilePhoto);
+      if (savedUserName) setUserName(savedUserName);
     };
 
     loadSettings();
@@ -100,12 +112,90 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
     localStorage.setItem('selectedSettingsCategory', selectedCategory);
   }, [selectedCategory]);
 
+  React.useEffect(() => {
+    localStorage.setItem('profilePhoto', profilePhoto);
+  }, [profilePhoto]);
+
+  React.useEffect(() => {
+    localStorage.setItem('userName', userName);
+  }, [userName]);
+
   const renderCategoryContent = () => {
     switch (selectedCategory) {
+        case "profile":
+            return (
+            <div className="space-y-6">
+                <h3 className="text-primary text-lg font-semibold mb-6">
+                Profile Settings
+                </h3>
+                
+                {/* Profile Photo and Name Section */}
+                <div className="flex flex-col items-center space-y-3 py-6">
+                  {/* Profile Photo Picker */}
+                  <div 
+                    className="relative cursor-pointer group"
+                    onClick={() => {
+                      const input = document.createElement('input');
+                      input.type = 'file';
+                      input.accept = 'image/*';
+                      input.onchange = (e) => {
+                        const file = (e.target as HTMLInputElement).files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (e) => {
+                            const result = e.target?.result as string;
+                            setProfilePhoto(result);
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      };
+                      input.click();
+                    }}
+                  >
+                    <img 
+                      src={profilePhoto} 
+                      alt="Profile" 
+                      className="w-20 h-20 object-cover transition-transform duration-200 group-hover:scale-105"
+                      style={{ borderRadius: '15px' }}
+                    />
+                  </div>
+
+                  {/* Name Field */}
+                  <div className="w-full max-w-[200px]">
+                    <input
+                      type="text"
+                      value={userName}
+                      onChange={(e) => setUserName(e.target.value)}
+                      className={`w-full px-3 py-2 rounded-md border transition-all duration-200 text-center mt-1 text-large font-medium ${
+                        isDarkMode 
+                          ? 'bg-gray-800 border-gray-700 text-white focus:border-accent' 
+                          : 'bg-white border-gray-300 text-gray-900 focus:border-accent'
+                      } focus:outline-none focus:ring-1 focus:ring-accent/30`}
+                      placeholder="Enter your name"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                <FormOption
+                    title="Time Spent Studying"
+                    description="Display time spent studying today to other users"
+                    isSelected={true} // Placeholder, implement actual logic
+                    onChange={() => {}}
+                />
+                <FormOption
+                    title="Show Online Status"
+                    description="Display your online status to other users"
+                    isSelected={false} // Placeholder, implement actual logic
+                    onChange={() => {}}
+                />
+                </div>
+            </div>
+            );
       case "appearance":
         return (
           <div className="space-y-4">
-            <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
+            <h3 className="text-primary text-lg font-semibold mb-4">
               Appearance Settings
             </h3>
             <div className="space-y-4">
@@ -124,7 +214,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
       case "timer":
         return (
           <div className="space-y-4">
-            <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
+            <h3 className="text-primary text-lg font-semibold mb-4">
               Timer Settings
             </h3>
             <div className="space-y-4">
@@ -148,7 +238,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
       case "notifications":
         return (
           <div className="space-y-4">
-            <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
+            <h3 className="text-primary text-lg font-semibold mb-4">
               Notification Settings
             </h3>
             <div className="space-y-4">
@@ -185,7 +275,9 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
         font,
         accentColor,
         wallpaper,
-        darkMode: isDarkMode
+        darkMode: isDarkMode,
+        profilePhoto,
+        userName
       });
       
       console.log("Settings saved successfully");
@@ -213,17 +305,17 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
         backdrop: "bg-black/50 backdrop-blur-sm",
       }}
     >
-      <ModalContent className={`${isDarkMode ? 'bg-black/95 border border-gray-800' : 'bg-white/95 border border-gray-100'} shadow-2xl backdrop-blur-md`}>
+      <ModalContent className={`${isDarkMode ? 'bg-black/95 border border-gray-800' : 'bg-white/95 border border-gray-100'} shadow-2xl backdrop-blur-md h-2/3 `}  >
         <ModalHeader className={`flex flex-col gap-1 ${isDarkMode ? 'border-b border-gray-800' : 'border-b border-gray-100'}`}>
-          <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          <h2 className="text-primary text-xl font-semibold">
             Settings
           </h2>
-          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          <p className="text-secondary text-sm">
             Customize your experience
           </p>
         </ModalHeader>
         <ModalBody className={`${isDarkMode ? 'text-white' : 'text-gray-800'} p-0`}>
-          <div className="flex h-96">
+          <div className="flex h-full">
             {/* Left Sidebar - Categories */}
             <div className={`w-64 ${isDarkMode ? 'bg-black/50 border-r border-gray-800' : 'bg-gray-50 border-r border-gray-200'} p-4`}>
               <h4 className={`text-sm font-medium mb-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} uppercase tracking-wide`}>

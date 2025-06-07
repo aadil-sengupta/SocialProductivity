@@ -138,6 +138,15 @@ body.dark {
   .ring-accent-800 { --tw-ring-color: var(--accent-800); }
   .ring-accent-900 { --tw-ring-color: var(--accent-900); }
   .ring-accent-DEFAULT { --tw-ring-color: var(--accent-DEFAULT); }
+  
+  /* Text colors that respond to dark/light mode */
+  .text-primary {
+    color: var(--text-color);
+  }
+  
+  .text-secondary {
+    color: var(--text-secondary-color);
+  }
 }
 
 /* Custom component styles that use accent colors */
