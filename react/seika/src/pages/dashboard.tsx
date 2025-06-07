@@ -174,7 +174,7 @@ export default function DashboardPage() {
                 ${selectedTab === 'pomo' ? 'opacity-100 transform translate-x-0' : 'opacity-0 transform translate-x-8'}
               `}
             >
-              <div className={`text-center rounded-lg px-4 py-2 transition-all duration-500 ease-out ${showBlur ? 'backdrop-blur-sm border border-white/20 bg-white/5' : 'backdrop-blur-none border border-white/5 bg-transparent'}`}>
+              <div className={`text-center rounded-lg px-4 py-2 transition-all duration-500 ease-out ${showBlur ? 'backdrop-blur-sm border border-white/10 bg-white/5' : 'backdrop-blur-none border border-transparent bg-transparent'}`}>
                 <div 
                   className="text-white text-lg font-medium" 
                   style={{ 
@@ -201,7 +201,7 @@ export default function DashboardPage() {
                 ${selectedTab === 'free' ? 'opacity-100 transform translate-x-0' : 'opacity-0 transform -translate-x-8'}
               `}
             >
-              <div className={`text-center rounded-lg px-4 py-2 transition-all duration-500 ease-out ${showBlur ? 'backdrop-blur-sm border border-white/20 bg-white/5' : 'backdrop-blur-none border border-white/10 bg-transparent'}`}>
+              <div className={`text-center rounded-lg px-4 py-2 transition-all duration-500 ease-out ${showBlur ? 'backdrop-blur-sm border border-white/10 bg-white/5' : 'backdrop-blur-none border border-transparent bg-transparent'}`}>
                 <div 
                   className="text-white text-lg font-medium" 
                   style={{ 
