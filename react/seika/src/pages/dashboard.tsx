@@ -22,7 +22,7 @@ export default function DashboardPage() {
   const [running, setRunning] = useState(false);
   const [selectedTab, setSelectedTab] = useState("pomo");
   const [showBlur, setShowBlur] = useState(false);
-  const [timerMode, setTimerMode] = useState<'countup' | 'countdown'>('countdown'); // New timer mode state
+  const [timerMode] = useState<'countup' | 'countdown'>('countdown'); // Timer mode state (updater unused)
   const [isTransitioning, setIsTransitioning] = useState(false);
   const { colorVariations } = useAccentColorManager();
   const { 

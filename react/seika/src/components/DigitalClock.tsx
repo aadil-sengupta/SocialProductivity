@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useDarkMode } from '@/contexts/DarkModeContext';
 import { useProfile } from '@/contexts/ProfileContext';
 
 interface DigitalClockProps {
@@ -16,7 +15,6 @@ export default function DigitalClock({
   format24h = false 
 }: DigitalClockProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const { isDarkMode } = useDarkMode();
   const { selectedTimezone } = useProfile();
 
   useEffect(() => {
