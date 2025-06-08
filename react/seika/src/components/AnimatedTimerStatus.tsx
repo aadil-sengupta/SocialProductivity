@@ -4,12 +4,14 @@ import { useAccentColorManager } from '@/contexts/AccentColorContext';
 interface AnimatedTimerStatusProps {
   mode: 'pomo' | 'free' | 'shortBreak' | 'longBreak';
   isRunning: boolean;
+  progress?: number; // Progress percentage (0-100) for the progress bar
   className?: string;
 }
 
 const AnimatedTimerStatus: React.FC<AnimatedTimerStatusProps> = ({
   mode,
   isRunning,
+  progress = 0,
   className = ''
 }) => {
   const { colorVariations } = useAccentColorManager();
@@ -161,15 +163,28 @@ const AnimatedTimerStatus: React.FC<AnimatedTimerStatusProps> = ({
           </div>
         </div>
 
-        {/* Progress bar animation (subtle) */}
+        {/* Progress bar - real progress for pomo mode, animated for free mode */}
         {isRunning && (
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10 overflow-hidden">
-            <div 
-              className="h-full animate-slide-progress"
-              style={{
-                background: `linear-gradient(90deg, transparent, ${config.color}60, transparent)`,
-              }}
-            />
+            {mode === 'free' ? (
+              // Free mode: animated sliding bar (no real progress)
+              <div 
+                className="h-full animate-slide-progress"
+                style={{
+                  background: `linear-gradient(90deg, transparent, ${config.color}60, transparent)`,
+                }}
+              />
+            ) : (
+              // Pomodoro modes: real progress bar
+              <div 
+                className="h-full transition-all duration-1000 ease-out"
+                style={{
+                  width: `${progress}%`,
+                  background: `linear-gradient(90deg, ${config.color}80, ${config.color}60)`,
+                  boxShadow: `0 0 4px ${config.color}40`,
+                }}
+              />
+            )}
           </div>
         )}
       </div>

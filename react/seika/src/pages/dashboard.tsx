@@ -9,6 +9,7 @@ import { useSearchParams } from "react-router-dom";
 import { useAccentColorManager } from "@/contexts/AccentColorContext";
 import { useTimer } from "@/contexts/TimerContext";
 import { IoRefreshSharp } from "react-icons/io5";
+import { MdFullscreen, MdFullscreenExit } from "react-icons/md";
 import AnimatedModeSwitcher from "@/components/AnimatedModeSwitcher";
 import AnimatedTimerStatus from "@/components/AnimatedTimerStatus";
 import DigitalClock from "@/components/DigitalClock";
@@ -16,14 +17,17 @@ import DigitalClock from "@/components/DigitalClock";
 export default function DashboardPage() {
   document.title = "Dashboard | Seika";
 
-  const timerRef = useRef<TimerRef>(null);
+  const pomoTimerRef = useRef<TimerRef>(null);
+  const freeTimerRef = useRef<TimerRef>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [started, setStarted] = useState(false);
   const [running, setRunning] = useState(false);
   const [selectedTab, setSelectedTab] = useState("pomo");
   const [showBlur, setShowBlur] = useState(false);
-  const [timerMode] = useState<'countup' | 'countdown'>('countdown'); // Timer mode state (updater unused)
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [totalTime, setTotalTime] = useState(0);
   const { colorVariations } = useAccentColorManager();
   const { 
       pomodoroMinutes, 
@@ -40,6 +44,23 @@ export default function DashboardPage() {
   // Check if settings modal should be open based on URL
   const isSettingsOpen = searchParams.get('modal') === 'settings';
 
+  // Helper function to get the active timer ref based on selected mode
+  const getActiveTimerRef = () => {
+    return selectedTab === 'pomo' ? pomoTimerRef : freeTimerRef;
+  };
+
+  // Handle fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
   // Handle temporary blur effect when mode is switched
   useEffect(() => {
     if (showBlur) {
@@ -53,10 +74,12 @@ export default function DashboardPage() {
 
   // Reset timer when pomodoro duration changes
   useEffect(() => {
-    if (timerRef.current) {
-      timerRef.current.reset();
+    if (pomoTimerRef.current) {
+      pomoTimerRef.current.reset();
       setStarted(false);
       setRunning(false);
+      setCurrentTime(0);
+      setTotalTime(0);
     }
   }, [pomodoroMinutes]);
 
@@ -74,7 +97,24 @@ export default function DashboardPage() {
     }
   }, [running]);
 
+  // Handle time updates from timers
+  const handleTimeUpdate = (time: number) => {
+    setCurrentTime(time);
+  };
+
   const handleModeSwitch = (mode: string) => {
+    // Reset both timers when switching modes to ensure clean state
+    if (started || running) {
+      pomoTimerRef.current?.pause();
+      pomoTimerRef.current?.reset();
+      freeTimerRef.current?.pause();
+      freeTimerRef.current?.reset();
+      setStarted(false);
+      setRunning(false);
+      setCurrentTime(0);
+      setTotalTime(0);
+    }
+    
     setSelectedTab(mode);
     setShowBlur(true); // Trigger temporary blur
   };
@@ -87,13 +127,15 @@ export default function DashboardPage() {
       setStarted(true);
       setRunning(true);
       
-      // Use pomodoroMinutes for duration (convert to seconds)
-      const durationInSeconds = pomodoroMinutes * 60;
-      
-      if (timerMode === 'countdown') {
-        timerRef.current?.start(durationInSeconds); // Start countdown timer
+      if (selectedTab === 'pomo') {
+        // Use pomodoroMinutes for duration (convert to seconds)
+        const durationInSeconds = pomodoroMinutes * 60;
+        setTotalTime(durationInSeconds);
+        getActiveTimerRef().current?.start(durationInSeconds); // Start countdown timer
       } else {
-        timerRef.current?.start(durationInSeconds); // Start countup timer with end value
+        // Free mode - start count up timer without duration
+        setTotalTime(0); // No total time for free mode
+        getActiveTimerRef().current?.start(); // Start count up timer
       }
       
       // Reset transition state after animation completes
@@ -104,12 +146,12 @@ export default function DashboardPage() {
   };
 
   const handlePause = () => {
-    timerRef.current?.pause();
+    getActiveTimerRef().current?.pause();
     setRunning(false);
   };
 
   const handleResume = () => {
-    timerRef.current?.resume();
+    getActiveTimerRef().current?.resume();
     setRunning(true);
   };
 
@@ -121,9 +163,11 @@ export default function DashboardPage() {
       // Reset timer state
       setStarted(false);
       setRunning(false);
+      setCurrentTime(0);
+      setTotalTime(0);
       
       // Reset the timer component
-      timerRef.current?.reset();
+      getActiveTimerRef().current?.reset();
       
       // Show completion notification
       if ('Notification' in window && Notification.permission === 'granted') {
@@ -170,6 +214,18 @@ export default function DashboardPage() {
     handleCloseSettings();
   };
 
+  const handleFullscreenToggle = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.warn('Could not enable fullscreen:', err);
+      });
+    } else {
+      document.exitFullscreen().catch(err => {
+        console.warn('Could not exit fullscreen:', err);
+      });
+    }
+  };
+
   // Map timer context mode to AnimatedTimerStatus mode
   const getAnimatedStatusMode = () => {
     if (selectedTab === 'free') return 'free';
@@ -182,8 +238,28 @@ export default function DashboardPage() {
     }
   };
 
+  // Calculate progress percentage for progress bar
+  const getProgress = () => {
+    if (selectedTab === 'free' || totalTime === 0) {
+      return 0; // No progress for free mode
+    }
+    // For countdown timer: progress goes from 0% to 100% as time decreases
+    return Math.max(0, Math.min(100, ((totalTime - currentTime) / totalTime) * 100));
+  };
+
   return (
     <MainLayout>
+      {/* Fullscreen Button - Top Left Corner */}
+      <div className="absolute top-6 left-6 z-30">
+        <AnimatedIconButton
+          onClick={handleFullscreenToggle}
+          icon={isFullscreen ? <MdFullscreenExit /> : <MdFullscreen />}
+          variant="settings"
+          size={38}
+          transparent={true}
+        />
+      </div>
+
       {/* Digital Clock - Top Right Corner */}
       <div className="absolute top-6 right-8 z-30">
         <DigitalClock 
@@ -230,7 +306,8 @@ export default function DashboardPage() {
               <AnimatedTimerStatus
                 mode={getAnimatedStatusMode()}
                 isRunning={running}
-                className="w-full"
+                progress={getProgress()}
+                className="w-full -translate-y-5 "
               />
             </div>
             
@@ -251,20 +328,55 @@ export default function DashboardPage() {
             />
           </div>
 
-          <Timer 
-            ref={timerRef} 
-            displayClassName="font-bold text-white"  
-            style={{ fontFamily: "Marmelat Black", fontSize: "10.5rem", margin: '-2rem 0' }} 
-            displayStyle={{ textShadow: '0 4px 30px rgba(0, 0, 0, 0.35), 0 12px 30px rgba(0, 0, 0, 0.4)'}} 
-            countUp={timerMode === 'countup'}
-            initialTime={timerMode === 'countdown' ? pomodoroMinutes * 60 : 0}
-            endValue={timerMode === 'countup' ? pomodoroMinutes * 60 : undefined}
-            onTimerEnd={handleEnd}
-          />
+          {/* Animated Timer Container - switches between Pomodoro and Free timers */}
+          <div className="relative" style={{ height: '12rem', marginTop: '-0.8rem', marginBottom: '-1.3rem' }}>
+            {/* Pomodoro Timer */}
+            <div 
+              className={`
+                absolute inset-0 transition-all duration-700 ease-in-out flex items-center justify-center
+                ${selectedTab === 'pomo' 
+                  ? 'opacity-100 transform translate-x-0 scale-100' 
+                  : 'opacity-0 transform translate-x-8 scale-95 pointer-events-none'
+                }
+              `}
+            >
+              <Timer 
+                ref={pomoTimerRef} 
+                displayClassName="font-bold text-white"  
+                style={{ fontFamily: "Marmelat Black", fontSize: "10.5rem" }} 
+                displayStyle={{ textShadow: '0 4px 30px rgba(0, 0, 0, 0.35), 0 12px 30px rgba(0, 0, 0, 0.4)'}} 
+                countUp={false}
+                initialTime={pomodoroMinutes * 60}
+                onTimerEnd={handleEnd}
+                onTimeUpdate={handleTimeUpdate}
+              />
+            </div>
+            
+            {/* Free Timer */}
+            <div 
+              className={`
+                absolute inset-0 transition-all duration-700 ease-in-out flex items-center justify-center
+                ${selectedTab === 'free' 
+                  ? 'opacity-100 transform translate-x-0 scale-100' 
+                  : 'opacity-0 transform -translate-x-8 scale-95 pointer-events-none'
+                }
+              `}
+            >
+              <Timer 
+                ref={freeTimerRef} 
+                displayClassName="font-bold text-white"  
+                style={{ fontFamily: "Marmelat Black", fontSize: "10.5rem" }} 
+                displayStyle={{ textShadow: '0 4px 30px rgba(0, 0, 0, 0.35), 0 12px 30px rgba(0, 0, 0, 0.4)'}} 
+                countUp={true}
+                initialTime={0}
+                endValue={999999} // Very large number for unlimited count-up
+                onTimerEnd={() => {}} // Free timer doesn't auto-end
+                onTimeUpdate={handleTimeUpdate}
+              />
+            </div>
+          </div>
 
-          
-
-          <div className="flex gap-4 mt-[-1.5rem] justify-center items-center">
+          <div className="flex gap-4 justify-center items-center">
             <AnimatedIconButton
               onClick={handleOpenSettings}
               icon={<IoSettingsOutline />}
@@ -274,9 +386,11 @@ export default function DashboardPage() {
             
             <AnimatedIconButton
               onClick={() => {
-                timerRef.current?.reset();
+                getActiveTimerRef().current?.reset();
                 setStarted(false);
                 setRunning(false);
+                setCurrentTime(0);
+                setTotalTime(0);
               }}
               icon={<IoRefreshSharp />}
               variant="reset"

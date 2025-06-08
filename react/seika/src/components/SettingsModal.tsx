@@ -18,7 +18,6 @@ interface SettingsModalProps {
 }
 
 export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModalProps) {
-  const [countUp, setCountUp] = React.useState(true);
   const [autoStart, setAutoStart] = React.useState(false);
   const [soundNotifications, setSoundNotifications] = React.useState(true);
   const [desktopNotifications, setDesktopNotifications] = React.useState(false);
@@ -137,7 +136,6 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
   // Load settings from localStorage on component mount
   React.useEffect(() => {
     const loadSettings = () => {
-      const savedCountUp = localStorage.getItem('countUp');
       const savedAutoStart = localStorage.getItem('autoStart');
       const savedSoundNotifications = localStorage.getItem('soundNotifications');
       const savedDesktopNotifications = localStorage.getItem('desktopNotifications');
@@ -145,7 +143,6 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
       const savedWallpaper = localStorage.getItem('wallpaper');
       const savedCategory = localStorage.getItem('selectedSettingsCategory');
 
-      if (savedCountUp !== null) setCountUp(savedCountUp === 'true');
       if (savedAutoStart !== null) setAutoStart(savedAutoStart === 'true');
       if (savedSoundNotifications !== null) setSoundNotifications(savedSoundNotifications === 'true');
       if (savedDesktopNotifications !== null) setDesktopNotifications(savedDesktopNotifications === 'true');
@@ -158,10 +155,6 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
   }, []);
 
   // Effects to update localStorage when state changes
-  React.useEffect(() => {
-    localStorage.setItem('countUp', countUp.toString());
-  }, [countUp]);
-
   React.useEffect(() => {
     localStorage.setItem('autoStart', autoStart.toString());
   }, [autoStart]);
@@ -854,13 +847,6 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormOption
-                  title="Count Up Timer"
-                  description="Start from 0 and count up to the target duration"
-                  isSelected={countUp}
-                  onChange={setCountUp}
-                />
-                
-                <FormOption
                   title="Auto Start Next Session"
                   description="Automatically begin the next timer when current one ends"
                   isSelected={autoStart}
@@ -1022,7 +1008,6 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
     try {
       // POST settings to API
       await apiClient.post('/users/settings/', {
-        countUp,
         autoStart,
         // soundNotifications,
         // desktopNotifications,
@@ -1060,7 +1045,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
         backdrop: "bg-black/50 backdrop-blur-sm",
       }}
     >
-      <ModalContent className={`${isDarkMode ? 'bg-black/95 border border-gray-800' : 'bg-white/95 border border-gray-100'} shadow-2xl backdrop-blur-md h-5/6 `}  >
+      <ModalContent className={`${isDarkMode ? 'bg-black/95 border border-gray-800' : 'bg-white/95 border border-gray-100'} shadow-2xl backdrop-blur-md h-2/3 `}  >
         <ModalHeader className={`flex flex-col gap-1 ${isDarkMode ? 'border-b border-gray-800' : 'border-b border-gray-100'}`}>
           <h2 className="text-primary text-xl font-semibold">
             Settings
