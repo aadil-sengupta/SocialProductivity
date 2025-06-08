@@ -11,6 +11,7 @@ import { useTimer } from "@/contexts/TimerContext";
 import { IoRefreshSharp } from "react-icons/io5";
 import AnimatedModeSwitcher from "@/components/AnimatedModeSwitcher";
 import AnimatedTimerStatus from "@/components/AnimatedTimerStatus";
+import DigitalClock from "@/components/DigitalClock";
 
 export default function DashboardPage() {
   document.title = "Dashboard | Seika";
@@ -183,6 +184,16 @@ export default function DashboardPage() {
 
   return (
     <MainLayout>
+      {/* Digital Clock - Top Right Corner */}
+      <div className="absolute top-6 right-8 z-30">
+        <DigitalClock 
+          className=""
+          showDate={true}
+          showSeconds={false}
+          format24h={false}
+        />
+      </div>
+
       <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10 z-20 h-full relative">
         <div className="justify-center flex flex-col">
           
@@ -354,7 +365,7 @@ export default function DashboardPage() {
                     textShadow: '0 0 15px rgba(0,0,0,0.7), 0 2px 6px rgba(0,0,0,0.5)' 
                   }}
                 >
-                  25 minutes of focused work
+                  {`${pomodoroMinutes} minutes of focused work`}
                 </div>
               </div>
             </div>

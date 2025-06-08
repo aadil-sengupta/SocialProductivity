@@ -5,6 +5,7 @@ import { DarkModeProvider } from "./contexts/DarkModeContext";
 import { AccentColorProvider } from "@/contexts/AccentColorContext";
 import { WallpaperProvider } from "@/contexts/WallpaperContext";
 import { TimerProvider } from "@/contexts/TimerContext";
+import { ProfileProvider } from "@/contexts/ProfileContext";
 
 declare module "@react-types/shared" {
   interface RouterConfig {
@@ -20,9 +21,11 @@ export function Provider({ children }: { children: React.ReactNode }) {
       <AccentColorProvider>
         <WallpaperProvider>
           <TimerProvider>
-            <HeroUIProvider navigate={navigate} useHref={useHref}>
-              {children}
-            </HeroUIProvider>
+            <ProfileProvider>
+              <HeroUIProvider navigate={navigate} useHref={useHref}>
+                {children}
+              </HeroUIProvider>
+            </ProfileProvider>
           </TimerProvider>
         </WallpaperProvider>
       </AccentColorProvider>

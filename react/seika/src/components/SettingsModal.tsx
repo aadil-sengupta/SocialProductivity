@@ -7,6 +7,7 @@ import ColorPicker from "@/components/ColorPicker";
 import { useDarkMode } from "@/contexts/DarkModeContext";
 import { useAccentColorManager } from "@/contexts/AccentColorContext";
 import { useTimer } from "@/contexts/TimerContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { apiClient } from "@/services/apiClient";
 import WallpaperPicker from "@/components/WallpaperPicker";
 
@@ -23,9 +24,75 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
   const [desktopNotifications, setDesktopNotifications] = React.useState(false);
   const [font, setFont] = React.useState("Poppins");
   const [wallpaper, setWallpaper] = React.useState("purple-gradient.jpg");
-  const [selectedCategory, setSelectedCategory] = React.useState("appearance");
-  const [profilePhoto, setProfilePhoto] = React.useState("https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_6.png");
-  const [userName, setUserName] = React.useState("Aadil Sengupta");
+  const [selectedCategory, setSelectedCategory] = React.useState("profile");
+  const [showAvatarPicker, setShowAvatarPicker] = React.useState(false);
+  
+  // Use ProfileContext for profile-related state
+  const {
+    profilePhoto,
+    setProfilePhoto,
+    userName,
+    setUserName,
+    selectedTimezone,
+    setSelectedTimezone,
+    privacySettings,
+    updatePrivacySetting,
+    selectedAvatarCategory,
+    setSelectedAvatarCategory
+  } = useProfile();
+  
+  // Avatar categories and data
+  const avatarCategories = [
+    {
+      id: "vibrent",
+      name: "Vibrent",
+      emoji: "✨",
+      description: "Colorful and vibrant avatars",
+      count: 27
+    },
+    {
+      id: "upstream",
+      name: "Upstream",
+      emoji: "🌊",
+      description: "Modern professional avatars",
+      count: 22
+    },
+    {
+      id: "toon",
+      name: "Toon",
+      emoji: "🎭",
+      description: "Fun cartoon-style avatars",
+      count: 10
+    },
+    {
+      id: "teams",
+      name: "Teams",
+      emoji: "👥",
+      description: "Team collaboration style",
+      count: 9
+    },
+    {
+      id: "3d",
+      name: "3D",
+      emoji: "🎯",
+      description: "Three-dimensional avatars",
+      count: 5
+    }
+  ];
+
+  // Generate avatar lists for each category
+  const getAvatarsForCategory = (category: string) => {
+    const counts = {
+      vibrent: 27,
+      upstream: 22,
+      toon: 10,
+      teams: 9,
+      "3d": 5
+    };
+    
+    const count = counts[category as keyof typeof counts] || 0;
+    return Array.from({ length: count }, (_, i) => `/avatars/${category}_${i + 1}.png`);
+  };
   
   const { isDarkMode, toggleTheme } = useDarkMode();
   const { accentColor } = useAccentColorManager();
@@ -77,8 +144,6 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
       const savedFont = localStorage.getItem('font');
       const savedWallpaper = localStorage.getItem('wallpaper');
       const savedCategory = localStorage.getItem('selectedSettingsCategory');
-      const savedProfilePhoto = localStorage.getItem('profilePhoto');
-      const savedUserName = localStorage.getItem('userName');
 
       if (savedCountUp !== null) setCountUp(savedCountUp === 'true');
       if (savedAutoStart !== null) setAutoStart(savedAutoStart === 'true');
@@ -87,8 +152,6 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
       if (savedFont) setFont(savedFont);
       if (savedWallpaper) setWallpaper(savedWallpaper);
       if (savedCategory) setSelectedCategory(savedCategory);
-      if (savedProfilePhoto) setProfilePhoto(savedProfilePhoto);
-      if (savedUserName) setUserName(savedUserName);
     };
 
     loadSettings();
@@ -123,14 +186,6 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
     localStorage.setItem('selectedSettingsCategory', selectedCategory);
   }, [selectedCategory]);
 
-  React.useEffect(() => {
-    localStorage.setItem('profilePhoto', profilePhoto);
-  }, [profilePhoto]);
-
-  React.useEffect(() => {
-    localStorage.setItem('userName', userName);
-  }, [userName]);
-
   const renderCategoryContent = () => {
     switch (selectedCategory) {
         case "profile":
@@ -149,7 +204,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
               <div className={`p-8 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
                 isDarkMode ? 'bg-gradient-to-br from-gray-900/50 to-gray-800/30 border-gray-700 hover:border-accent/50' : 'bg-gradient-to-br from-gray-50/50 to-white/50 border-gray-200 hover:border-accent/50'
               }`}>
-                <div className="flex items-center gap-4 mb-6">
+                <div className="flex items-center gap-4 mb-8">
                   <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
                     <span className="text-2xl">🎭</span>
                   </div>
@@ -165,37 +220,29 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
                 
                 <div className="flex flex-col items-center space-y-6">
                   {/* Profile Photo Picker */}
-                  <div 
-                    className="relative cursor-pointer group"
-                    onClick={() => {
-                      const input = document.createElement('input');
-                      input.type = 'file';
-                      input.accept = 'image/*';
-                      input.onchange = (e) => {
-                        const file = (e.target as HTMLInputElement).files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onload = (e) => {
-                            const result = e.target?.result as string;
-                            setProfilePhoto(result);
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      };
-                      input.click();
-                    }}
-                  >
-                    <div className="relative">
-                      <img 
-                        src={profilePhoto} 
-                        alt="Profile" 
-                        className="w-24 h-24 object-cover transition-all duration-300 group-hover:scale-105 shadow-lg"
-                        style={{ borderRadius: '20px' }}
-                      />
-                      <div className={`absolute inset-0 rounded-[20px] bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center`}>
-                        <span className="text-white text-sm font-medium">Change Photo</span>
+                  <div className="flex flex-col items-center space-y-4">
+                    <div 
+                      className="relative cursor-pointer group"
+                      onClick={() => setShowAvatarPicker(true)}
+                    >
+                      <div className="relative">
+                        <img 
+                          src={profilePhoto} 
+                          alt="Profile" 
+                          className="w-24 h-24 object-cover transition-all duration-300 group-hover:scale-105 shadow-lg"
+                          style={{ borderRadius: '20px' }}
+                        />
+                        <div className={`absolute inset-0 rounded-[20px] bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center`}>
+                          <span className="text-white text-sm font-medium text-center">Choose Avatar</span>
+                        </div>
+                        <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-accent rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-200">
+                          <span className="text-white text-lg">✨</span>
+                        </div>
                       </div>
                     </div>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} text-center`}>
+                      Click to choose from amazing avatars
+                    </p>
                   </div>
 
                   {/* Name Field */}
@@ -240,15 +287,111 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
                   <FormOption
                     title="Time Spent Studying"
                     description="Display time spent studying today to other users"
-                    isSelected={true}
-                    onChange={() => {}}
+                    isSelected={privacySettings.showTimeSpentStudying}
+                    onChange={(value) => updatePrivacySetting('showTimeSpentStudying', value)}
                   />
                   <FormOption
                     title="Show Online Status"
                     description="Display your online status to other users"
-                    isSelected={false}
-                    onChange={() => {}}
+                    isSelected={privacySettings.showOnlineStatus}
+                    onChange={(value) => updatePrivacySetting('showOnlineStatus', value)}
                   />
+                </div>
+              </div>
+
+              {/* Timezone Settings */}
+              <div className={`p-6 rounded-2xl border ${
+                isDarkMode ? 'bg-gray-900/30 border-gray-700' : 'bg-gray-50/30 border-gray-200'
+              }`}>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+                    <span className="text-xl">🌍</span>
+                  </div>
+                  <div>
+                    <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                      Timezone Settings
+                    </h4>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Set your preferred timezone for scheduling
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-green-500/5 to-blue-500/5">
+                    <div>
+                      <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        Current Time
+                      </p>
+                      <p className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {new Date().toLocaleTimeString('en-US', { 
+                          timeZone: selectedTimezone,
+                          hour12: true,
+                          hour: 'numeric',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        Selected Timezone
+                      </p>
+                      <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {selectedTimezone.replace('_', ' ')}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <select
+                    value={selectedTimezone}
+                    onChange={(e) => setSelectedTimezone(e.target.value)}
+                    className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 ${
+                      isDarkMode 
+                        ? 'bg-gray-800/50 border-gray-700 text-white focus:border-accent focus:bg-gray-800' 
+                        : 'bg-white/50 border-gray-300 text-gray-900 focus:border-accent focus:bg-white'
+                    } focus:outline-none focus:ring-2 focus:ring-accent/20 hover:border-accent/50`}
+                  >
+                    <optgroup label="Popular Timezones">
+                      <option value="America/New_York">Eastern Time (New York)</option>
+                      <option value="America/Chicago">Central Time (Chicago)</option>
+                      <option value="America/Denver">Mountain Time (Denver)</option>
+                      <option value="America/Los_Angeles">Pacific Time (Los Angeles)</option>
+                      <option value="Europe/London">GMT (London)</option>
+                      <option value="Europe/Paris">CET (Paris)</option>
+                      <option value="Europe/Berlin">CET (Berlin)</option>
+                      <option value="Asia/Tokyo">JST (Tokyo)</option>
+                      <option value="Asia/Shanghai">CST (Shanghai)</option>
+                      <option value="Asia/Kolkata">IST (India)</option>
+                      <option value="Australia/Sydney">AEST (Sydney)</option>
+                    </optgroup>
+                    <optgroup label="Americas">
+                      <option value="America/Toronto">Eastern Time (Toronto)</option>
+                      <option value="America/Vancouver">Pacific Time (Vancouver)</option>
+                      <option value="America/Mexico_City">Central Time (Mexico City)</option>
+                      <option value="America/Sao_Paulo">BRT (São Paulo)</option>
+                      <option value="America/Argentina/Buenos_Aires">ART (Buenos Aires)</option>
+                    </optgroup>
+                    <optgroup label="Europe">
+                      <option value="Europe/Madrid">CET (Madrid)</option>
+                      <option value="Europe/Rome">CET (Rome)</option>
+                      <option value="Europe/Amsterdam">CET (Amsterdam)</option>
+                      <option value="Europe/Stockholm">CET (Stockholm)</option>
+                      <option value="Europe/Moscow">MSK (Moscow)</option>
+                    </optgroup>
+                    <optgroup label="Asia & Pacific">
+                      <option value="Asia/Dubai">GST (Dubai)</option>
+                      <option value="Asia/Singapore">SGT (Singapore)</option>
+                      <option value="Asia/Hong_Kong">HKT (Hong Kong)</option>
+                      <option value="Asia/Seoul">KST (Seoul)</option>
+                      <option value="Australia/Melbourne">AEST (Melbourne)</option>
+                      <option value="Pacific/Auckland">NZST (Auckland)</option>
+                    </optgroup>
+                    <optgroup label="Africa">
+                      <option value="Africa/Cairo">EET (Cairo)</option>
+                      <option value="Africa/Lagos">WAT (Lagos)</option>
+                      <option value="Africa/Johannesburg">SAST (Johannesburg)</option>
+                    </optgroup>
+                  </select>
                 </div>
               </div>
             </div>
@@ -901,15 +1044,16 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
   };
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onOpenChange={(open) => {
-        if (!open) {
-          onClose();
-        }
-      }}
-      size="5xl"
-      backdrop="blur"
+    <>
+      <Modal 
+        isOpen={isOpen} 
+        onOpenChange={(open) => {
+          if (!open) {
+            onClose();
+          }
+        }}
+        size="5xl"
+        backdrop="blur"
       scrollBehavior="inside"
       classNames={{
         base: "bg-transparent",
@@ -965,7 +1109,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
 
             {/* Right Content Area */}
             <div className="flex-1 p-6">
-              <ScrollShadow hideScrollBar={true} className="h-full">
+              <ScrollShadow hideScrollBar={true} className="h-full pt-4 pb-7 px-3">
                 {renderCategoryContent()}
               </ScrollShadow>
             </div>
@@ -989,5 +1133,121 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
         </ModalFooter>
       </ModalContent>
     </Modal>
+
+    {/* Avatar Picker Modal */}
+    <Modal 
+      isOpen={showAvatarPicker} 
+      onClose={() => setShowAvatarPicker(false)}
+      size="4xl"
+      scrollBehavior="inside"
+      className="max-h-[90vh]"
+    >
+      <ModalContent className={`${isDarkMode ? 'bg-black border-gray-800' : 'bg-white border-gray-200'} border`}>
+        <ModalHeader className="flex flex-col gap-3 p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+              <span className="text-2xl">🎭</span>
+            </div>
+            <div>
+              <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                Choose Your Avatar
+              </h3>
+              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Select from our collection of beautiful avatars
+              </p>
+            </div>
+          </div>
+          
+          {/* Category Tabs */}
+          <div className="flex gap-2 mt-4 flex-wrap">
+            {avatarCategories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setSelectedAvatarCategory(category.id)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                  selectedAvatarCategory === category.id
+                    ? 'bg-accent text-accent-foreground shadow-md scale-105'
+                    : isDarkMode
+                    ? 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800'
+                }`}
+              >
+                <span className="text-base">{category.emoji}</span>
+                <span>{category.name}</span>
+                <span className={`text-xs px-2 py-1 rounded-full ${
+                  selectedAvatarCategory === category.id
+                    ? 'bg-white/20'
+                    : isDarkMode
+                    ? 'bg-gray-700'
+                    : 'bg-gray-200'
+                }`}>
+                  {category.count}
+                </span>
+              </button>
+            ))}
+          </div>
+        </ModalHeader>
+        
+        <ModalBody className="p-6 pt-0">
+          {/* Avatar Grid */}
+          <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-3">
+            {getAvatarsForCategory(selectedAvatarCategory).map((avatarPath, index) => (
+              <div
+                key={avatarPath}
+                className={`relative cursor-pointer group transition-all duration-200 hover:scale-110 ${
+                  profilePhoto === avatarPath ? 'ring-3 ring-accent ring-offset-2 ring-offset-background scale-110' : ''
+                }`}
+                onClick={() => {
+                  setProfilePhoto(avatarPath);
+                  setShowAvatarPicker(false);
+                }}
+              >
+                <img
+                  src={avatarPath}
+                  alt={`Avatar ${index + 1}`}
+                  className="w-16 h-16 object-cover rounded-xl shadow-md group-hover:shadow-lg transition-shadow duration-200"
+                  onError={(e) => {
+                    // Fallback if image doesn't exist
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+                {profilePhoto === avatarPath && (
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-accent rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-white text-xs">✓</span>
+                  </div>
+                )}
+                <div className={`absolute inset-0 rounded-xl bg-accent/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${
+                  profilePhoto === avatarPath ? 'opacity-100' : ''
+                }`} />
+              </div>
+            ))}
+          </div>
+        </ModalBody>
+        
+        <ModalFooter className="p-6 pt-0 flex justify-between">
+          <Button 
+            variant="light" 
+            onPress={() => setShowAvatarPicker(false)}
+            className={`${isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'}`}
+          >
+            Cancel
+          </Button>
+          
+          {/* Surprise Me Button */}
+          <Button
+            onPress={() => {
+              const allAvatars = getAvatarsForCategory(selectedAvatarCategory);
+              const randomAvatar = allAvatars[Math.floor(Math.random() * allAvatars.length)];
+              setProfilePhoto(randomAvatar);
+              setShowAvatarPicker(false);
+            }}
+            className="bg-accent hover:bg-accent/80 text-accent-foreground font-medium px-6 transition-all hover:scale-105"
+          >
+            🎲 Surprise Me!
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+    </>
   );
 }
