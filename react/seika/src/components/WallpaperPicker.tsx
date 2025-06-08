@@ -21,7 +21,7 @@ export default function WallpaperPicker({ className }: WallpaperPickerProps) {
     const { isDarkMode } = useDarkMode();
     const { accentColor } = useAccentColorManager();
     const [showAll, setShowAll] = useState(false);
-    const [hoveredWallpaper, setHoveredWallpaper] = useState<string | null>(null);
+    // const [hoveredWallpaper, setHoveredWallpaper] = useState<string | null>(null);
     
     // Show only first 6 wallpapers initially, or all if showAll is true
     const displayedWallpapers = showAll ? wallpapers : wallpapers.slice(0, 6);
@@ -62,8 +62,8 @@ export default function WallpaperPicker({ className }: WallpaperPickerProps) {
                             <div 
                                 key={wallpaper.name}
                                 className="group relative"
-                                onMouseEnter={() => setHoveredWallpaper(wallpaper.fileName)}
-                                onMouseLeave={() => setHoveredWallpaper(null)}
+                                // onMouseEnter={() => setHoveredWallpaper(wallpaper.fileName)}
+                                // onMouseLeave={() => setHoveredWallpaper(null)}
                                 style={{ animationDelay: `${index * 50}ms` }}
                             >
                                 {/* Main Card */}
