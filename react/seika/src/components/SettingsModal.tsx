@@ -1060,7 +1060,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
         backdrop: "bg-black/50 backdrop-blur-sm",
       }}
     >
-      <ModalContent className={`${isDarkMode ? 'bg-black/95 border border-gray-800' : 'bg-white/95 border border-gray-100'} shadow-2xl backdrop-blur-md h-2/3 `}  >
+      <ModalContent className={`${isDarkMode ? 'bg-black/95 border border-gray-800' : 'bg-white/95 border border-gray-100'} shadow-2xl backdrop-blur-md h-5/6 `}  >
         <ModalHeader className={`flex flex-col gap-1 ${isDarkMode ? 'border-b border-gray-800' : 'border-b border-gray-100'}`}>
           <h2 className="text-primary text-xl font-semibold">
             Settings
