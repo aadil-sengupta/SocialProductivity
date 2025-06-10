@@ -84,6 +84,18 @@ export default function DashboardPage() {
     }
   }, [pomodoroMinutes]);
 
+  // Debug log timer context values
+  useEffect(() => {
+    console.log('Timer Context Values:', {
+      pomodoroMinutes,
+      shortBreakMinutes,
+      longBreakMinutes,
+      longBreakInterval,
+      sessionPhase,
+      pomodoroCount
+    });
+  }, [pomodoroMinutes, shortBreakMinutes, longBreakMinutes, longBreakInterval, sessionPhase, pomodoroCount]);
+
 
   useEffect(() => {
     return () => {
@@ -115,6 +127,7 @@ export default function DashboardPage() {
       setCurrentTime(0);
       setTotalTime(0);
       setSessionPhase('focus');
+      setPomodoroCount(0); // Reset pomodoro count when switching modes
     }
     
     setSelectedTab(mode);
@@ -123,8 +136,8 @@ export default function DashboardPage() {
 
   // Main button press handler - handles start, pause, resume, and session transitions
   const handleMainButtonPress = () => {
-    // Special case: if in overtime mode, start the next session regardless of current running state
-    if (selectedTab === 'pomo' && (sessionPhase === 'focus-overtime' || sessionPhase === 'break-overtime')) {
+    // Special case: if in overtime mode OR during break, start the next session regardless of current running state
+    if (selectedTab === 'pomo' && (sessionPhase === 'focus-overtime' || sessionPhase === 'break-overtime' || sessionPhase === 'break')) {
       handleStart();
     } else if (!started) {
       // Starting a new timer session
@@ -140,11 +153,14 @@ export default function DashboardPage() {
 
   // Get the appropriate button text based on current state and session phase
   const getButtonText = () => {
-    // Special case: if in overtime mode, show transition options regardless of running state
-    if (selectedTab === 'pomo' && (sessionPhase === 'focus-overtime' || sessionPhase === 'break-overtime')) {
+    // Special cases for pomodoro mode based on session phase
+    if (selectedTab === 'pomo') {
       if (sessionPhase === 'focus-overtime') {
         return 'Start Break';
       } else if (sessionPhase === 'break-overtime') {
+        return 'Start Focus';
+      } else if (sessionPhase === 'break') {
+        // During break, allow users to start focus immediately
         return 'Start Focus';
       }
     }
@@ -178,7 +194,7 @@ export default function DashboardPage() {
           const shouldBeLongBreak = pomodoroCount > 0 && pomodoroCount % longBreakInterval === 0;
           durationInSeconds = shouldBeLongBreak ? longBreakMinutes * 60 : shortBreakMinutes * 60;
           newPhase = 'break';
-          console.log(`Starting ${shouldBeLongBreak ? 'long' : 'short'} break. PomodoroCount: ${pomodoroCount}, LongBreakInterval: ${longBreakInterval}, Duration: ${durationInSeconds / 60} minutes`);
+          console.log(`Starting ${shouldBeLongBreak ? 'long' : 'short'} break. PomodoroCount: ${pomodoroCount}, LongBreakInterval: ${longBreakInterval}, Duration: ${durationInSeconds / 60} minutes, Should be long break: ${shouldBeLongBreak}`);
         } else if (sessionPhase === 'break-overtime') {
           // Starting a focus session after break overtime
           durationInSeconds = pomodoroMinutes * 60;
@@ -229,6 +245,7 @@ export default function DashboardPage() {
 
   const handleEnd = () => {
     // Only handle end for pomodoro mode - for free mode, timer doesn't auto-end
+
     if (selectedTab === 'pomo') {
       setIsTransitioning(true);
       
@@ -314,6 +331,43 @@ export default function DashboardPage() {
         console.warn('Could not exit fullscreen:', err);
       });
     }
+  };
+
+  const handleSkipToBreak = () => {
+    // Only allow skipping during focus sessions in pomodoro mode
+    if (selectedTab !== 'pomo' || sessionPhase !== 'focus') {
+      return;
+    }
+
+    setIsTransitioning(true);
+    
+    // Small delay to allow transition animation to begin
+    setTimeout(() => {
+      // Increment pomodoro count since we're completing a focus session (even if early)
+      const newPomodoroCount = pomodoroCount + 1;
+      setPomodoroCount(newPomodoroCount);
+      
+      // Determine if this should be a long break
+      const shouldBeLongBreak = newPomodoroCount > 0 && newPomodoroCount % longBreakInterval === 0;
+      const breakDuration = shouldBeLongBreak ? longBreakMinutes * 60 : shortBreakMinutes * 60;
+      
+      // Set session phase to break
+      setSessionPhase('break');
+      setTotalTime(breakDuration);
+      
+      console.log(`Skipping to ${shouldBeLongBreak ? 'long' : 'short'} break. PomodoroCount: ${newPomodoroCount}, Duration: ${breakDuration / 60} minutes`);
+      
+      // Reset timer and start break countdown
+      setTimeout(() => {
+        getActiveTimerRef().current?.reset();
+        getActiveTimerRef().current?.start(breakDuration);
+      }, 50);
+      
+      // Reset transition state after animation completes
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 500);
+    }, 200);
   };
 
   // Map timer context mode to AnimatedTimerStatus mode
@@ -506,6 +560,7 @@ export default function DashboardPage() {
                 setCurrentTime(0);
                 setTotalTime(0);
                 setSessionPhase('focus');
+                setPomodoroCount(0); // Reset pomodoro count
               }}
               icon={<IoRefreshSharp />}
               variant="reset"
@@ -514,7 +569,16 @@ export default function DashboardPage() {
             
             <Button
               onPress={handleMainButtonPress}
-              variant={started ? (running ? "ghost" : "solid") : "solid"}
+              variant={(() => {
+                const buttonText = getButtonText();
+                if (buttonText.includes('Start') || !started) {
+                  return "solid";
+                } else if (running) {
+                  return "ghost";
+                } else {
+                  return "solid";
+                }
+              })()}
               color="primary"
               size="lg"
               radius="full"
@@ -523,24 +587,24 @@ export default function DashboardPage() {
                 padding: '1.78rem 2.5rem',
                 '--heroui-primary': colorVariations[500],
                 '--heroui-primary-foreground': '#ffffff',
-                ...(started && running ? {
+                ...(started && running && !getButtonText().includes('Start') ? {
                   borderColor: `${colorVariations[400]}50`,
                   boxShadow: `0 4px 12px ${colorVariations[500]}20`,
                 } : {}),
               } as React.CSSProperties}
               className={`
-                ${started && running 
+                ${started && running && !getButtonText().includes('Start')
                   ? 'text-white bg-transparent hover:bg-primary-500/20' 
                   : 'relative overflow-hidden'
                 }
                 transition-all duration-300 ease-out
                 hover:scale-[1.01] hover:shadow-sm
                 active:scale-95
-                ${started && running 
+                ${started && running && !getButtonText().includes('Start')
                   ? `border-2 hover:border-primary-400/70` 
                   : ''
                 }
-                ${!started || !running ? `
+                ${(!started || !running || getButtonText().includes('Start')) ? `
                   before:absolute before:inset-0 before:bg-gradient-to-r before:from-white/10 before:to-transparent 
                   before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300 before:pointer-events-none
                 ` : ''}
@@ -551,18 +615,12 @@ export default function DashboardPage() {
                 
             
             <AnimatedIconButton
-              onClick={() => {
-                getActiveTimerRef().current?.reset();
-                setStarted(false);
-                setRunning(false);
-                setCurrentTime(0);
-                setTotalTime(0);
-                setSessionPhase('focus');
-              }}
+              onClick={handleSkipToBreak}
               icon={<BsCupHotFill />}
               variant="break"
               size={26}
-              tooltip="Skip to Break"
+              tooltip={selectedTab === 'pomo' && sessionPhase === 'focus' ? "Skip to Short Break" : "Skip to Short Break (Focus mode only)"}
+              disabled={selectedTab !== 'pomo' || sessionPhase !== 'focus'}
             />
 
             <AnimatedIconButton
@@ -573,11 +631,13 @@ export default function DashboardPage() {
                 setCurrentTime(0);
                 setTotalTime(0);
                 setSessionPhase('focus');
+                setPomodoroCount(0); // Reset pomodoro count
               }}
               icon={<HiMiniVideoCamera />}
               variant="break"
               size={26}
-              tooltip="Skip to Break"
+              tooltip="Group Video Call"
+              disabled={started}
             />
             
             {/* <Button
@@ -599,64 +659,6 @@ export default function DashboardPage() {
           </div>
           
         </div>
-
-<div className="absolute bottom-2 left-1/2 w-60 h-20 translate-x-[-50%] " > 
-      <div className="relative h-16 overflow-hidden mb-1">
-            <div 
-              className={`
-                absolute inset-0 flex items-center justify-center
-                transition-all duration-300 ease-in-out
-                ${selectedTab === 'pomo' ? 'opacity-100 transform translate-x-0' : 'opacity-0 transform translate-x-8'}
-              `}
-            >
-              <div className={`text-center rounded-lg px-4 py-2 transition-all duration-500 ease-out ${showBlur ? 'backdrop-blur-sm border border-white/10 bg-white/5' : 'backdrop-blur-none border border-transparent bg-transparent'}`}>
-                <div 
-                  className="text-white text-lg font-medium" 
-                  style={{ 
-                    textShadow: '0 0 20px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.1)' 
-                  }}
-                >
-                  Focus Session
-                </div>
-                <div 
-                  className="text-white/80 text-sm" 
-                  style={{ 
-                    textShadow: '0 0 15px rgba(0,0,0,0.7), 0 2px 6px rgba(0,0,0,0.5)' 
-                  }}
-                >
-                  {`${pomodoroMinutes} minutes of focused work`}
-                </div>
-              </div>
-            </div>
-            
-            <div 
-              className={`
-                absolute inset-0 flex items-center justify-center
-                transition-all duration-300 ease-in-out
-                ${selectedTab === 'free' ? 'opacity-100 transform translate-x-0' : 'opacity-0 transform -translate-x-8'}
-              `}
-            >
-              <div className={`text-center rounded-lg px-4 py-2 transition-all duration-500 ease-out ${showBlur ? 'backdrop-blur-sm border border-white/10 bg-white/5' : 'backdrop-blur-none border border-transparent bg-transparent'}`}>
-                <div 
-                  className="text-white text-lg font-medium" 
-                  style={{ 
-                    textShadow: '0 0 20px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.1)' 
-                  }}
-                >
-                  Free Timer
-                </div>
-                <div 
-                  className="text-white/80 text-sm" 
-                  style={{ 
-                    textShadow: '0 0 15px rgba(0,0,0,0.7), 0 2px 6px rgba(0,0,0,0.5)' 
-                  }}
-                >
-                  Unlimited time tracking
-                </div>
-              </div>
-            </div>
-          </div>
-</div>
       </section>
 
       <SettingsModal 

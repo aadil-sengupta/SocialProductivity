@@ -9,6 +9,7 @@ interface AnimatedIconButtonProps {
   className?: string;
   transparent?: boolean; // Add option for transparent background
   tooltip?: string; // Custom tooltip text
+  disabled?: boolean; // Disable all animations and interactions
 }
 
 const AnimatedIconButton: React.FC<AnimatedIconButtonProps> = ({
@@ -18,7 +19,8 @@ const AnimatedIconButton: React.FC<AnimatedIconButtonProps> = ({
   size = 38,
   className = '',
   transparent = false,
-  tooltip
+  tooltip,
+  disabled = false
 }) => {
   const { colorVariations } = useAccentColorManager();
   
@@ -39,24 +41,22 @@ const AnimatedIconButton: React.FC<AnimatedIconButtonProps> = ({
     relative group overflow-hidden
     flex items-center justify-center
     w-14 h-14 rounded-full
-    transition-all duration-500 ease-out
-    cursor-pointer
-    active:scale-90
+    ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
+    ${disabled ? '' : 'transition-all duration-500 ease-out active:scale-90'}
     ${className}
   ` : `
     relative group overflow-hidden
     flex items-center justify-center
     w-14 h-14 rounded-full
-    transition-all duration-500 ease-out
-    cursor-pointer
+    ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
+    ${disabled ? '' : 'transition-all duration-500 ease-out active:scale-90'}
     backdrop-blur-sm
     border border-white/10
-    hover:border-white/30
-    active:scale-90
+    ${disabled ? '' : 'hover:border-white/30'}
     ${className}
   `;
 
-  const hoverClasses = transparent ? '' : `hover:shadow-lg`;
+  const hoverClasses = transparent || disabled ? '' : `hover:shadow-lg`;
 
   // Create dynamic styles using accent color
   const dynamicStyle = {
@@ -71,7 +71,7 @@ const AnimatedIconButton: React.FC<AnimatedIconButtonProps> = ({
   return (
     <div className="relative group">
       {/* Animated Tooltip */}
-      {tooltipText && (
+      {tooltipText && !disabled && (
         <div className="
           absolute top-16 left-1/2 transform -translate-x-1/2
           bg-black/90 backdrop-blur-sm text-white text-xs font-medium
@@ -98,12 +98,13 @@ const AnimatedIconButton: React.FC<AnimatedIconButtonProps> = ({
       )}
       
       <button
-        onClick={onClick}
+        onClick={disabled ? undefined : onClick}
+        disabled={disabled}
         className={`${baseClasses} ${hoverClasses}`}
         style={dynamicStyle}
       >
       {/* Background effects - only render if not transparent */}
-      {!transparent && (
+      {!transparent && !disabled && (
         <>
           {/* Background glow effect */}
           <div 
@@ -143,17 +144,17 @@ const AnimatedIconButton: React.FC<AnimatedIconButtonProps> = ({
       
       {/* Icon container with rotation animation */}
       <div className={`
-        relative z-10 transition-transform duration-500 ease-out
-        group-hover:scale-110
-        ${variant === 'settings' ? 'group-hover:rotate-90' : 'group-hover:rotate-180'}
-        ${variant === 'break' ? 'group-hover:rotate-0 group-hover:scale-120' : ''}
+        relative z-10 ${disabled ? '' : 'transition-transform duration-500 ease-out'}
+        ${disabled ? '' : 'group-hover:scale-110'}
+        ${disabled ? '' : (variant === 'settings' ? 'group-hover:rotate-90' : 'group-hover:rotate-180')}
+        ${disabled ? '' : (variant === 'break' ? 'group-hover:rotate-0 group-hover:scale-120' : '')}
       `}
       style={{
         transformOrigin: variant === 'reset' ? 'center 53%' : 'center center'
       }}>
         {React.cloneElement(icon, {
           size: size,
-          className: `transition-all duration-500 text-white group-hover:drop-shadow-[0_0_8px_var(--icon-shadow)]`}
+          className: `${disabled ? 'text-white' : 'transition-all duration-500 text-white group-hover:drop-shadow-[0_0_8px_var(--icon-shadow)]'}`}
           )}
       </div>
       </button>

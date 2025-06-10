@@ -842,7 +842,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
               
                 <FormOption
                   title="Paused time counts as break"
-                  description="Include paused timer duration in break calculations."
+                  description="Include paused timer duration in break calculations (Highly Recommended)."
                   isSelected={countPauseTime}
                   onChange={setCountPauseTime}
                 />
