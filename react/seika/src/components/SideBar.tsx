@@ -3,15 +3,24 @@ import "../styles/Sidebar.css";
 import ProfileTile, { User } from "./ProfileTile";
 import { useDarkMode } from "@/contexts/DarkModeContext";
 import { FaPlus } from "react-icons/fa6";
+import { useProfile } from "@/contexts/ProfileContext";
 
 const SideBar = () => {
   const [isShrinkView, setIsShrinkView] = React.useState(true);
   const { isDarkMode, toggleTheme } = useDarkMode();
+  const { userName, profilePhoto } = useProfile();
 
   const handleThemeChange = () => {
     toggleTheme();
   };
-
+  const mainUser = {
+    id: "0",
+    name: userName,
+    avatar: profilePhoto,
+    activityTime: "4 hrs 22 mins",
+    isOnline: true,
+    altText: userName
+  }
   // Sample user data - in a real app, this would come from props or context
   const users: User[] = [
     {
@@ -94,7 +103,7 @@ const SideBar = () => {
           ))}
           </div>
           <div>
-          <ProfileTile user={users[0]} />
+          <ProfileTile user={mainUser} />
           <div className="sidebar-themeContainer mr-[7.5px] mt-2">
           <label
             htmlFor="theme-toggle"

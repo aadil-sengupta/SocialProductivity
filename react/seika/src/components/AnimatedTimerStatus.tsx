@@ -2,7 +2,7 @@ import React from 'react';
 import { useAccentColorManager } from '@/contexts/AccentColorContext';
 
 interface AnimatedTimerStatusProps {
-  mode: 'pomo' | 'free' | 'shortBreak' | 'longBreak';
+  mode: 'pomo' | 'free' | 'shortBreak' | 'longBreak' | 'completed' | 'breakOvertime';
   isRunning: boolean;
   progress?: number; // Progress percentage (0-100) for the progress bar
   className?: string;
@@ -33,6 +33,22 @@ const AnimatedTimerStatus: React.FC<AnimatedTimerStatusProps> = ({
       color: colorVariations[500],
       bgGradient: `linear-gradient(135deg, ${colorVariations[500]}15, ${colorVariations[600]}20)`,
       pulseColor: colorVariations[400],
+    },
+    completed: {
+      title: 'Session Complete!',
+      subtitle: 'Tracking overtime',
+      emoji: '✅',
+      color: '#10B981', // emerald green
+      bgGradient: `linear-gradient(135deg, #10B98120, #059F4625)`,
+      pulseColor: '#34D399',
+    },
+    breakOvertime: {
+      title: 'Break Overtime',
+      subtitle: 'Extended break time',
+      emoji: '⏳',
+      color: '#EF4444', // red
+      bgGradient: `linear-gradient(135deg, #EF444420, #DC262625)`,
+      pulseColor: '#F87171',
     },
     shortBreak: {
       title: 'Short Break',
@@ -91,6 +107,12 @@ const AnimatedTimerStatus: React.FC<AnimatedTimerStatusProps> = ({
         {isRunning && mode === 'pomo' && (
           <div className="absolute top-3 right-3 text-xs opacity-60 animate-pulse">💪</div>
         )}
+        {isRunning && mode === 'completed' && (
+          <div className="absolute top-3 right-3 text-xs opacity-60 animate-bounce" style={{ animationDuration: '2s' }}>🎉</div>
+        )}
+        {isRunning && mode === 'breakOvertime' && (
+          <div className="absolute top-3 right-3 text-xs opacity-60 animate-pulse" style={{ animationDuration: '1.5s' }}>⚡</div>
+        )}
         {isRunning && mode === 'shortBreak' && (
           <div className="absolute top-3 left-3 text-xs opacity-60 animate-bounce" style={{ animationDuration: '3s' }}>🌱</div>
         )}
@@ -106,6 +128,10 @@ const AnimatedTimerStatus: React.FC<AnimatedTimerStatusProps> = ({
               isRunning 
                 ? mode === 'pomo' 
                   ? 'animate-pulse scale-110' 
+                  : mode === 'completed'
+                  ? 'animate-bounce scale-110'
+                  : mode === 'breakOvertime'
+                  ? 'animate-pulse scale-110'
                   : mode === 'shortBreak'
                   ? 'animate-bounce scale-105'
                   : mode === 'longBreak'
@@ -114,7 +140,7 @@ const AnimatedTimerStatus: React.FC<AnimatedTimerStatusProps> = ({
                 : 'scale-100'
             }`}
             style={{
-              animationDuration: mode === 'longBreak' ? '4s' : mode === 'shortBreak' ? '2s' : '3s',
+              animationDuration: mode === 'longBreak' ? '4s' : mode === 'shortBreak' ? '2s' : mode === 'completed' ? '1.5s' : mode === 'breakOvertime' ? '1.2s' : '3s',
               filter: isRunning ? 'drop-shadow(0 0 8px rgba(255,255,255,0.3))' : 'none'
             }}
           >

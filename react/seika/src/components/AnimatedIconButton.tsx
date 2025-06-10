@@ -4,10 +4,11 @@ import { useAccentColorManager } from '@/contexts/AccentColorContext';
 interface AnimatedIconButtonProps {
   onClick: () => void;
   icon: ReactElement;
-  variant?: 'settings' | 'reset';
+  variant?: 'settings' | 'reset' | 'break'; // Define variants for different animations
   size?: number;
   className?: string;
   transparent?: boolean; // Add option for transparent background
+  tooltip?: string; // Custom tooltip text
 }
 
 const AnimatedIconButton: React.FC<AnimatedIconButtonProps> = ({
@@ -16,9 +17,22 @@ const AnimatedIconButton: React.FC<AnimatedIconButtonProps> = ({
   variant = 'settings',
   size = 38,
   className = '',
-  transparent = false
+  transparent = false,
+  tooltip
 }) => {
   const { colorVariations } = useAccentColorManager();
+  
+  // Default tooltip text based on variant
+  const getDefaultTooltip = () => {
+    switch (variant) {
+      case 'settings': return 'Settings';
+      case 'reset': return 'Reset';
+      case 'break': return 'Break';
+      default: return '';
+    }
+  };
+  
+  const tooltipText = tooltip || getDefaultTooltip();
   
   // Base classes for transparent vs. normal button
   const baseClasses = transparent ? `
@@ -55,11 +69,39 @@ const AnimatedIconButton: React.FC<AnimatedIconButtonProps> = ({
   } as React.CSSProperties;
 
   return (
-    <button
-      onClick={onClick}
-      className={`${baseClasses} ${hoverClasses}`}
-      style={dynamicStyle}
-    >
+    <div className="relative group">
+      {/* Animated Tooltip */}
+      {tooltipText && (
+        <div className="
+          absolute top-16 left-1/2 transform -translate-x-1/2
+          bg-black/90 backdrop-blur-sm text-white text-xs font-medium
+          px-3 py-2 rounded-md
+          opacity-0 group-hover:opacity-100
+          -translate-y-2 group-hover:translate-y-0
+          transition-all duration-300 ease-out delay-500
+          pointer-events-none z-[100]
+          whitespace-nowrap
+          border border-white/20
+          shadow-lg shadow-black/50
+        "
+        style={{
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)'
+        }}>
+          {tooltipText}
+          {/* Tooltip arrow */}
+          <div className="
+            absolute bottom-full left-1/2 transform -translate-x-1/2
+            w-0 h-0 border-l-4 border-r-4 border-b-4
+            border-l-transparent border-r-transparent border-b-black/90
+          " />
+        </div>
+      )}
+      
+      <button
+        onClick={onClick}
+        className={`${baseClasses} ${hoverClasses}`}
+        style={dynamicStyle}
+      >
       {/* Background effects - only render if not transparent */}
       {!transparent && (
         <>
@@ -104,6 +146,7 @@ const AnimatedIconButton: React.FC<AnimatedIconButtonProps> = ({
         relative z-10 transition-transform duration-500 ease-out
         group-hover:scale-110
         ${variant === 'settings' ? 'group-hover:rotate-90' : 'group-hover:rotate-180'}
+        ${variant === 'break' ? 'group-hover:rotate-0 group-hover:scale-120' : ''}
       `}
       style={{
         transformOrigin: variant === 'reset' ? 'center 53%' : 'center center'
@@ -113,7 +156,8 @@ const AnimatedIconButton: React.FC<AnimatedIconButtonProps> = ({
           className: `transition-all duration-500 text-white group-hover:drop-shadow-[0_0_8px_var(--icon-shadow)]`}
           )}
       </div>
-    </button>
+      </button>
+    </div>
   );
 };
 

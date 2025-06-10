@@ -13,6 +13,7 @@ interface TimerState {
   longBreakMinutes: number;
   pomodoroCount: number;
   longBreakInterval: number; // after how many pomodoros to take long break
+  countPauseTime: boolean; // whether to count pause time towards total session time
 }
 
 interface TimerActions {
@@ -31,6 +32,7 @@ interface TimerActions {
   setShortBreakMinutes: (minutes: number) => void;
   setLongBreakMinutes: (minutes: number) => void;
   setLongBreakInterval: (interval: number) => void;
+  setCountPauseTime: (countPauseTime: boolean) => void;
   
   // Time updates
   updateCurrentTime: (time: number) => void;
@@ -66,6 +68,7 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({ children }) => {
             longBreakMinutes: parsed.longBreakMinutes || 15,
             pomodoroCount: 0,
             longBreakInterval: parsed.longBreakInterval || 4,
+            countPauseTime: parsed.countPauseTime || true,
           };
         } catch (error) {
           console.warn('Failed to parse timer settings from localStorage:', error);
@@ -84,6 +87,7 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({ children }) => {
       longBreakMinutes: 15,
       pomodoroCount: 0,
       longBreakInterval: 4, // Long break after every 4 pomodoros
+      countPauseTime: true,
     };
   });
 
@@ -204,6 +208,10 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({ children }) => {
     setState(prev => ({ ...prev, longBreakInterval: interval }));
   }, []);
 
+  const setCountPauseTime = useCallback((countPauseTime: boolean) => {
+    setState(prev => ({ ...prev, countPauseTime }));
+  }, []);
+
   // Time updates
   const updateCurrentTime = useCallback((time: number) => {
     setState(prev => ({
@@ -256,10 +264,11 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({ children }) => {
         shortBreakMinutes: state.shortBreakMinutes,
         longBreakMinutes: state.longBreakMinutes,
         longBreakInterval: state.longBreakInterval,
+        countPauseTime: state.countPauseTime,
       };
       localStorage.setItem('timerSettings', JSON.stringify(settingsToSave));
     }
-  }, [state.pomodoroMinutes, state.shortBreakMinutes, state.longBreakMinutes, state.longBreakInterval]);
+  }, [state.pomodoroMinutes, state.shortBreakMinutes, state.longBreakMinutes, state.longBreakInterval, state.countPauseTime]);
 
   const contextValue: TimerContextType = {
     // State
@@ -276,6 +285,7 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({ children }) => {
     setShortBreakMinutes,
     setLongBreakMinutes,
     setLongBreakInterval,
+    setCountPauseTime,
     updateCurrentTime,
     completePomodoro,
     startNextSession,

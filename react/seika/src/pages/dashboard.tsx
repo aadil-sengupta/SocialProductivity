@@ -13,9 +13,12 @@ import { MdFullscreen, MdFullscreenExit } from "react-icons/md";
 import AnimatedModeSwitcher from "@/components/AnimatedModeSwitcher";
 import AnimatedTimerStatus from "@/components/AnimatedTimerStatus";
 import DigitalClock from "@/components/DigitalClock";
+import RandomGreeting from "@/components/RandomGreeting";
+import { BsCupHotFill } from "react-icons/bs";
+import { HiMiniVideoCamera } from "react-icons/hi2";
 
 export default function DashboardPage() {
-  document.title = "Dashboard | Seika";
+  // document.title = "Dashboard | Seika";
 
   const pomoTimerRef = useRef<TimerRef>(null);
   const freeTimerRef = useRef<TimerRef>(null);
@@ -28,17 +31,15 @@ export default function DashboardPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [totalTime, setTotalTime] = useState(0);
+  const [sessionPhase, setSessionPhase] = useState<'focus' | 'break' | 'focus-overtime' | 'break-overtime'>('focus'); // Track current session phase
+  const [pomodoroCount, setPomodoroCount] = useState(0); // Track completed pomodoros for long break
   const { colorVariations } = useAccentColorManager();
   const { 
       pomodoroMinutes, 
+      shortBreakMinutes, 
+      longBreakMinutes, 
+      longBreakInterval,
       mode: timerContextMode,
-      // shortBreakMinutes, 
-      // longBreakMinutes, 
-      // longBreakInterval,
-      // setPomodoroMinutes,
-      // setShortBreakMinutes,
-      // setLongBreakMinutes,
-      // setLongBreakInterval
     } = useTimer();
 
   // Check if settings modal should be open based on URL
@@ -83,7 +84,7 @@ export default function DashboardPage() {
     }
   }, [pomodoroMinutes]);
 
-  // Reset document title when component unmounts or timer stops
+
   useEffect(() => {
     return () => {
       document.title = "Dashboard | Seika";
@@ -113,10 +114,49 @@ export default function DashboardPage() {
       setRunning(false);
       setCurrentTime(0);
       setTotalTime(0);
+      setSessionPhase('focus');
     }
     
     setSelectedTab(mode);
     setShowBlur(true); // Trigger temporary blur
+  };
+
+  // Main button press handler - handles start, pause, resume, and session transitions
+  const handleMainButtonPress = () => {
+    // Special case: if in overtime mode, start the next session regardless of current running state
+    if (selectedTab === 'pomo' && (sessionPhase === 'focus-overtime' || sessionPhase === 'break-overtime')) {
+      handleStart();
+    } else if (!started) {
+      // Starting a new timer session
+      handleStart();
+    } else if (running) {
+      // Timer is running, pause it
+      handlePause();
+    } else {
+      // Timer is paused, resume it
+      handleResume();
+    }
+  };
+
+  // Get the appropriate button text based on current state and session phase
+  const getButtonText = () => {
+    // Special case: if in overtime mode, show transition options regardless of running state
+    if (selectedTab === 'pomo' && (sessionPhase === 'focus-overtime' || sessionPhase === 'break-overtime')) {
+      if (sessionPhase === 'focus-overtime') {
+        return 'Start Break';
+      } else if (sessionPhase === 'break-overtime') {
+        return 'Start Focus';
+      }
+    }
+    
+    if (!started) {
+      // Not started yet - show Start
+      return 'Start';
+    } else if (running) {
+      return 'Pause';
+    } else {
+      return 'Resume';
+    }
   };
 
   const handleStart = () => {
@@ -128,12 +168,44 @@ export default function DashboardPage() {
       setRunning(true);
       
       if (selectedTab === 'pomo') {
-        // Use pomodoroMinutes for duration (convert to seconds)
-        const durationInSeconds = pomodoroMinutes * 60;
+        // Determine session duration and phase based on current context
+        let durationInSeconds: number;
+        let newPhase: 'focus' | 'break';
+        
+        if (sessionPhase === 'focus-overtime') {
+          // Starting a break after focus overtime
+          // Long break should happen after completing longBreakInterval pomodoros (e.g., after 4th pomodoro)
+          const shouldBeLongBreak = pomodoroCount > 0 && pomodoroCount % longBreakInterval === 0;
+          durationInSeconds = shouldBeLongBreak ? longBreakMinutes * 60 : shortBreakMinutes * 60;
+          newPhase = 'break';
+          console.log(`Starting ${shouldBeLongBreak ? 'long' : 'short'} break. PomodoroCount: ${pomodoroCount}, LongBreakInterval: ${longBreakInterval}, Duration: ${durationInSeconds / 60} minutes`);
+        } else if (sessionPhase === 'break-overtime') {
+          // Starting a focus session after break overtime
+          durationInSeconds = pomodoroMinutes * 60;
+          newPhase = 'focus';
+        } else if (sessionPhase === 'break') {
+          // This shouldn't happen, but handle it
+          durationInSeconds = pomodoroMinutes * 60;
+          newPhase = 'focus';
+        } else {
+          // Starting a focus session (default)
+          durationInSeconds = pomodoroMinutes * 60;
+          newPhase = 'focus';
+        }
+        
+        // Update session phase first
+        setSessionPhase(newPhase);
         setTotalTime(durationInSeconds);
-        getActiveTimerRef().current?.start(durationInSeconds); // Start countdown timer
+        
+        // Reset timer and start countdown with proper duration
+        // Small delay to ensure sessionPhase state has updated
+        setTimeout(() => {
+          getActiveTimerRef().current?.reset();
+          getActiveTimerRef().current?.start(durationInSeconds); // Start countdown timer
+        }, 50);
       } else {
         // Free mode - start count up timer without duration
+        setSessionPhase('focus');
         setTotalTime(0); // No total time for free mode
         getActiveTimerRef().current?.start(); // Start count up timer
       }
@@ -156,46 +228,64 @@ export default function DashboardPage() {
   };
 
   const handleEnd = () => {
-    setIsTransitioning(true);
-    
-    // Small delay to allow transition animation to begin
-    setTimeout(() => {
-      // Reset timer state
-      setStarted(false);
-      setRunning(false);
-      setCurrentTime(0);
-      setTotalTime(0);
+    // Only handle end for pomodoro mode - for free mode, timer doesn't auto-end
+    if (selectedTab === 'pomo') {
+      setIsTransitioning(true);
       
-      // Reset the timer component
-      getActiveTimerRef().current?.reset();
-      
-      // Show completion notification
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('Timer Complete!', {
-          body: `Your ${selectedTab === 'pomo' ? 'focus session' : 'timer'} has finished.`,
-          icon: '/favicon.ico',
-          tag: 'timer-complete'
-        });
-      }
-      
-      // Play completion sound (if audio element exists)
-      const audio = document.getElementById('timer-complete-sound') as HTMLAudioElement;
-      if (audio) {
-        audio.play().catch(e => console.warn('Could not play completion sound:', e));
-      }
-      
-      // Optional: Show browser notification if page is not visible
-      if (document.hidden) {
-        document.title = '⏰ Timer Complete! - Seika';
-      }
-      
-      console.log('Timer completed successfully');
-      
-      // Reset transition state after animation completes
+      // Small delay to allow transition animation to begin
       setTimeout(() => {
-        setIsTransitioning(false);
-      }, 500);
-    }, 200);
+        // Update session phase to overtime first (before resetting timer)
+        let newPhase: 'focus-overtime' | 'break-overtime';
+        if (sessionPhase === 'focus') {
+          newPhase = 'focus-overtime';
+          setPomodoroCount(prev => prev + 1); // Increment completed pomodoros
+        } else {
+          newPhase = 'break-overtime';
+        }
+        
+        setSessionPhase(newPhase);
+        setCurrentTime(0);
+        setTotalTime(0); // No total time for count-up mode
+        
+        // Now reset and start the timer in count-up mode
+        // Use a small delay to ensure sessionPhase state has updated
+        setTimeout(() => {
+          getActiveTimerRef().current?.reset();
+          getActiveTimerRef().current?.start(); // Start counting up without duration limit
+        }, 50);
+        
+        // Show completion notification based on session type
+        if ('Notification' in window && Notification.permission === 'granted') {
+          const isBreakSession = sessionPhase === 'break';
+          new Notification(isBreakSession ? 'Break Complete!' : 'Focus Session Complete!', {
+            body: isBreakSession 
+              ? 'Break time is over. Timer is now tracking break overtime.' 
+              : 'Great work! Timer is now tracking your overtime.',
+            icon: '/favicon.ico',
+            tag: 'timer-complete'
+          });
+        }
+        
+        // Play completion sound (if audio element exists)
+        const audio = document.getElementById('timer-complete-sound') as HTMLAudioElement;
+        if (audio) {
+          audio.play().catch(e => console.warn('Could not play completion sound:', e));
+        }
+        
+        // Optional: Show browser notification if page is not visible
+        if (document.hidden) {
+          const isBreakSession = sessionPhase === 'break';
+          document.title = isBreakSession ? '⏰ Break Over! - Seika' : '✅ Session Complete! - Seika';
+        }
+        
+        console.log(`${sessionPhase === 'break' ? 'Break' : 'Focus'} session completed, now tracking overtime`);
+        
+        // Reset transition state after animation completes
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 500);
+      }, 200);
+    }
   };
 
   const handleOpenSettings = () => {
@@ -229,13 +319,24 @@ export default function DashboardPage() {
   // Map timer context mode to AnimatedTimerStatus mode
   const getAnimatedStatusMode = () => {
     if (selectedTab === 'free') return 'free';
-    // For pomodoro mode, use the context mode if available
-    switch (timerContextMode) {
-      case 'shortBreak': return 'shortBreak';
-      case 'longBreak': return 'longBreak';
-      case 'pomodoro':
-      default: return 'pomo';
+    
+    // For pomodoro mode, use session phase to determine status
+    if (selectedTab === 'pomo') {
+      switch (sessionPhase) {
+        case 'focus':
+          return 'pomo';
+        case 'break':
+          return 'shortBreak'; // Could be enhanced to detect long break vs short break
+        case 'focus-overtime':
+          return 'completed';
+        case 'break-overtime':
+          return 'breakOvertime'; // We'll need to add this to AnimatedTimerStatus
+        default:
+          return 'pomo';
+      }
     }
+    
+    return 'pomo';
   };
 
   // Calculate progress percentage for progress bar
@@ -267,6 +368,14 @@ export default function DashboardPage() {
           showDate={true}
           showSeconds={false}
           format24h={false}
+        />
+      </div>
+
+      {/* Random Greeting - Top Right, below clock */}
+      <div className="absolute top-20 right-8 z-30">
+        <RandomGreeting 
+          firstName="Aadil" // You can replace this with actual user data
+          className="backdrop-blur-sm bg-white/5 px-3 py-2 rounded-lg border border-white/10"
         />
       </div>
 
@@ -344,9 +453,14 @@ export default function DashboardPage() {
                 ref={pomoTimerRef} 
                 displayClassName="font-bold text-white"  
                 style={{ fontFamily: "Marmelat Black", fontSize: "10.5rem" }} 
-                displayStyle={{ textShadow: '0 4px 30px rgba(0, 0, 0, 0.35), 0 12px 30px rgba(0, 0, 0, 0.4)'}} 
-                countUp={false}
-                initialTime={pomodoroMinutes * 60}
+                displayStyle={{ 
+                  textShadow: '0 4px 30px rgba(0, 0, 0, 0.35), 0 12px 30px rgba(0, 0, 0, 0.4)',
+                  ...(sessionPhase === 'focus-overtime' ? { color: '#10B981' } : {}), // Green for focus overtime
+                  ...(sessionPhase === 'break-overtime' ? { color: '#EF4444' } : {}), // Red for break overtime
+                }} 
+                countUp={sessionPhase === 'focus-overtime' || sessionPhase === 'break-overtime'} // Switch to count-up mode when in overtime
+                endValue={sessionPhase === 'focus-overtime' || sessionPhase === 'break-overtime' ? 999999 : undefined}
+                initialTime={sessionPhase === 'focus-overtime' || sessionPhase === 'break-overtime' ? 0 : (sessionPhase === 'break' ? shortBreakMinutes * 60 : pomodoroMinutes * 60)}
                 onTimerEnd={handleEnd}
                 onTimeUpdate={handleTimeUpdate}
               />
@@ -391,6 +505,7 @@ export default function DashboardPage() {
                 setRunning(false);
                 setCurrentTime(0);
                 setTotalTime(0);
+                setSessionPhase('focus');
               }}
               icon={<IoRefreshSharp />}
               variant="reset"
@@ -398,7 +513,7 @@ export default function DashboardPage() {
             />
             
             <Button
-              onPress={started ? (running ? handlePause : handleResume) : handleStart}
+              onPress={handleMainButtonPress}
               variant={started ? (running ? "ghost" : "solid") : "solid"}
               color="primary"
               size="lg"
@@ -431,10 +546,40 @@ export default function DashboardPage() {
                 ` : ''}
               `}
             >
-            
-              {started ? (running ? 'Pause' : 'Resume') : 'Start'}
+              {getButtonText()}
             </Button>
+                
+            
+            <AnimatedIconButton
+              onClick={() => {
+                getActiveTimerRef().current?.reset();
+                setStarted(false);
+                setRunning(false);
+                setCurrentTime(0);
+                setTotalTime(0);
+                setSessionPhase('focus');
+              }}
+              icon={<BsCupHotFill />}
+              variant="break"
+              size={26}
+              tooltip="Skip to Break"
+            />
 
+            <AnimatedIconButton
+              onClick={() => {
+                getActiveTimerRef().current?.reset();
+                setStarted(false);
+                setRunning(false);
+                setCurrentTime(0);
+                setTotalTime(0);
+                setSessionPhase('focus');
+              }}
+              icon={<HiMiniVideoCamera />}
+              variant="break"
+              size={26}
+              tooltip="Skip to Break"
+            />
+            
             {/* <Button
 
             {/* <Button

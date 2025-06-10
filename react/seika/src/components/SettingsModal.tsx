@@ -18,7 +18,6 @@ interface SettingsModalProps {
 }
 
 export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModalProps) {
-  const [autoStart, setAutoStart] = React.useState(false);
   const [soundNotifications, setSoundNotifications] = React.useState(true);
   const [desktopNotifications, setDesktopNotifications] = React.useState(false);
   const [font, setFont] = React.useState("Poppins");
@@ -100,10 +99,12 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
     shortBreakMinutes, 
     longBreakMinutes, 
     longBreakInterval,
+    countPauseTime,
     setPomodoroMinutes,
     setShortBreakMinutes,
     setLongBreakMinutes,
-    setLongBreakInterval
+    setLongBreakInterval,
+    setCountPauseTime
   } = useTimer();
 
   const categories = [
@@ -136,14 +137,12 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
   // Load settings from localStorage on component mount
   React.useEffect(() => {
     const loadSettings = () => {
-      const savedAutoStart = localStorage.getItem('autoStart');
       const savedSoundNotifications = localStorage.getItem('soundNotifications');
       const savedDesktopNotifications = localStorage.getItem('desktopNotifications');
       const savedFont = localStorage.getItem('font');
       const savedWallpaper = localStorage.getItem('wallpaper');
       const savedCategory = localStorage.getItem('selectedSettingsCategory');
 
-      if (savedAutoStart !== null) setAutoStart(savedAutoStart === 'true');
       if (savedSoundNotifications !== null) setSoundNotifications(savedSoundNotifications === 'true');
       if (savedDesktopNotifications !== null) setDesktopNotifications(savedDesktopNotifications === 'true');
       if (savedFont) setFont(savedFont);
@@ -155,10 +154,6 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
   }, []);
 
   // Effects to update localStorage when state changes
-  React.useEffect(() => {
-    localStorage.setItem('autoStart', autoStart.toString());
-  }, [autoStart]);
-
   React.useEffect(() => {
     localStorage.setItem('soundNotifications', soundNotifications.toString());
   }, [soundNotifications]);
@@ -845,14 +840,12 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormOption
-                  title="Auto Start Next Session"
-                  description="Automatically begin the next timer when current one ends"
-                  isSelected={autoStart}
-                  onChange={setAutoStart}
+                  title="Paused time counts as break"
+                  description="Include paused timer duration in break calculations."
+                  isSelected={countPauseTime}
+                  onChange={setCountPauseTime}
                 />
-              </div>
             </div>
           </div>
         );
@@ -1008,7 +1001,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
     try {
       // POST settings to API
       await apiClient.post('/users/settings/', {
-        autoStart,
+        pomodoroMinutes,
         // soundNotifications,
         // desktopNotifications,
         font,
