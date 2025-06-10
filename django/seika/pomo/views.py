@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from pomo.models import PomoSession
+from pomo.models import CurrentSession
 
 
 def timerView(request):
@@ -14,7 +14,7 @@ def timerView(request):
 @permission_classes([IsAuthenticated])
 def existingSessions(request):
     request.user
-    sessions = PomoSession.objects.filter(users=request.user)
+    sessions = CurrentSession.objects.filter(users=request.user)
     if sessions:
         return Response({
             "message": "Existing sessions found",

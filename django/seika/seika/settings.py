@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-cmm)c6e#2@uqxgl*6+%1@c_@#@m+a3k%5(!lr8aoagsfjm-ehb
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'daphne',
     'corsheaders',
+    'celery',
     #'channels',
 
     'django.contrib.admin',

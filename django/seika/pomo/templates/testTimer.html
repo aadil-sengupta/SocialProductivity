@@ -68,7 +68,7 @@
     
 
         // Websocket logic (untouched)
-        let url = `ws://${window.location.host}/ws/pomo/?token=${window.localStorage.getItem("token")}`;
+        let url = `ws://${window.location.host}/ws/session/?token=${window.localStorage.getItem("token")}`;
         ws = new WebSocket(url);
         ws.onopen = () => {
             console.log("WebSocket connection established");
