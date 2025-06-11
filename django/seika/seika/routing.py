@@ -1,6 +1,6 @@
 from django.urls import re_path
-from pomo.consumer import PomoConsumer
+from pomo.consumer import SessionConsumer
 
 websocket_urlpatterns = [
-    re_path('ws/session/', PomoConsumer.as_asgi()),
+    re_path('ws/session/', SessionConsumer.as_asgi()),
 ]

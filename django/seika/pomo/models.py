@@ -10,7 +10,7 @@ from django.utils import timezone # Added for timezone.now() and timedelta
 
 class CurrentSession(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='current_sessions')
-    mode = models.CharField(max_length=50, default='pomodoro', choices=[
+    mode = models.CharField(max_length=50, default='pomodoro',null=True, blank=True, choices=[
         ('pomodoro', 'Pomodoro'),
         ('free', 'Free'),
     ])
@@ -21,9 +21,9 @@ class CurrentSession(models.Model):
         ('free', 'Free'),
         ('paused', 'Paused'),
     ])
+    pomodoroCount = models.IntegerField(default=0)
     start_time = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField(null=True, blank=True)
-    isRunning = models.BooleanField(default=True)
     isConnected = models.BooleanField(default=True)
     lastDisconnected = models.DateTimeField(
         null=True,
@@ -33,12 +33,28 @@ class CurrentSession(models.Model):
     lastBreakStartTime = models.DateTimeField(
         null=True,
         blank=True,
-        help_text="Timestamp when the session was last paused."
+        help_text="Timestamp when the session was last Break-ed."
     )
     accumulatedBreakDuration = models.DurationField(
         default=timezone.timedelta(seconds=0),
         help_text="Total accumulated duration of all breaks for this session."
     )
+    lastPauseStartTime = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Timestamp when the session was last paused."
+    )
+    accumulatedPauseDuration = models.DurationField(
+        default=timezone.timedelta(seconds=0),
+        help_text="Total accumulated duration of all pauses for this session."
+    )
+
+    def save(self, *args, **kwargs):
+        if self.mode == 'pomodoro':
+            self.phase = 'focus'
+        elif self.mode == 'free':
+            self.phase = 'free'
+        super().save(*args, **kwargs)
 
     def __str__(self):
         current_status = "Running" if self.is_running else "Paused"
@@ -46,30 +62,41 @@ class CurrentSession(models.Model):
     
     async def pause_session(self):
         """Pauses the session if it is currently running."""
-        if self.isRunning:
-            self.isRunning = False
-            self.lastBreakStartTime = timezone.now()
-            await self.asave()
+        self.lastPauseStartTime = timezone.now()
+        self.phase = 'paused'
+        await self.asave()
 
     async def resume_session(self):
         """Resumes the session if it is currently paused."""
-        if not self.isRunning:
-            self.isRunning = True
-            if self.lastBreakStartTime:
-                break_duration = timezone.now() - self.lastBreakStartTime
-                self.accumulatedBreakDuration += break_duration
-                self.lastBreakStartTime = None
-            await self.asave()
+        if self.lastPauseStartTime:
+            pause_duration = timezone.now() - self.lastPauseStartTime
+            self.accumulatedPauseDuration += pause_duration
+            self.lastPauseStartTime = None
+        await self.asave()
     
+    async def break_start(self, break_type):
+        """Starts a break for the session."""
+        self.lastBreakStartTime = timezone.now()
+        self.phase = break_type
+        await self.asave()
+    
+    async def break_end(self):
+        """Ends the break for the session, updating the accumulated break duration."""
+        if self.lastBreakStartTime:
+            break_duration = timezone.now() - self.lastBreakStartTime
+            self.accumulatedBreakDuration += break_duration
+            self.lastBreakStartTime = None
+            self.phase = 'focus'
+        await self.asave()
+
     async def end_session(self):
         """Ends the session, marking it as completed."""
-        if self.isRunning or self.lastBreakStartTime:
+        if self.lastBreakStartTime:
             if self.lastBreakStartTime:
                 break_duration = timezone.now() - self.lastBreakStartTime
                 self.accumulatedBreakDuration += break_duration
 
             self.endTime = timezone.now()
-            self.isRunning = False
             self.totalTime = self.endTime - self.startTime
             self.activeTime = self.totalTime - self.accumulatedBreakDuration
             await self.asave()
