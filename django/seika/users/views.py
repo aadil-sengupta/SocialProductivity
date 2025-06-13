@@ -14,32 +14,20 @@ def protected_functional_view(request):
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def userSettings(request):
-    # get user model - Django automatically sets request.user from the token
     if request.method == 'POST':
         # Handle POST request to update user settings
-        userDataModel = UserData.objects.filter(user=request.user).first()
-        
-        if userDataModel:
-            # Update existing user settings
-            serializer = UserDataSerializer(userDataModel, data=request.data, context={'request': request})
-        else:
-            # Create new user settings if none exist
-            serializer = UserDataSerializer(data=request.data, context={'request': request})
+        userDataModel = UserData.objects.get(user=request.user)
         
         print("Post data:", request.data)
+        serializer = UserDataSerializer(userDataModel, data=request.data, partial=True)
         if serializer.is_valid():
-            if userDataModel:
-                # Update existing record
-                serializer.save()
-            else:
-                # Create new record
-                serializer.save(user=request.user)
+            serializer.save()
             return Response(serializer.data, status=200)
         else:
             return Response(serializer.errors, status=400)
     
     # Handle GET request
-    userDataModel = UserData.objects.filter(user=request.user).first()
+    userDataModel = UserData.objects.get(user=request.user)
     if userDataModel:
         serializer = UserDataSerializer(userDataModel)
         return Response(serializer.data)

@@ -8,6 +8,10 @@ import { useDarkMode } from "@/contexts/DarkModeContext";
 import { useAccentColorManager } from "@/contexts/AccentColorContext";
 import { useTimer } from "@/contexts/TimerContext";
 import { useProfile } from "@/contexts/ProfileContext";
+import { useNotifications } from "@/contexts/NotificationContext";
+import { useNotificationReminders } from "@/contexts/NotificationRemindersContext";
+import { useAppearance, FONT_OPTIONS } from "@/contexts/AppearanceContext";
+import { useWallpaper } from "@/contexts/WallpaperContext";
 import { apiClient } from "@/services/apiClient";
 import WallpaperPicker from "@/components/WallpaperPicker";
 
@@ -18,12 +22,9 @@ interface SettingsModalProps {
 }
 
 export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModalProps) {
-  const [soundNotifications, setSoundNotifications] = React.useState(true);
-  const [desktopNotifications, setDesktopNotifications] = React.useState(false);
-  const [font, setFont] = React.useState("Poppins");
-  const [wallpaper, setWallpaper] = React.useState("purple-gradient.jpg");
   const [selectedCategory, setSelectedCategory] = React.useState("profile");
   const [showAvatarPicker, setShowAvatarPicker] = React.useState(false);
+  const [showAllFonts, setShowAllFonts] = React.useState(false);
   
   // Use ProfileContext for profile-related state
   const {
@@ -38,6 +39,31 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
     selectedAvatarCategory,
     setSelectedAvatarCategory
   } = useProfile();
+
+  // Use NotificationContext for notification settings
+  const {
+    soundNotifications,
+    setSoundNotifications,
+    desktopNotifications,
+    setDesktopNotifications
+  } = useNotifications();
+
+  // Use NotificationRemindersContext for reminder settings
+  const {
+    breakReminders,
+    setBreakReminders,
+    standUpReminders,
+    setStandUpReminders
+  } = useNotificationReminders();
+
+  // Use AppearanceContext for appearance settings
+  const {
+    font,
+    setFont
+  } = useAppearance();
+
+  // Use WallpaperContext for wallpaper settings
+  const { selectedWallpaper: wallpaper, wallpaperBlur } = useWallpaper();
   
   // Avatar categories and data
   const avatarCategories = [
@@ -137,16 +163,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
   // Load settings from localStorage on component mount
   React.useEffect(() => {
     const loadSettings = () => {
-      const savedSoundNotifications = localStorage.getItem('soundNotifications');
-      const savedDesktopNotifications = localStorage.getItem('desktopNotifications');
-      const savedFont = localStorage.getItem('font');
-      const savedWallpaper = localStorage.getItem('wallpaper');
       const savedCategory = localStorage.getItem('selectedSettingsCategory');
-
-      if (savedSoundNotifications !== null) setSoundNotifications(savedSoundNotifications === 'true');
-      if (savedDesktopNotifications !== null) setDesktopNotifications(savedDesktopNotifications === 'true');
-      if (savedFont) setFont(savedFont);
-      if (savedWallpaper) setWallpaper(savedWallpaper);
       if (savedCategory) setSelectedCategory(savedCategory);
     };
 
@@ -154,22 +171,6 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
   }, []);
 
   // Effects to update localStorage when state changes
-  React.useEffect(() => {
-    localStorage.setItem('soundNotifications', soundNotifications.toString());
-  }, [soundNotifications]);
-
-  React.useEffect(() => {
-    localStorage.setItem('desktopNotifications', desktopNotifications.toString());
-  }, [desktopNotifications]);
-
-  React.useEffect(() => {
-    localStorage.setItem('font', font);
-  }, [font]);
-
-  React.useEffect(() => {
-    localStorage.setItem('wallpaper', wallpaper);
-  }, [wallpaper]);
-
   React.useEffect(() => {
     localStorage.setItem('selectedSettingsCategory', selectedCategory);
   }, [selectedCategory]);
@@ -443,6 +444,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
               <WallpaperPicker />
             </div>
 
+
             {/* Color Scheme Card */}
             <div className={`p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
               isDarkMode ? 'bg-gray-900/50 border-gray-700 hover:border-accent/50' : 'bg-gray-50/50 border-gray-200 hover:border-accent/50'
@@ -463,7 +465,110 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
               
               <ColorPicker />
             </div>
+
+                        {/* Timer Font Settings Card */}
+            <div className={`p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
+              isDarkMode ? 'bg-gray-900/50 border-gray-700 hover:border-accent/50' : 'bg-gray-50/50 border-gray-200 hover:border-accent/50'
+            }`}>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center">
+                    <span className="text-2xl">⏱️</span>
+                  </div>
+                  <div>
+                    <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                      Timer Font
+                    </h4>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Choose the font for your main timer display
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Preview Badge 
+                <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  isDarkMode ? 'bg-accent/20 text-accent' : 'bg-accent/10 text-accent'
+                }`}>
+                  Live Preview
+                </div> */}
+              </div>
+              
+              {/* Simple Font Picker */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {(showAllFonts ? FONT_OPTIONS : FONT_OPTIONS.slice(0, 10)).map((fontOption) => (
+                  <button
+                    key={fontOption.name}
+                    onClick={() => setFont(fontOption.name)}
+                    className={`group relative p-4 rounded-xl border-2 transition-all duration-300 hover:scale-[1.02] ${
+                      font === fontOption.name
+                        ? 'border-accent bg-accent/10 shadow-lg scale-[1.02]'
+                        : `border-transparent ${isDarkMode ? 'bg-gray-800/60 hover:bg-gray-700/60' : 'bg-gray-50/80 hover:bg-gray-100/80'}`
+                    }`}
+                  >
+                    {/* Timer Preview */}
+                    <div className={`p-3 rounded-lg mb-3 ${
+                      font === fontOption.name 
+                        ? 'bg-accent/20' 
+                        : `${isDarkMode ? 'bg-gray-900/60' : 'bg-white/80'}`
+                    }`}>
+                      <div 
+                        className={`text-center text-xl font-bold ${
+                          font === fontOption.name 
+                            ? 'text-accent' 
+                            : isDarkMode ? 'text-white' : 'text-gray-800'
+                        }`}
+                        style={{ fontFamily: fontOption.name }}
+                      >
+                        25:00
+                      </div>
+                    </div>
+                    
+                    {/* Font Name */}
+                    <div className="text-center">
+                      <h4 className={`text-sm font-medium ${
+                        font === fontOption.name 
+                          ? 'text-accent' 
+                          : isDarkMode ? 'text-white' : 'text-gray-800'
+                      }`}>
+                        {fontOption.name}
+                      </h4>
+                    </div>
+                    
+                    {/* Selection Indicator */}
+                    {font === fontOption.name && (
+                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-accent rounded-full flex items-center justify-center shadow-lg">
+                        <span className="text-accent-foreground text-xs font-bold">✓</span>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+              
+              {/* Show More/Less Button */}
+              {FONT_OPTIONS.length > 10 && (
+                <div className="flex justify-center pt-4">
+                  <button
+                    onClick={() => setShowAllFonts(!showAllFonts)}
+                    className={`flex items-center gap-3 px-6 py-3 rounded-xl transition-all duration-300 hover:scale-[1.02] border ${
+                      isDarkMode 
+                        ? 'text-gray-300 hover:text-white hover:bg-gray-800/50 border-gray-700/50 hover:border-gray-600' 
+                        : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100/50 border-gray-200/50 hover:border-gray-300'
+                    }`}
+                  >
+                    <span className="text-sm font-medium">
+                      {showAllFonts ? 'Show Less' : `Show ${FONT_OPTIONS.length - 10} More Fonts`}
+                    </span>
+                    <span className={`transition-transform duration-300 ${showAllFonts ? 'rotate-180' : ''}`}>
+                      ↓
+                    </span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+
           </div>
+          
         );
        case "timer":
         return (
@@ -918,14 +1023,14 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
                 <FormOption
                   title="Break Time Notifications"
                   description="Remind me when it's time for a break"
-                  isSelected={true}
-                  onChange={() => {}}
+                  isSelected={breakReminders}
+                  onChange={setBreakReminders}
                 />
                 <FormOption
                   title="Stand Up Reminders"
                   description="Gentle reminders to stretch and move"
-                  isSelected={false}
-                  onChange={() => {}}
+                  isSelected={standUpReminders}
+                  onChange={setStandUpReminders}
                   comingSoon={true}
                   comingSoonText="Coming Soon!"
                 />
@@ -964,6 +1069,8 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
                   description="Reduce system notifications during focus time"
                   isSelected={true}
                   onChange={() => {}}
+                  comingSoon={true}
+                  comingSoonText="Coming Soon!"
                 />
               </div>
             </div>
@@ -1005,15 +1112,30 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
     try {
       // POST settings to API
       await apiClient.post('/users/settings/', {
-        pomodoroMinutes,
-        // soundNotifications,
-        // desktopNotifications,
-        font,
+        // Profile settings
+        profilePhoto,
+        showOnlineStatus: privacySettings.showOnlineStatus,
+        showTimeSpendStudying: privacySettings.showTimeSpentStudying,
+        
+        // Theme settings (map React state to Django field names)
         accentColor,
         wallpaper,
+        backgroundBlur: wallpaperBlur,
+        font,
         darkMode: isDarkMode,
-        profilePhoto,
-        userName
+
+        // Timer settings (map React state to Django field names)
+        focusDuration: pomodoroMinutes,
+        shortBreakDuration: shortBreakMinutes,
+        longBreakDuration: longBreakMinutes,
+        longBreakInterval,
+        pauseIsBreak: countPauseTime,
+        
+        // Notification settings (map React state to Django field names)
+        desktopNotifications,
+        playSoundOnNotification: soundNotifications,
+        breakReminders,
+        standUpReminders,
       });
       
       console.log("Settings saved successfully");

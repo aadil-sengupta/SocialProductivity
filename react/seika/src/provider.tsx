@@ -7,6 +7,9 @@ import { WallpaperProvider } from "@/contexts/WallpaperContext";
 import { TimerProvider } from "@/contexts/TimerContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
+import { NotificationProvider } from "@/contexts/NotificationContext";
+import { NotificationRemindersProvider } from "@/contexts/NotificationRemindersContext";
+import { AppearanceProvider } from "@/contexts/AppearanceContext";
 
 declare module "@react-types/shared" {
   interface RouterConfig {
@@ -21,20 +24,26 @@ export function Provider({ children }: { children: React.ReactNode }) {
     <DarkModeProvider>
       <AccentColorProvider>
         <WallpaperProvider>
-          <TimerProvider>
-            <ProfileProvider>
-              <WebSocketProvider
-              url="ws://localhost:8000/ws/session/"
-              autoConnect={true}  // disable if profile context doesn't have anything or smthin
-              reconnectAttempts={5}
-              reconnectDelay={3000}
-              >
-                <HeroUIProvider navigate={navigate} useHref={useHref}>
-                  {children}
-                </HeroUIProvider>
-              </WebSocketProvider>
-            </ProfileProvider>
-          </TimerProvider>
+          <NotificationProvider>
+            <NotificationRemindersProvider>
+              <AppearanceProvider>
+                <TimerProvider>
+                  <ProfileProvider>
+                    <WebSocketProvider
+                    url="ws://localhost:8000/ws/session/"
+                    autoConnect={true}  // disable if profile context doesn't have anything or smthin
+                    reconnectAttempts={5}
+                    reconnectDelay={3000}
+                    >
+                      <HeroUIProvider navigate={navigate} useHref={useHref}>
+                        {children}
+                      </HeroUIProvider>
+                    </WebSocketProvider>
+                  </ProfileProvider>
+                </TimerProvider>
+              </AppearanceProvider>
+            </NotificationRemindersProvider>
+          </NotificationProvider>
         </WallpaperProvider>
       </AccentColorProvider>
     </DarkModeProvider>

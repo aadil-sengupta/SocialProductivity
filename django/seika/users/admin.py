@@ -2,8 +2,8 @@ from django.contrib import admin
 from users.models import UserData
 
 class UserDataAdmin(admin.ModelAdmin):
-    list_display = ('user', 'font', 'accentColor', 'darkMode', 'isOnline', 'wallpaper')
-    list_filter = ('darkMode', 'isOnline', 'accentColor', 'font')
+    list_display = ('user', 'isOnline', 'darkMode', 'font', 'accentColor', 'focusDuration', 'desktopNotifications')
+    list_filter = ('darkMode', 'isOnline', 'showOnlineStatus', 'showTimeSpendStudying', 'backgroundBlur', 'pauseIsBreak', 'desktopNotifications', 'playSoundOnNotification', 'breakReminders', 'standUpReminders')
     search_fields = ('user__username', 'user__email')
     readonly_fields = ('activeTime', 'totalTime', 'isWorking')
     
@@ -11,8 +11,17 @@ class UserDataAdmin(admin.ModelAdmin):
         ('User Information', {
             'fields': ('user',)
         }),
-        ('Appearance Settings', {
-            'fields': ('wallpaper', 'font', 'accentColor', 'darkMode')
+        ('Profile Settings', {
+            'fields': ('profilePhoto', 'showOnlineStatus', 'showTimeSpendStudying')
+        }),
+        ('Theme & Appearance', {
+            'fields': ('accentColor', 'wallpaper', 'backgroundBlur', 'font', 'darkMode')
+        }),
+        ('Timer Settings', {
+            'fields': ('focusDuration', 'shortBreakDuration', 'longBreakDuration', 'longBreakInterval', 'pauseIsBreak')
+        }),
+        ('Notification Settings', {
+            'fields': ('desktopNotifications', 'playSoundOnNotification', 'breakReminders', 'standUpReminders')
         }),
         ('Status', {
             'fields': ('isOnline',)

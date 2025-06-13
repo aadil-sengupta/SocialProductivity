@@ -22,8 +22,8 @@ class SessionConsumer(AsyncWebsocketConsumer):
             return
         print(f"User {self.user} connected to SessionConsumer")
 
-    async def disconnect(self):
-        print(f"Disconnecting user: {self.user}") # handle ongoing sessions
+    async def disconnect(self, code):
+        print(f"Disconnecting user: {self.user} with code: {code}")
         if hasattr(self, 'session'):
             await self.session.end_session()
         self.userData.isOnline = False

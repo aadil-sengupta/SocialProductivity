@@ -187,18 +187,13 @@ const Timer: React.ForwardRefRenderFunction<TimerRef, TimerProps> = (
     <div className={`timer ${className || ''}`} style={style}>
       <div 
         className={`timer-display ${displayClassName || ''}`}
-        style={displayStyle}
+        style={{
+          fontFamily: 'var(--timer-font-family, "Marmelat Black")',
+          ...displayStyle
+        }}
       >
         {formatTime(time)}
       </div>
-        <style>{`
-            @font-face {
-            font-family: "Marmelat Black";
-            src: local("Marmelat Black"),
-            url("/fonts/Marmelat Black.woff") format("woff");
-            font-weight: bold;
-            }
-        `}</style>
     </div>
   );
 };
