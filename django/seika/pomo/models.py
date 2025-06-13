@@ -14,7 +14,7 @@ class CurrentSession(models.Model):
         ('pomodoro', 'Pomodoro'),
         ('free', 'Free'),
     ])
-    phase = models.CharField(max_length=50, default='work', choices=[
+    phase = models.CharField(max_length=50, blank=True, null=True, choices=[
         ('focus', 'Focus'),
         ('shortBreak', 'Short Break'),
         ('longBreak', 'Long Break'),
@@ -22,8 +22,7 @@ class CurrentSession(models.Model):
         ('paused', 'Paused'),
     ])
     pomodoroCount = models.IntegerField(default=0)
-    start_time = models.DateTimeField(auto_now_add=True)
-    end_time = models.DateTimeField(null=True, blank=True)
+    startTime = models.DateTimeField(auto_now_add=True)
     isConnected = models.BooleanField(default=True)
     lastDisconnected = models.DateTimeField(
         null=True,
@@ -49,16 +48,15 @@ class CurrentSession(models.Model):
         help_text="Total accumulated duration of all pauses for this session."
     )
 
-    def save(self, *args, **kwargs):
-        if self.mode == 'pomodoro':
-            self.phase = 'focus'
-        elif self.mode == 'free':
-            self.phase = 'free'
-        super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     if self.mode == 'pomodoro':
+    #         self.phase = 'focus'
+    #     elif self.mode == 'free':
+    #         self.phase = 'free'
+    #     super().save(*args, **kwargs)
 
     def __str__(self):
-        current_status = "Running" if self.is_running else "Paused"
-        return f"{current_status} for User: {self.user.username} in {self.mode} mode, phase: {self.phase}"
+        return f"{self.user.username} in {self.mode} mode, phase: {self.phase}"
     
     async def pause_session(self):
         """Pauses the session if it is currently running."""
@@ -77,7 +75,11 @@ class CurrentSession(models.Model):
     async def break_start(self, break_type):
         """Starts a break for the session."""
         self.lastBreakStartTime = timezone.now()
-        self.phase = break_type
+        print(f"Starting break of type: {break_type} for user: {self.user.username}")
+        if break_type == 'shortBreak':
+            self.phase = 'shortBreak'
+        elif break_type == 'longBreak':
+            self.phase = 'longBreak'
         await self.asave()
     
     async def break_end(self):
@@ -92,14 +94,15 @@ class CurrentSession(models.Model):
     async def end_session(self):
         """Ends the session, marking it as completed."""
         if self.lastBreakStartTime:
-            if self.lastBreakStartTime:
-                break_duration = timezone.now() - self.lastBreakStartTime
-                self.accumulatedBreakDuration += break_duration
-
-            self.endTime = timezone.now()
-            self.totalTime = self.endTime - self.startTime
-            self.activeTime = self.totalTime - self.accumulatedBreakDuration
-            await self.asave()
+            break_duration = timezone.now() - self.lastBreakStartTime
+            self.accumulatedBreakDuration += break_duration
+        if self.lastPauseStartTime:
+            pause_duration = timezone.now() - self.lastPauseStartTime
+            self.accumulatedPauseDuration += pause_duration
+        self.endTime = timezone.now()
+        self.totalTime = self.endTime - self.startTime
+        self.activeTime = self.totalTime - self.accumulatedBreakDuration - self.accumulatedPauseDuration
+        await self.asave()
 
 class SessionData(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='pomo_session_data')
@@ -107,6 +110,7 @@ class SessionData(models.Model):
     totalTime = models.DurationField()
     activeTime = models.DurationField(blank=True, null=True) 
     breakTime = models.DurationField()
+    pauseTime = models.DurationField() # Total time spent in pause
     startTime = models.DateTimeField() # Time the session started
 
     def save(self, *args, **kwargs):

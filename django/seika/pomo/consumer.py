@@ -1,21 +1,26 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.utils import timezone
-from .models import CurrentSession
-
+from .models import CurrentSession, SessionData
+from .serializers import SessionDataSerializer
 class SessionConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
         await self.accept()
         self.user = self.scope['user']
+        print(f"Connecting user: {self.user}")
         if self.user.is_anonymous:
+            await self.send(text_data=json.dumps({
+                'type': 'anonymous_user',
+                'message': 'You must be logged in to start a session.',
+            }))
             await self.close()
             return
         print(f"User {self.user} connected to SessionConsumer")
 
     async def receive(self, text_data):
         data = json.loads(text_data)
-        action = data.get('action')
+        action = data.get('type')
         print(f"Received action: {action} from user: {self.user}")
         if action == 'start_session':
             await self.start_session(data)
@@ -26,19 +31,21 @@ class SessionConsumer(AsyncWebsocketConsumer):
         elif action == 'break_end':
             await self.break_end(data)
         elif action == 'resume_session':
-            await self.resume_session(data)
+            await self.resume_session()
         elif action == 'end_session':
-            await self.end_session(data)
+            await self.end_session()
 
     async def start_session(self, data): #type of session
-        existingSession = CurrentSession.objects.filter(user=self.user, isRunning=True)
-        if existingSession:
+        # check if user already has an active session
+        if await CurrentSession.objects.filter(user=self.user).aexists():
+            print(f"User {self.user} already has an active session.")
             await self.send(text_data=json.dumps({
                 'type': 'session_exists',
                 'message': 'You already have an active session.',
             }))
             return
-        self.session = await CurrentSession.objects.acreate(user=self.user, mode=data.get('mode'))
+        self.session = await CurrentSession.objects.acreate(user=self.user, mode=data.get('payload').get('mode'), phase='focus')
+        print(f"Starting session for user: {self.user} with mode: {self.session.mode}")
         await self.send(text_data=json.dumps({
             'type': 'session_started',
             'phase': self.session.phase,
@@ -47,7 +54,7 @@ class SessionConsumer(AsyncWebsocketConsumer):
 
     async def break_start(self, data):
         try:
-            break_type = data.get('break_type', 'shortBreak')  # Default to 'short' if not provided
+            break_type = data.get('payload').get('break_type', 'shortBreak')  # Default to 'short' if not provided
             await self.session.break_start(break_type)
             await self.send(text_data=json.dumps({
                 'type': 'break_started',
@@ -104,8 +111,19 @@ class SessionConsumer(AsyncWebsocketConsumer):
     async def end_session(self): # add logic to mark session as inactive and allow users to reconnect
         try:
             await self.session.end_session()
+            # Save session data to SessionData model
+            session_data = await SessionData.objects.acreate(
+                user=self.user,
+                totalTime=self.session.totalTime,
+                activeTime=self.session.activeTime,
+                breakTime=self.session.accumulatedBreakDuration,
+                pauseTime=self.session.accumulatedPauseDuration,
+                startTime=self.session.startTime
+            )
+            await self.session.adelete()  # Remove the current session after ending it
             await self.send(text_data=json.dumps({
                 'type': 'session_ended',
+                'data': SessionDataSerializer(session_data).data,
                 'id': self.session.id,
             }))
         except CurrentSession.DoesNotExist:
@@ -113,3 +131,4 @@ class SessionConsumer(AsyncWebsocketConsumer):
                 'type': 'error',
                 'message': 'No active session to end.',
             }))
+        

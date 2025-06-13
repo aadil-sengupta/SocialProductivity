@@ -1,295 +1,332 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback, ReactNode } from 'react';
 
-// Types
+// WebSocket connection states
 export type WebSocketStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error';
 
+// Message types for type safety
 export interface WebSocketMessage {
   type: string;
   payload?: any;
   timestamp?: number;
 }
 
+// WebSocket context type
 interface WebSocketContextType {
   // Connection state
-  status: WebSocketStatus;
   isConnected: boolean;
-  lastError: string | null;
-  reconnectAttempts: number;
+  status: WebSocketStatus;
   
   // Connection methods
-  connect: (url: string) => void;
+  connect: () => void;
   disconnect: () => void;
   
   // Messaging
-  sendMessage: (message: WebSocketMessage) => boolean;
+  sendMessage: (message: WebSocketMessage) => void;
   
-  // Event listeners
-  addEventListener: (type: string, callback: (data: any) => void) => void;
-  removeEventListener: (type: string, callback: (data: any) => void) => void;
-  
-  // Timer-specific methods for your app
-  broadcastTimerState: (timerData: any) => void;
-  joinRoom: (roomId: string, userId: string) => void;
+  // Room management (if needed)
+  joinRoom: (roomId: string) => void;
   leaveRoom: () => void;
+  currentRoom: string | null;
+  
+  // Connection stats
+  connectionAttempts: number;
+  lastConnectedAt: Date | null;
 }
 
 interface WebSocketProviderProps {
   children: ReactNode;
+  url?: string;
   autoConnect?: boolean;
-  serverUrl?: string;
-  reconnectInterval?: number;
-  maxReconnectAttempts?: number;
+  reconnectAttempts?: number;
+  reconnectDelay?: number;
+  enableHeartbeat?: boolean;
+  heartbeatInterval?: number;
 }
 
+// Create context
 const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined);
 
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   children,
-  autoConnect = false,
-  serverUrl = 'ws://localhost:8000/ws/', // Your Django WebSocket URL
-  reconnectInterval = 3000,
-  maxReconnectAttempts = 5
+  url = 'ws://localhost:8000/ws/session/',
+  autoConnect = true,
+  reconnectAttempts = 5,
+  reconnectDelay = 3000,
+  enableHeartbeat = false, // Disabled by default - only enable for production with proxies/firewalls
+  heartbeatInterval = 30000, // 30 seconds
 }) => {
   // State
   const [status, setStatus] = useState<WebSocketStatus>('disconnected');
-  const [lastError, setLastError] = useState<string | null>(null);
-  const [reconnectAttempts, setReconnectAttempts] = useState(0);
+  const [currentRoom, setCurrentRoom] = useState<string | null>(null);
+  const [connectionAttempts, setConnectionAttempts] = useState(0);
+  const [lastConnectedAt, setLastConnectedAt] = useState<Date | null>(null);
   
   // Refs
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const eventListenersRef = useRef<Map<string, Set<(data: any) => void>>>(new Map());
-  const currentRoomRef = useRef<string | null>(null);
-  const userIdRef = useRef<string | null>(null);
-
-  // Helper to clear reconnect timeout
+  const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const messageQueueRef = useRef<WebSocketMessage[]>([]);
+  
+  // Computed state
+  const isConnected = status === 'connected';
+  
+  // Clear reconnect timeout
   const clearReconnectTimeout = useCallback(() => {
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
   }, []);
-
-  // Event listener management
-  const addEventListener = useCallback((type: string, callback: (data: any) => void) => {
-    if (!eventListenersRef.current.has(type)) {
-      eventListenersRef.current.set(type, new Set());
+  
+  // Clear heartbeat interval
+  const clearHeartbeat = useCallback(() => {
+    if (heartbeatIntervalRef.current) {
+      clearInterval(heartbeatIntervalRef.current);
+      heartbeatIntervalRef.current = null;
     }
-    eventListenersRef.current.get(type)?.add(callback);
   }, []);
-
-  const removeEventListener = useCallback((type: string, callback: (data: any) => void) => {
-    eventListenersRef.current.get(type)?.delete(callback);
-  }, []);
-
-  const emitEvent = useCallback((type: string, data: any) => {
-    eventListenersRef.current.get(type)?.forEach(callback => {
-      try {
-        callback(data);
-      } catch (error) {
-        console.error(`Error in WebSocket event listener for ${type}:`, error);
-      }
-    });
-  }, []);
-
-  // Send message function
-  const sendMessage = useCallback((message: WebSocketMessage): boolean => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      try {
-        const messageWithTimestamp = {
-          ...message,
-          timestamp: Date.now()
-        };
-        wsRef.current.send(JSON.stringify(messageWithTimestamp));
-        return true;
-      } catch (error) {
-        console.error('Failed to send WebSocket message:', error);
-        setLastError('Failed to send message');
-        return false;
-      }
-    }
-    return false;
-  }, []);
-
-  // Timer-specific methods
-  const broadcastTimerState = useCallback((timerData: any) => {
-    if (currentRoomRef.current) {
-      sendMessage({
-        type: 'timer_update',
-        payload: {
-          roomId: currentRoomRef.current,
-          userId: userIdRef.current,
-          timerData
-        }
-      });
-    }
-  }, [sendMessage]);
-
-  const joinRoom = useCallback((roomId: string, userId: string) => {
-    currentRoomRef.current = roomId;
-    userIdRef.current = userId;
-    
-    sendMessage({
-      type: 'join_room',
-      payload: {
-        roomId,
-        userId
-      }
-    });
-  }, [sendMessage]);
-
-  const leaveRoom = useCallback(() => {
-    if (currentRoomRef.current) {
-      sendMessage({
-        type: 'leave_room',
-        payload: {
-          roomId: currentRoomRef.current,
-          userId: userIdRef.current
-        }
-      });
-    }
-    currentRoomRef.current = null;
-    userIdRef.current = null;
-  }, [sendMessage]);
-
-  // Connect function
-  const connect = useCallback((url?: string) => {
-    const wsUrl = url || serverUrl;
-    
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      console.warn('WebSocket is already connected');
+  
+  // Send heartbeat to keep connection alive
+  const startHeartbeat = useCallback(() => {
+    if (!enableHeartbeat) {
+      console.log('💓 [WebSocket] Heartbeat disabled - relying on TCP keepalive');
       return;
     }
-
+    
+    clearHeartbeat();
+    heartbeatIntervalRef.current = setInterval(() => {
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        console.log('📡 [WebSocket] Sending heartbeat');
+        wsRef.current.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
+      }
+    }, heartbeatInterval);
+  }, [clearHeartbeat, enableHeartbeat, heartbeatInterval]);
+  
+  // Process queued messages
+  const processMessageQueue = useCallback(() => {
+    if (wsRef.current?.readyState === WebSocket.OPEN && messageQueueRef.current.length > 0) {
+      console.log(`📤 [WebSocket] Processing ${messageQueueRef.current.length} queued messages`);
+      messageQueueRef.current.forEach(message => {
+        wsRef.current?.send(JSON.stringify(message));
+      });
+      messageQueueRef.current = [];
+    }
+  }, []);
+  
+  // Send message
+  const sendMessage = useCallback((message: WebSocketMessage) => {
+    const messageWithTimestamp = {
+      ...message,
+      timestamp: message.timestamp || Date.now(),
+    };
+    
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      console.log('📤 [WebSocket] Sending message:', messageWithTimestamp);
+      wsRef.current.send(JSON.stringify(messageWithTimestamp));
+    } else {
+      console.log('📋 [WebSocket] Queueing message (not connected):', messageWithTimestamp);
+      messageQueueRef.current.push(messageWithTimestamp);
+    }
+  }, []);
+  
+  // Join room
+  const joinRoom = useCallback((roomId: string) => {
+    console.log(`🚪 [WebSocket] Joining room: ${roomId}`);
+    setCurrentRoom(roomId);
+    sendMessage({
+      type: 'join_room',
+      payload: { roomId }
+    });
+  }, [sendMessage]);
+  
+  // Leave room
+  const leaveRoom = useCallback(() => {
+    if (currentRoom) {
+      console.log(`🚪 [WebSocket] Leaving room: ${currentRoom}`);
+      sendMessage({
+        type: 'leave_room',
+        payload: { roomId: currentRoom }
+      });
+      setCurrentRoom(null);
+    }
+  }, [currentRoom, sendMessage]);
+  
+  // Connect to WebSocket
+  const connect = useCallback(() => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      console.log('⚠️ [WebSocket] Already connected, skipping connection attempt');
+      return;
+    }
+    
+    if (wsRef.current?.readyState === WebSocket.CONNECTING) {
+      console.log('⚠️ [WebSocket] Connection already in progress');
+      return;
+    }
+    
+    console.log(`🔌 [WebSocket] Attempting to connect to ${url} (attempt ${connectionAttempts + 1})`);
+    setStatus('connecting');
+    
     try {
-      setStatus('connecting');
-      setLastError(null);
-      clearReconnectTimeout();
-
+      // Get user token from localStorage for authorization
+      const userToken = localStorage.getItem('userToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
+      
+      // Construct WebSocket URL with token as query parameter if available
+      let wsUrl = url;
+      if (userToken) {
+        const separator = url.includes('?') ? '&' : '?';
+        wsUrl = `${url}${separator}token=${encodeURIComponent(userToken)}`;
+        console.log('🔑 [WebSocket] Including user token in connection');
+      } else {
+        console.log('⚠️ [WebSocket] No user token found in localStorage');
+      }
+      
       wsRef.current = new WebSocket(wsUrl);
-
+      
       wsRef.current.onopen = () => {
-        console.log('WebSocket connected');
+        console.log('✅ [WebSocket] Connected successfully');
         setStatus('connected');
-        setReconnectAttempts(0);
-        emitEvent('connected', null);
-
-        // Rejoin room if we were in one
-        if (currentRoomRef.current && userIdRef.current) {
-          joinRoom(currentRoomRef.current, userIdRef.current);
-        }
+        setConnectionAttempts(0);
+        setLastConnectedAt(new Date());
+        clearReconnectTimeout();
+        startHeartbeat();
+        processMessageQueue();
       };
-
+      
       wsRef.current.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data);
-          emitEvent('message', message);
+          console.log('📥 [WebSocket] Received message:', message);
           
-          // Handle specific message types
-          if (message.type) {
-            emitEvent(message.type, message.payload);
+          // Handle special message types
+          if (message.type === 'pong') {
+            console.log('💓 [WebSocket] Received pong');
+            return;
           }
+          
+          // Dispatch custom event for message handling
+          window.dispatchEvent(new CustomEvent('websocket-message', { detail: message }));
         } catch (error) {
-          console.error('Failed to parse WebSocket message:', error);
-          emitEvent('error', { error: 'Failed to parse message', data: event.data });
+          console.error('❌ [WebSocket] Error parsing message:', error);
         }
       };
-
-      wsRef.current.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        setLastError('Connection error');
-        emitEvent('error', error);
-      };
-
+      
       wsRef.current.onclose = (event) => {
-        console.log('WebSocket disconnected:', event.code, event.reason);
-        wsRef.current = null;
-        emitEvent('disconnected', { code: event.code, reason: event.reason });
-
-        // Attempt reconnection if not intentionally closed
-        if (event.code !== 1000 && reconnectAttempts < maxReconnectAttempts) {
+        console.log(`🔌 [WebSocket] Connection closed:`, {
+          code: event.code,
+          reason: event.reason,
+          wasClean: event.wasClean
+        });
+        
+        setStatus('disconnected');
+        clearHeartbeat();
+        
+        // Attempt reconnection if it wasn't a clean close and we haven't exceeded max attempts
+        if (!event.wasClean && connectionAttempts < reconnectAttempts) {
           setStatus('reconnecting');
-          setReconnectAttempts(prev => prev + 1);
+          setConnectionAttempts(prev => prev + 1);
+          
+          console.log(`🔄 [WebSocket] Scheduling reconnection in ${reconnectDelay}ms (attempt ${connectionAttempts + 1}/${reconnectAttempts})`);
           
           reconnectTimeoutRef.current = setTimeout(() => {
-            connect(wsUrl);
-          }, reconnectInterval);
-        } else {
-          setStatus('disconnected');
+            connect();
+          }, reconnectDelay);
+        } else if (connectionAttempts >= reconnectAttempts) {
+          console.log('❌ [WebSocket] Max reconnection attempts reached');
+          setStatus('error');
         }
       };
-
+      
+      wsRef.current.onerror = (error) => {
+        console.error('❌ [WebSocket] Connection error:', error);
+        setStatus('error');
+      };
+      
     } catch (error) {
-      console.error('Failed to create WebSocket connection:', error);
+      console.error('❌ [WebSocket] Failed to create WebSocket:', error);
       setStatus('error');
-      setLastError(error instanceof Error ? error.message : 'Unknown connection error');
     }
-  }, [serverUrl, reconnectAttempts, maxReconnectAttempts, reconnectInterval, clearReconnectTimeout, emitEvent, joinRoom]);
-
-  // Disconnect function
+  }, [url, connectionAttempts, reconnectAttempts, reconnectDelay, clearReconnectTimeout, startHeartbeat, processMessageQueue]);
+  
+  // Disconnect from WebSocket
   const disconnect = useCallback(() => {
+    console.log('🔌 [WebSocket] Manually disconnecting');
     clearReconnectTimeout();
-    setReconnectAttempts(0);
+    clearHeartbeat();
     
     if (wsRef.current) {
-      // Send leave room message before disconnecting
-      leaveRoom();
-      
-      wsRef.current.close(1000, 'Intentional disconnect');
+      wsRef.current.close(1000, 'Manual disconnect');
       wsRef.current = null;
     }
     
     setStatus('disconnected');
-    setLastError(null);
-  }, [clearReconnectTimeout, leaveRoom]);
-
-  // Auto-connect on mount if enabled
+    setConnectionAttempts(0);
+    setCurrentRoom(null);
+    messageQueueRef.current = [];
+  }, [clearReconnectTimeout, clearHeartbeat]);
+  
+  // Auto-connect on mount
   useEffect(() => {
     if (autoConnect) {
+      console.log('🚀 [WebSocket] Auto-connecting on mount');
       connect();
     }
-
+    
     // Cleanup on unmount
     return () => {
+      console.log('🧹 [WebSocket] Cleaning up on unmount');
       disconnect();
     };
-  }, [autoConnect, connect, disconnect]);
-
-  // Handle visibility change to reconnect when tab becomes active
+  }, [autoConnect]); // Only run on mount and when autoConnect changes
+  
+  // Handle page visibility changes (reconnect when page becomes visible)
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden && status === 'disconnected' && autoConnect) {
+      if (document.visibilityState === 'visible' && status === 'disconnected' && autoConnect) {
+        console.log('👁️ [WebSocket] Page became visible, attempting reconnection');
         connect();
       }
     };
-
+    
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [status, autoConnect, connect]);
+  
+  // Handle online/offline events
+  useEffect(() => {
+    const handleOnline = () => {
+      console.log('🌐 [WebSocket] Network came online, attempting reconnection');
+      if (status === 'disconnected' && autoConnect) {
+        connect();
+      }
+    };
+    
+    const handleOffline = () => {
+      console.log('📴 [WebSocket] Network went offline');
+      setStatus('disconnected');
+    };
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
     };
   }, [status, autoConnect, connect]);
-
-  // Context value
+  
   const contextValue: WebSocketContextType = {
-    // State
+    isConnected,
     status,
-    isConnected: status === 'connected',
-    lastError,
-    reconnectAttempts,
-    
-    // Methods
     connect,
     disconnect,
     sendMessage,
-    addEventListener,
-    removeEventListener,
-    
-    // Timer-specific methods
-    broadcastTimerState,
     joinRoom,
-    leaveRoom
+    leaveRoom,
+    currentRoom,
+    connectionAttempts,
+    lastConnectedAt,
   };
-
+  
   return (
     <WebSocketContext.Provider value={contextValue}>
       {children}
@@ -297,8 +334,8 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   );
 };
 
-// Custom hook to use the WebSocket context
-export const useWebSocket = (): WebSocketContextType => {
+// Hook to use WebSocket context
+export const useWebSocket = () => {
   const context = useContext(WebSocketContext);
   if (context === undefined) {
     throw new Error('useWebSocket must be used within a WebSocketProvider');
@@ -306,18 +343,26 @@ export const useWebSocket = (): WebSocketContextType => {
   return context;
 };
 
-// Hook for specific event listening with cleanup
+// Hook to listen for specific WebSocket message types
 export const useWebSocketListener = (
-  eventType: string, 
-  callback: (data: any) => void, 
-  dependencies: any[] = []
+  messageType: string,
+  callback: (data: any) => void,
+  deps: React.DependencyList = []
 ) => {
-  const { addEventListener, removeEventListener } = useWebSocket();
-
   useEffect(() => {
-    addEventListener(eventType, callback);
-    return () => removeEventListener(eventType, callback);
-  }, [eventType, ...dependencies, addEventListener, removeEventListener]);
+    const handleMessage = (event: CustomEvent) => {
+      const message = event.detail;
+      if (message.type === messageType) {
+        callback(message.payload || message);
+      }
+    };
+    
+    window.addEventListener('websocket-message', handleMessage as EventListener);
+    
+    return () => {
+      window.removeEventListener('websocket-message', handleMessage as EventListener);
+    };
+  }, [messageType, ...deps]);
 };
 
 export default WebSocketContext;

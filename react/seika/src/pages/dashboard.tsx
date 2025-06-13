@@ -16,6 +16,7 @@ import DigitalClock from "@/components/DigitalClock";
 import RandomGreeting from "@/components/RandomGreeting";
 import { BsCupHotFill } from "react-icons/bs";
 import { HiMiniVideoCamera } from "react-icons/hi2";
+import { useWebSocket, useWebSocketListener } from "@/contexts/WebSocketContext";
 
 export default function DashboardPage() {
   // document.title = "Dashboard | Seika";
@@ -39,8 +40,27 @@ export default function DashboardPage() {
       shortBreakMinutes, 
       longBreakMinutes, 
       longBreakInterval,
-      mode: timerContextMode,
     } = useTimer();
+    const { isConnected, sendMessage } = useWebSocket();
+
+    useWebSocketListener('session_exists', (data)=> {
+      console.log('Session exists:', data);
+      
+      // Session exists modal
+
+      setTimeout(()=> {
+      pomoTimerRef.current?.pause();
+      pomoTimerRef.current?.reset();
+      freeTimerRef.current?.pause();
+      freeTimerRef.current?.reset();
+      setStarted(false);
+      setRunning(false);
+      setCurrentTime(0);
+      setTotalTime(0);
+      setSessionPhase('focus');
+      setPomodoroCount(0); // Reset pomodoro count when switching modes
+      }, 500);
+    });
 
   // Check if settings modal should be open based on URL
   const isSettingsOpen = searchParams.get('modal') === 'settings';
@@ -94,7 +114,22 @@ export default function DashboardPage() {
       sessionPhase,
       pomodoroCount
     });
+
   }, [pomodoroMinutes, shortBreakMinutes, longBreakMinutes, longBreakInterval, sessionPhase, pomodoroCount]);
+
+  // useEffect(() => {
+  //   console.log(`New Phase: ${sessionPhase}`);
+
+  //   if (sessionPhase === 'break-overtime' || sessionPhase === 'focus-overtime') {
+  //     return
+  //   }
+
+  //   sendMessage({
+  //     type: sessionPhase,
+  //     payload: {}
+  //   });
+
+  // }, [sessionPhase]);
 
 
   useEffect(() => {
@@ -133,6 +168,22 @@ export default function DashboardPage() {
     setSelectedTab(mode);
     setShowBlur(true); // Trigger temporary blur
   };
+
+  const handleResetButton = () => {
+
+      // Modal confirming session end.
+      sendMessage({
+        type: 'end_session',
+        payload: {}
+      });
+      getActiveTimerRef().current?.reset();
+      setStarted(false);
+      setRunning(false);
+      setCurrentTime(0);
+      setTotalTime(0);
+      setSessionPhase('focus');
+      setPomodoroCount(0); // Reset pomodoro count
+  }
 
   // Main button press handler - handles start, pause, resume, and session transitions
   const handleMainButtonPress = () => {
@@ -174,10 +225,15 @@ export default function DashboardPage() {
       return 'Resume';
     }
   };
-
+  
   const handleStart = () => {
     setIsTransitioning(true);
-    
+
+    if (!isConnected) {
+      alert('Server is not connected. Please check your connection or refresh the page to try again.'); // modal saying server not connected, refresh for offline mode or smthin
+      return;
+    }
+
     // Small delay to allow transition animation to begin
     setTimeout(() => {
       setStarted(true);
@@ -194,17 +250,31 @@ export default function DashboardPage() {
           const shouldBeLongBreak = pomodoroCount > 0 && pomodoroCount % longBreakInterval === 0;
           durationInSeconds = shouldBeLongBreak ? longBreakMinutes * 60 : shortBreakMinutes * 60;
           newPhase = 'break';
+
+          sendMessage({ type: 'break_start', payload: { break_type: shouldBeLongBreak ? 'longBreak' : 'shortBreak' } });
+
           console.log(`Starting ${shouldBeLongBreak ? 'long' : 'short'} break. PomodoroCount: ${pomodoroCount}, LongBreakInterval: ${longBreakInterval}, Duration: ${durationInSeconds / 60} minutes, Should be long break: ${shouldBeLongBreak}`);
         } else if (sessionPhase === 'break-overtime') {
           // Starting a focus session after break overtime
+
+          sendMessage({ type: 'break_end', payload: {} });
+
           durationInSeconds = pomodoroMinutes * 60;
           newPhase = 'focus';
+
         } else if (sessionPhase === 'break') {
           // This shouldn't happen, but handle it
+          sendMessage({ type: 'break_end', payload: {} });
           durationInSeconds = pomodoroMinutes * 60;
           newPhase = 'focus';
         } else {
           // Starting a focus session (default)
+          sendMessage({
+            type: 'start_session',
+            payload: {
+              mode: 'pomodoro',
+            }
+          });
           durationInSeconds = pomodoroMinutes * 60;
           newPhase = 'focus';
         }
@@ -234,11 +304,21 @@ export default function DashboardPage() {
   };
 
   const handlePause = () => {
+    sendMessage({
+      type: 'pause_session',
+      payload: {}
+    });
+
     getActiveTimerRef().current?.pause();
     setRunning(false);
   };
 
   const handleResume = () => {
+    sendMessage({
+      type: 'resume_session',
+      payload: {}
+    });
+
     getActiveTimerRef().current?.resume();
     setRunning(true);
   };
@@ -338,7 +418,7 @@ export default function DashboardPage() {
     if (selectedTab !== 'pomo' || sessionPhase !== 'focus') {
       return;
     }
-
+    
     setIsTransitioning(true);
     
     // Small delay to allow transition animation to begin
@@ -356,7 +436,9 @@ export default function DashboardPage() {
       setTotalTime(breakDuration);
       
       console.log(`Skipping to ${shouldBeLongBreak ? 'long' : 'short'} break. PomodoroCount: ${newPomodoroCount}, Duration: ${breakDuration / 60} minutes`);
-      
+
+      sendMessage({ type: 'break_start', payload: { break_type: shouldBeLongBreak ? 'longBreak' : 'shortBreak' } });  
+
       // Reset timer and start break countdown
       setTimeout(() => {
         getActiveTimerRef().current?.reset();
@@ -553,15 +635,7 @@ export default function DashboardPage() {
             />
             
             <AnimatedIconButton
-              onClick={() => {
-                getActiveTimerRef().current?.reset();
-                setStarted(false);
-                setRunning(false);
-                setCurrentTime(0);
-                setTotalTime(0);
-                setSessionPhase('focus');
-                setPomodoroCount(0); // Reset pomodoro count
-              }}
+              onClick={handleResetButton}
               icon={<IoRefreshSharp />}
               variant="reset"
               size={42}
