@@ -9,15 +9,15 @@ def timerView(request):
     return render(request, 'testTimer.html')
 
 
-#api view
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def existingSessions(request):
-    request.user
-    sessions = CurrentSession.objects.filter(users=request.user)
-    if sessions:
-        return Response({
-            "message": "Existing sessions found",
-            "sessions": [session.sessionId for session in sessions]
-        })
-    return Response({"message": "Existing sessions API"})
+# #api view
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def existingSessions(request):
+#     request.user
+#     sessions = CurrentSession.objects.filter(users=request.user)
+#     if sessions:
+#         return Response({
+#             "message": "Existing sessions found",
+#             "sessions": [session.sessionId for session in sessions]
+#         })
+#     return Response({"message": "Existing sessions API"})

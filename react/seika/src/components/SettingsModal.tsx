@@ -926,6 +926,8 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
                   description="Gentle reminders to stretch and move"
                   isSelected={false}
                   onChange={() => {}}
+                  comingSoon={true}
+                  comingSoonText="Coming Soon!"
                 />
               </div>
             </div>
@@ -950,10 +952,12 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
               
               <div className="space-y-4">
                 <FormOption
-                  title="Block Distracting Apps"
+                  title="Block Distracting Apps & Websites"
                   description="Temporarily block social media and entertainment"
                   isSelected={false}
                   onChange={() => {}}
+                  comingSoon={true}
+                  comingSoonText="Coming Soon!"
                 />
                 <FormOption
                   title="Minimize Notifications"
@@ -965,7 +969,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
             </div>
 
             {/* Notification Schedule Card */}
-            <div className={`p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
+            {/* <div className={`p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
               isDarkMode ? 'bg-gray-900/50 border-gray-700 hover:border-accent/50' : 'bg-gray-50/50 border-gray-200 hover:border-accent/50'
             }`}>
               <div className="flex items-center gap-3 mb-6">
@@ -988,7 +992,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
                 isSelected={false}
                 onChange={() => {}}
               />
-            </div>
+            </div> */}
           </div>
         );
       
@@ -1038,7 +1042,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
         backdrop: "bg-black/50 backdrop-blur-sm",
       }}
     >
-      <ModalContent className={`${isDarkMode ? 'bg-black/95 border border-gray-800' : 'bg-white/95 border border-gray-100'} shadow-2xl backdrop-blur-md h-2/3 `}  >
+      <ModalContent className={`${isDarkMode ? 'bg-black/95 border border-gray-800' : 'bg-white/95 border border-gray-100'} shadow-2xl backdrop-blur-md h-5/6`}  >
         <ModalHeader className={`flex flex-col gap-1 ${isDarkMode ? 'border-b border-gray-800' : 'border-b border-gray-100'}`}>
           <h2 className="text-primary text-xl font-semibold">
             Settings
@@ -1094,14 +1098,14 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
           </div>
         </ModalBody>
         <ModalFooter className={`${isDarkMode ? 'border-t border-gray-800' : 'border-t border-gray-100'} gap-3`}>
-          <Button 
+          {/* <Button 
             color="danger" 
             variant="light" 
             onPress={onClose}
             className={`${isDarkMode ? 'text-red-400 hover:bg-red-500/10' : 'text-red-600 hover:bg-red-50'} transition-colors`}
           >
             Cancel
-          </Button>
+          </Button> */}
           <Button 
             className="bg-accent hover:bg-accent-600 text-accent-foreground font-medium px-6 transition-all hover:scale-105"
             onPress={handleSave}

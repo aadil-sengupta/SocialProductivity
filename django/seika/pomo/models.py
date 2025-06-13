@@ -60,6 +60,10 @@ class CurrentSession(models.Model):
     
     async def pause_session(self):
         """Pauses the session if it is currently running."""
+        if self.lastBreakStartTime:
+            break_duration = timezone.now() - self.lastBreakStartTime
+            self.accumulatedBreakDuration += break_duration
+            self.lastBreakStartTime = None
         self.lastPauseStartTime = timezone.now()
         self.phase = 'paused'
         await self.asave()
@@ -75,6 +79,10 @@ class CurrentSession(models.Model):
     async def break_start(self, break_type):
         """Starts a break for the session."""
         self.lastBreakStartTime = timezone.now()
+        if self.lastPauseStartTime:
+            pause_duration = timezone.now() - self.lastPauseStartTime
+            self.accumulatedPauseDuration += pause_duration
+            self.lastPauseStartTime = None
         print(f"Starting break of type: {break_type} for user: {self.user.username}")
         if break_type == 'shortBreak':
             self.phase = 'shortBreak'

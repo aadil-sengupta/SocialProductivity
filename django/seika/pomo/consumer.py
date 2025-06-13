@@ -2,12 +2,16 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.utils import timezone
 from .models import CurrentSession, SessionData
+from users.models import UserData
 from .serializers import SessionDataSerializer
 class SessionConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
         await self.accept()
         self.user = self.scope['user']
+        self.userData = await UserData.objects.aget(user=self.user)
+        self.userData.isOnline = True
+        await self.userData.asave()
         print(f"Connecting user: {self.user}")
         if self.user.is_anonymous:
             await self.send(text_data=json.dumps({
@@ -17,6 +21,13 @@ class SessionConsumer(AsyncWebsocketConsumer):
             await self.close()
             return
         print(f"User {self.user} connected to SessionConsumer")
+
+    async def disconnect(self):
+        print(f"Disconnecting user: {self.user}") # handle ongoing sessions
+        if hasattr(self, 'session'):
+            await self.session.end_session()
+        self.userData.isOnline = False
+        await self.userData.asave()
 
     async def receive(self, text_data):
         data = json.loads(text_data)
