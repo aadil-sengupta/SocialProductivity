@@ -1,23 +1,42 @@
-from celery import shared_task
-from django.contrib.auth import get_user_model
-# Assuming you have a way to check if the user is currently connected via WS
-# This would typically query Redis or a similar fast store
-from some_module import is_user_ws_connected
-from datetime import datetime, timedelta
+from django.contrib.auth.models import User
+from django.utils import timezone
+from .models import CurrentSession
+from datetime import timedelta
 
-User = get_user_model()
 
-@shared_task
-def mark_session_inactive_after_delay(user_id):
-    print(f"Celery task checking user {user_id} for reconnection...")
+
+
+def checkUserConnection(user_id):
+    """
+    Check if user has reconnected after 2 minutes of disconnection.
+    If not, end their active session.
+    """
+    print(f"Django-Q task checking user {user_id} for reconnection after 2 minutes...")
+    
     try:
         user = User.objects.get(id=user_id)
     except User.DoesNotExist:
         print(f"User {user_id} not found.")
         return
 
-    if is_user_ws_connected(user_id):
-        print(f"User {user_id} reconnected. Session still active.")
+    session = CurrentSession.objects.filter(user=user).first()
+    if not session:
+        print(f"No active session found for user {user.username}.")
         return
 
-    print(f"User {user_id} has not reconnected. Marking session as inactive.")
+    # Check if user has reconnected
+    if session.isConnected:
+        print(f"User {user.username} has reconnected. Session remains active.")
+        return
+
+    # Verify that at least 2 minutes have passed since disconnection
+    if session.lastDisconnected:
+        time_since_disconnect = timezone.now() - session.lastDisconnected
+        if time_since_disconnect < timedelta(minutes=2):
+            print(f"User {user.username} disconnected for {time_since_disconnect}, but less than 2 minutes. Not ending session yet.")
+            return
+
+    print(f"User {user.username} has been disconnected for 2+ minutes. Ending session.")
+    session.end_session_sync()
+    
+    

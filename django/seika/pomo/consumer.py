@@ -1,9 +1,12 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.utils import timezone
+from datetime import timedelta
 from .models import CurrentSession, SessionData
 from users.models import UserData
 from .serializers import SessionDataSerializer
+from .tasks import checkUserConnection
+from django_q.models import Schedule
 class SessionConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
@@ -12,6 +15,7 @@ class SessionConsumer(AsyncWebsocketConsumer):
         self.userData = await UserData.objects.aget(user=self.user)
         self.userData.isOnline = True
         await self.userData.asave()
+        
         print(f"Connecting user: {self.user}")
         if self.user.is_anonymous:
             await self.send(text_data=json.dumps({
@@ -20,14 +24,54 @@ class SessionConsumer(AsyncWebsocketConsumer):
             }))
             await self.close()
             return
+        
+        # Check if user has an existing session and mark as reconnected
+        existing_session = await CurrentSession.objects.filter(user=self.user).afirst()
+        if existing_session and not existing_session.isConnected:
+            existing_session.isConnected = True
+            existing_session.lastDisconnected = None  # Clear disconnect timestamp
+            await existing_session.asave()
+            self.session = existing_session
+            print(f"User {self.user} reconnected to existing session {existing_session.id}")
+            
+            # Send session state to user
+            await self.send(text_data=json.dumps({
+                'type': 'session_reconnected',
+                'phase': existing_session.phase,
+                'id': existing_session.id,
+                'mode': existing_session.mode,
+                'pomodoroCount': existing_session.pomodoroCount,
+            }))
+        
         print(f"User {self.user} connected to SessionConsumer")
 
     async def disconnect(self, code):
         print(f"Disconnecting user: {self.user} with code: {code}")
-        if hasattr(self, 'session'):
-            await self.session.end_session()
+        
+        # Update user online status
         self.userData.isOnline = False
         await self.userData.asave()
+        
+        # Handle session disconnection if user has an active session
+        session = await CurrentSession.objects.filter(user=self.user).afirst()
+        if session:
+            session.isConnected = False
+            session.lastDisconnected = timezone.now()
+            await session.asave()
+
+            # Schedule a task to check user connection after 2 minutes
+            schedule = await Schedule.objects.acreate(
+                func='pomo.tasks.checkUserConnection',
+                args=str(self.user.id),  # Convert to string for JSON serialization
+                schedule_type=Schedule.ONCE,
+                next_run=timezone.now() + timedelta(seconds=120)
+            )
+
+            print(f"Scheduled connection check for user {self.user} in 2 minutes (Schedule ID: {schedule.id}).")
+        else:
+            print(f"No active session found for user {self.user} on disconnect.")
+
+
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -121,21 +165,19 @@ class SessionConsumer(AsyncWebsocketConsumer):
 
     async def end_session(self): # add logic to mark session as inactive and allow users to reconnect
         try:
+            # Get the session ID before it's deleted
+            session_id = self.session.id
+            
+            # Use the model's end_session method which handles SessionData creation and deletion
             await self.session.end_session()
-            # Save session data to SessionData model
-            session_data = await SessionData.objects.acreate(
-                user=self.user,
-                totalTime=self.session.totalTime,
-                activeTime=self.session.activeTime,
-                breakTime=self.session.accumulatedBreakDuration,
-                pauseTime=self.session.accumulatedPauseDuration,
-                startTime=self.session.startTime
-            )
-            await self.session.adelete()  # Remove the current session after ending it
+            
+            # Get the most recent SessionData for this user to return to the client
+            session_data = await SessionData.objects.filter(user=self.user).alast()
+            
             await self.send(text_data=json.dumps({
                 'type': 'session_ended',
                 'data': SessionDataSerializer(session_data).data,
-                'id': self.session.id,
+                'id': session_id,
             }))
         except CurrentSession.DoesNotExist:
             await self.send(text_data=json.dumps({

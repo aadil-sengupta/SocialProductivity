@@ -33,7 +33,7 @@ ALLOWED_HOSTS = ['*']
 INSTALLED_APPS = [
     'daphne',
     'corsheaders',
-    'celery',
+    'django_q',
     #'channels',
 
     'django.contrib.admin',
@@ -176,3 +176,12 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 
+
+Q_CLUSTER = {
+    'name': 'seika_tasks',
+    'workers': 4,  # Number of worker processes to run
+    'timeout': 90,  # Seconds before a task is considered timed out
+    'retry': 120,   # Seconds to wait before retrying a failed task
+    'queue_limit': 50,
+    'orm': 'default',  # Use the default Django database as the broker
+}

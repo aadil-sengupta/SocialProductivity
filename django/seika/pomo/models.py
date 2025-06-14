@@ -100,17 +100,72 @@ class CurrentSession(models.Model):
         await self.asave()
 
     async def end_session(self):
-        """Ends the session, marking it as completed."""
+        """Ends the session, creates a SessionData record, and deletes the current session."""
+        
+        # Calculate final durations
         if self.lastBreakStartTime:
             break_duration = timezone.now() - self.lastBreakStartTime
             self.accumulatedBreakDuration += break_duration
+            self.lastBreakStartTime = None
+        
         if self.lastPauseStartTime:
             pause_duration = timezone.now() - self.lastPauseStartTime
             self.accumulatedPauseDuration += pause_duration
-        self.endTime = timezone.now()
-        self.totalTime = self.endTime - self.startTime
-        self.activeTime = self.totalTime - self.accumulatedBreakDuration - self.accumulatedPauseDuration
-        await self.asave()
+            self.lastPauseStartTime = None
+        
+        end_time = timezone.now()
+        total_time = end_time - self.startTime
+        active_time = total_time - self.accumulatedBreakDuration - self.accumulatedPauseDuration
+        
+        # Create SessionData record with the completed session data
+        await SessionData.objects.acreate(
+            user=self.user,
+            endTime=end_time,
+            totalTime=total_time,
+            activeTime=active_time,
+            breakTime=self.accumulatedBreakDuration,
+            pauseTime=self.accumulatedPauseDuration,
+            startTime=self.startTime
+        )
+        
+        print(f"Session ended for user {self.user.username}. Duration: {total_time}, Active: {active_time}")
+        
+        # Delete the current session
+        await self.adelete()
+
+    def end_session_sync(self):
+        """Ends the session, creates a SessionData record, and deletes the current session."""
+        
+        # Calculate final durations
+        if self.lastBreakStartTime:
+            break_duration = timezone.now() - self.lastBreakStartTime
+            self.accumulatedBreakDuration += break_duration
+            self.lastBreakStartTime = None
+        
+        if self.lastPauseStartTime:
+            pause_duration = timezone.now() - self.lastPauseStartTime
+            self.accumulatedPauseDuration += pause_duration
+            self.lastPauseStartTime = None
+        
+        end_time = timezone.now()
+        total_time = end_time - self.startTime
+        active_time = total_time - self.accumulatedBreakDuration - self.accumulatedPauseDuration
+        
+        # Create SessionData record with the completed session data
+        SessionData.objects.create(
+            user=self.user,
+            endTime=end_time,
+            totalTime=total_time,
+            activeTime=active_time,
+            breakTime=self.accumulatedBreakDuration,
+            pauseTime=self.accumulatedPauseDuration,
+            startTime=self.startTime
+        )
+        
+        print(f"Session ended for user {self.user.username}. Duration: {total_time}, Active: {active_time}")
+        
+        # Delete the current session
+        self.delete()
 
 class SessionData(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='pomo_session_data')

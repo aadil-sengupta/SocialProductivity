@@ -1156,6 +1156,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
             onClose();
           }
         }}
+        onClose={handleSave}
         size="5xl"
         backdrop="blur"
       scrollBehavior="inside"
