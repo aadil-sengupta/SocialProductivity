@@ -3,6 +3,8 @@ import { useRef, useState, useEffect } from "react";
 import MainLayout from "@/layouts/main";
 import { Button } from "@heroui/button";
 import SettingsModal from "@/components/SettingsModal";
+import AlertModal from "@/components/AlertModal";
+import { useAlert } from "@/hooks/useAlert";
 import AnimatedIconButton from "@/components/AnimatedIconButton";
 import { IoSettingsOutline } from "react-icons/io5";
 import { useSearchParams } from "react-router-dom";
@@ -42,10 +44,10 @@ export default function DashboardPage() {
       longBreakInterval,
     } = useTimer();
     const { isConnected, sendMessage } = useWebSocket();
+    const { alertState, showError, hideAlert, showConfirm, showInfo } = useAlert();
 
     useWebSocketListener('session_exists', (data)=> {
       console.log('Session exists:', data);
-      
       // Session exists modal
 
       setTimeout(()=> {
@@ -60,6 +62,25 @@ export default function DashboardPage() {
       setSessionPhase('focus');
       setPomodoroCount(0); // Reset pomodoro count when switching modes
       }, 500);
+
+      showError(
+        'Session Already Exists',
+        'You already have an active session. Please end the current session before starting a new one.',
+        { size: 'lg' }
+      );
+
+    });
+
+    useWebSocketListener('session_reconnected', (data) => {
+      console.log('Session reconnected:', data);
+      
+      // tell the user that the session has been reconnected
+
+      showInfo(
+        'Session Reconnected',
+        'Your session has been reconnected successfully. The timer will continue from where it left off.',
+        { size: 'lg' }
+      );
     });
 
   // Check if settings modal should be open based on URL
@@ -79,6 +100,18 @@ export default function DashboardPage() {
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  // Handle page unload - run handleResetButton when page is unloaded
+  useEffect(() => {
+    const handlePageUnload = () => {
+      handleResetButton();
+    };
+
+    window.addEventListener('beforeunload', handlePageUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handlePageUnload);
     };
   }, []);
 
@@ -169,21 +202,42 @@ export default function DashboardPage() {
     setShowBlur(true); // Trigger temporary blur
   };
 
-  const handleResetButton = () => {
+  const resetTimer = () => {
+        getActiveTimerRef().current?.reset();
+        setStarted(false);
+        setRunning(false);
+        setCurrentTime(0);
+        setTotalTime(0);
+        setSessionPhase('focus');
+        setPomodoroCount(0); // Reset pomodoro count
+      }
 
-      // Modal confirming session end.
-      sendMessage({
-        type: 'end_session',
-        payload: {}
-      });
-      getActiveTimerRef().current?.reset();
-      setStarted(false);
-      setRunning(false);
-      setCurrentTime(0);
-      setTotalTime(0);
-      setSessionPhase('focus');
-      setPomodoroCount(0); // Reset pomodoro count
-  }
+  const handleResetButton = () => {
+    // Modal confirming session end.
+      if (!started){
+        resetTimer();
+        return
+      }
+    
+    showConfirm(
+      'Reset Session?',
+      'Are you sure you want to reset your current timer session? This will end your current progress.',
+      () => {
+
+        sendMessage({
+          type: 'end_session',
+          payload: {}
+        });
+      
+      resetTimer();
+    },
+    {
+      confirmText: 'Reset',
+      cancelText: 'Keep Going',
+      type: 'warning'
+    }
+  );
+}
 
   // Main button press handler - handles start, pause, resume, and session transitions
   const handleMainButtonPress = () => {
@@ -230,7 +284,12 @@ export default function DashboardPage() {
     setIsTransitioning(true);
 
     if (!isConnected) {
-      alert('Server is not connected. Please check your connection or refresh the page to try again.'); // modal saying server not connected, refresh for offline mode or smthin
+      showError(
+        'Connection Lost!', 
+        'Server is not connected. Please check your connection or refresh the page to try again.',
+        { size: 'lg' }
+      );
+      setIsTransitioning(false);
       return;
     }
 
@@ -352,8 +411,9 @@ export default function DashboardPage() {
         }, 50);
         
         // Show completion notification based on session type
+        const isBreakSession = sessionPhase === 'break';
+        
         if ('Notification' in window && Notification.permission === 'granted') {
-          const isBreakSession = sessionPhase === 'break';
           new Notification(isBreakSession ? 'Break Complete!' : 'Focus Session Complete!', {
             body: isBreakSession 
               ? 'Break time is over. Timer is now tracking break overtime.' 
@@ -363,6 +423,21 @@ export default function DashboardPage() {
           });
         }
         
+        // Show custom alert modal for completion
+        // if (isBreakSession) {
+        //   showSuccess(
+        //     '⏰ Break Complete!',
+        //     'Break time is over. Your timer is now tracking break overtime.',
+        //     { size: 'lg' }
+        //   );
+        // } else {
+        //   showCelebration(
+        //     '🎉 Focus Session Complete!',
+        //     'Excellent work! You completed a full focus session. Your timer is now tracking overtime.',
+        //     { size: 'lg' }
+        //   );
+        // }
+        
         // Play completion sound (if audio element exists)
         const audio = document.getElementById('timer-complete-sound') as HTMLAudioElement;
         if (audio) {
@@ -371,7 +446,6 @@ export default function DashboardPage() {
         
         // Optional: Show browser notification if page is not visible
         if (document.hidden) {
-          const isBreakSession = sessionPhase === 'break';
           document.title = isBreakSession ? '⏰ Break Over! - Seika' : '✅ Session Complete! - Seika';
         }
         
@@ -739,6 +813,19 @@ export default function DashboardPage() {
         isOpen={isSettingsOpen}
         onClose={handleCloseSettings}
         onSave={handleSaveSettings}
+      />
+      
+      <AlertModal 
+        isOpen={alertState.isOpen}
+        onClose={hideAlert}
+        onConfirm={alertState.onConfirm}
+        title={alertState.title}
+        message={alertState.message}
+        type={alertState.type}
+        confirmText={alertState.confirmText}
+        cancelText={alertState.cancelText}
+        showCancel={alertState.showCancel}
+        size={alertState.size}
       />
       
       {/* CSS for shimmer animation */}

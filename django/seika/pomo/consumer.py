@@ -38,9 +38,13 @@ class SessionConsumer(AsyncWebsocketConsumer):
             await self.send(text_data=json.dumps({
                 'type': 'session_reconnected',
                 'phase': existing_session.phase,
-                'id': existing_session.id,
                 'mode': existing_session.mode,
                 'pomodoroCount': existing_session.pomodoroCount,
+                'startTime': existing_session.startTime.isoformat(),
+                'lastPauseStartTime': existing_session.lastPauseStartTime.isoformat() if existing_session.lastPauseStartTime else None,
+                'lastBreakStartTime': existing_session.lastBreakStartTime.isoformat() if existing_session.lastBreakStartTime else None,
+                'accumulatedBreakDuration': str(existing_session.accumulatedBreakDuration),
+                'accumulatedPauseDuration': str(existing_session.accumulatedPauseDuration),
             }))
         
         print(f"User {self.user} connected to SessionConsumer")
@@ -165,20 +169,7 @@ class SessionConsumer(AsyncWebsocketConsumer):
 
     async def end_session(self): # add logic to mark session as inactive and allow users to reconnect
         try:
-            # Get the session ID before it's deleted
-            session_id = self.session.id
-            
-            # Use the model's end_session method which handles SessionData creation and deletion
             await self.session.end_session()
-            
-            # Get the most recent SessionData for this user to return to the client
-            session_data = await SessionData.objects.filter(user=self.user).alast()
-            
-            await self.send(text_data=json.dumps({
-                'type': 'session_ended',
-                'data': SessionDataSerializer(session_data).data,
-                'id': session_id,
-            }))
         except CurrentSession.DoesNotExist:
             await self.send(text_data=json.dumps({
                 'type': 'error',

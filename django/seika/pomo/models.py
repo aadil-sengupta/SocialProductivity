@@ -113,6 +113,8 @@ class CurrentSession(models.Model):
             self.accumulatedPauseDuration += pause_duration
             self.lastPauseStartTime = None
         
+        self.asave()
+
         end_time = timezone.now()
         total_time = end_time - self.startTime
         active_time = total_time - self.accumulatedBreakDuration - self.accumulatedPauseDuration
