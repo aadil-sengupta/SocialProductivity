@@ -12,11 +12,18 @@ export interface User {
 
 interface ProfileTileProps {
   user: User;
+  accentColor?: string;
 }
 
-const ProfileTile: React.FC<ProfileTileProps> = ({ user }) => {
+const ProfileTile: React.FC<ProfileTileProps> = ({ user, accentColor }) => {
   return (
-    <div className="sidebar-profileSection bg-transparent profile-tile" style={{ marginTop: "6px" }}>
+    <div 
+      className="sidebar-profileSection bg-transparent profile-tile" 
+      style={{ 
+        marginTop: "6px",
+        '--accent-glow': accentColor ? `${accentColor}40` : 'rgba(255, 255, 255, 0.1)'
+      } as React.CSSProperties & { '--accent-glow': string }}
+    >
       <div className="profile-image-container">
         <img
           src={user.avatar}

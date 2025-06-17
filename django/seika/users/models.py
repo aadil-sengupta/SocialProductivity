@@ -2,11 +2,30 @@ from django.db import models
 from django.contrib.auth.models import User
 from pomo.models import SessionData, CurrentSession
 from django.utils import timezone
-# from pomo.models import PomoSessionData, PomoSession
 
 # Create your models here.
+class FriendRequest(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('declined', 'Declined'),
+    ]
+    
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_requests')
+    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_requests')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ('sender', 'receiver')
+    
+    def __str__(self):
+        return f"{self.sender.username} -> {self.receiver.username} ({self.status})"
+
 class UserData(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    friends = models.ManyToManyField(User, related_name='friend_of', blank=True)
     isOnline = models.BooleanField(default=True)
     # countUp = models.BooleanField(default=True)
 
@@ -65,3 +84,86 @@ class UserData(models.Model):
 
     def __str__(self):
         return f"UserData for {self.user.username}"
+    
+    def send_friend_request(self, to_user):
+        """Send a friend request to another user"""
+        if to_user == self.user:
+            return False, "Cannot send friend request to yourself"
+        
+        if self.is_friend(to_user):
+            return False, "Already friends"
+        
+        request, created = FriendRequest.objects.get_or_create(
+            sender=self.user,
+            receiver=to_user,
+            defaults={'status': FriendRequest.PENDING}
+        )
+        
+        if not created and request.status == FriendRequest.DECLINED:
+            request.status = FriendRequest.PENDING
+            request.save()
+            return True, "Friend request sent"
+        elif not created:
+            return False, "Friend request already exists"
+        
+        return True, "Friend request sent"
+    
+    def accept_friend_request(self, from_user):
+        """Accept a friend request"""
+        try:
+            request = FriendRequest.objects.get(
+                sender=from_user,
+                receiver=self.user,
+                status=FriendRequest.PENDING
+            )
+            request.status = FriendRequest.ACCEPTED
+            request.save()
+            
+            # Add each other as friends
+            self.friends.add(from_user)
+            from_user.userdata.friends.add(self.user)
+            
+            return True, "Friend request accepted"
+        except FriendRequest.DoesNotExist:
+            return False, "Friend request not found"
+    
+    def decline_friend_request(self, from_user):
+        """Decline a friend request"""
+        try:
+            request = FriendRequest.objects.get(
+                sender=from_user,
+                receiver=self.user,
+                status=FriendRequest.PENDING
+            )
+            request.status = FriendRequest.DECLINED
+            request.save()
+            return True, "Friend request declined"
+        except FriendRequest.DoesNotExist:
+            return False, "Friend request not found"
+    
+    def remove_friend(self, friend_user):
+        """Remove a friend"""
+        if self.is_friend(friend_user):
+            self.friends.remove(friend_user)
+            friend_user.userdata.friends.remove(self.user)
+            return True, "Friend removed"
+        return False, "Not friends"
+    
+    def is_friend(self, user):
+        """Check if user is a friend"""
+        return self.friends.filter(id=user.id).exists()
+    
+    def get_pending_requests(self):
+        """Get pending friend requests received"""
+        return FriendRequest.objects.filter(
+            receiver=self.user,
+            status=FriendRequest.PENDING
+        )
+    
+    def get_sent_requests(self):
+        """Get pending friend requests sent"""
+        return FriendRequest.objects.filter(
+            sender=self.user,
+            status=FriendRequest.PENDING
+        )
+

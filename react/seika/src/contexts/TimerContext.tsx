@@ -14,6 +14,7 @@ interface TimerState {
   pomodoroCount: number;
   longBreakInterval: number; // after how many pomodoros to take long break
   countPauseTime: boolean; // whether to count pause time towards total session time
+  dailyStudyTime: number; // total study time today in minutes
 }
 
 interface TimerActions {
@@ -40,6 +41,11 @@ interface TimerActions {
   // Pomodoro cycle management
   completePomodoro: () => void;
   startNextSession: () => void;
+  
+  // Daily study time tracking
+  setDailyStudyTime: (minutes: number) => void;
+  getDailyStudyTime: () => number;
+  resetDailyStudyTime: () => void;
 }
 
 interface TimerContextType extends TimerState, TimerActions {}
@@ -55,6 +61,20 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({ children }) => {
     // Load settings from localStorage if available
     if (typeof window !== 'undefined') {
       const savedSettings = localStorage.getItem('timerSettings');
+      const savedDailyStudy = localStorage.getItem('dailyStudyTime');
+      
+      let dailyStudyTime = 0;
+      
+      // Load daily study time if it exists
+      if (savedDailyStudy) {
+        try {
+          const dailyData = JSON.parse(savedDailyStudy);
+          dailyStudyTime = dailyData.minutes || 0;
+        } catch (error) {
+          console.warn('Failed to parse daily study time from localStorage:', error);
+        }
+      }
+      
       if (savedSettings) {
         try {
           const parsed = JSON.parse(savedSettings);
@@ -69,6 +89,7 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({ children }) => {
             pomodoroCount: 0,
             longBreakInterval: parsed.longBreakInterval || 4,
             countPauseTime: parsed.countPauseTime || true,
+            dailyStudyTime,
           };
         } catch (error) {
           console.warn('Failed to parse timer settings from localStorage:', error);
@@ -88,6 +109,7 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({ children }) => {
       pomodoroCount: 0,
       longBreakInterval: 4, // Long break after every 4 pomodoros
       countPauseTime: true,
+      dailyStudyTime: 0,
     };
   });
 
@@ -270,6 +292,35 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({ children }) => {
     }
   }, [state.pomodoroMinutes, state.shortBreakMinutes, state.longBreakMinutes, state.longBreakInterval, state.countPauseTime]);
 
+  // Save daily study time to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const dailyStudyData = {
+        minutes: state.dailyStudyTime,
+      };
+      localStorage.setItem('dailyStudyTime', JSON.stringify(dailyStudyData));
+    }
+  }, [state.dailyStudyTime]);
+
+  // Daily study time tracking functions
+  const setDailyStudyTime = useCallback((minutes: number) => {
+    setState(prev => ({
+      ...prev,
+      dailyStudyTime: minutes,
+    }));
+  }, []);
+
+  const getDailyStudyTime = useCallback(() => {
+    return state.dailyStudyTime;
+  }, [state.dailyStudyTime]);
+
+  const resetDailyStudyTime = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      dailyStudyTime: 0,
+    }));
+  }, []);
+
   const contextValue: TimerContextType = {
     // State
     ...state,
@@ -289,6 +340,9 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({ children }) => {
     updateCurrentTime,
     completePomodoro,
     startNextSession,
+    setDailyStudyTime,
+    getDailyStudyTime,
+    resetDailyStudyTime,
   };
 
   return (

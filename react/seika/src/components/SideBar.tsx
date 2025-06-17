@@ -4,22 +4,24 @@ import ProfileTile, { User } from "./ProfileTile";
 import { useDarkMode } from "@/contexts/DarkModeContext";
 import { FaPlus } from "react-icons/fa6";
 import { useProfile } from "@/contexts/ProfileContext";
+import { useAccentColorManager } from "@/contexts/AccentColorContext";
 
 const SideBar = () => {
   const [isShrinkView, setIsShrinkView] = React.useState(true);
   const { isDarkMode, toggleTheme } = useDarkMode();
   const { userName, profilePhoto } = useProfile();
+  const { accentColor } = useAccentColorManager();
 
   const handleThemeChange = () => {
     toggleTheme();
   };
   const mainUser = {
     id: "0",
-    name: userName,
-    avatar: profilePhoto,
+    name: userName || "You",
+    avatar: profilePhoto || "https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_1.png",
     activityTime: "4 hrs 22 mins",
     isOnline: true,
-    altText: userName
+    altText: userName || "Your Profile"
   }
   // Sample user data - in a real app, this would come from props or context
   const users: User[] = [
@@ -44,7 +46,7 @@ const SideBar = () => {
       name: "Aadil Sengupta",
       avatar: "https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_3.png",
       activityTime: "4 hrs 22 mins",
-      isOnline: true,
+      isOnline: false,
       altText: "Aadil Sengupta"
     }
   ];
@@ -80,31 +82,57 @@ const SideBar = () => {
       <div className="sidebar-wrapper">
         <div className="sidebar-list flex flex-col justify-between h-full">
           <div>
-          <div className={`relative overflow-hidden transition-all duration-500 ease-in-out flex ${isShrinkView ? 'h-0 mb-0' : 'h-8 mb-4 ml-2'}`}>
-            <h2 className={`absolute top-0 left-0 w-full text-lg font-semibold transition-all duration-500 ease-in-out transform text-primary ${
+          <div className={`relative overflow-hidden transition-all duration-500 ease-in-out flex ${isShrinkView ? 'h-0 mb-0' : 'h-10 mb-6 ml-4'}`}>
+            <h2 className={`absolute top-0 left-0 w-full text-xl font-bold transition-all duration-500 ease-in-out transform text-accent ${
               isShrinkView 
                 ? 'opacity-0 translate-y-[-100%] scale-95' 
                 : 'opacity-100 translate-y-0 scale-100'
             }`}>
               Friends
             </h2>
-            <div className={`absolute top-0 right-0 h-full mr-3 transition-all duration-500 ease-in-out transform ${
+            <div className={`absolute top-0 right-0 h-full mr-6 transition-all duration-500 ease-in-out transform ${
               isShrinkView 
                 ? 'opacity-0 scale-95 translate-y-[-100%]' 
                 : 'opacity-100 scale-100 translate-y-0'
             }`}>
-              <button className={`sidebar-addButton hover:scale-110 hover:${isDarkMode ? "bg-gray-800" : "bg-gray-200"} p-1 rounded-md transition-all duration-300`} title="Add Friend">
-                <FaPlus size={20} color={isDarkMode ? "white" : "black"} />
+              <button 
+                className={`
+                  sidebar-addButton group relative overflow-hidden
+                  w-8 h-8 rounded-xl
+                  backdrop-blur-sm transition-all duration-300 ease-out
+                  hover:scale-110 hover:shadow-lg active:scale-95
+                  flex items-center justify-center
+                  border border-accent/20 hover:border-accent/40
+                  ${isDarkMode 
+                    ? "bg-accent/10 hover:bg-accent/20" 
+                    : "bg-accent/10 hover:bg-accent/20"
+                  }
+                `} 
+                title="Add Friend"
+                style={{
+                  boxShadow: `0 4px 12px ${accentColor}20`,
+                }}
+              >
+                <div 
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform -skew-x-12"
+                  style={{
+                    background: `linear-gradient(90deg, transparent, ${accentColor}30, transparent)`
+                  }}
+                />
+                <FaPlus 
+                  size={14} 
+                  className="relative z-10 transition-all duration-300 text-accent group-hover:scale-110" 
+                />
               </button>
             </div>
           </div>
           {users.map(user => (
-            <ProfileTile key={user.id} user={user} />
+            <ProfileTile key={user.id} user={user} accentColor={accentColor} />
           ))}
           </div>
           <div>
-          <ProfileTile user={mainUser} />
-          <div className="sidebar-themeContainer mr-[7.5px] mt-2">
+          <ProfileTile user={mainUser} accentColor={accentColor} />
+          <div className="sidebar-themeContainer mt-2">
           <label
             htmlFor="theme-toggle"
             className={`sidebar-themeLabel${isDarkMode ? " switched" : ""}`}
