@@ -10,6 +10,7 @@ import { WebSocketProvider } from "./contexts/WebSocketContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { NotificationRemindersProvider } from "@/contexts/NotificationRemindersContext";
 import { AppearanceProvider } from "@/contexts/AppearanceContext";
+import { ContextMenuProvider } from "@/contexts/ContextMenuContext";
 
 declare module "@react-types/shared" {
   interface RouterConfig {
@@ -29,16 +30,18 @@ export function Provider({ children }: { children: React.ReactNode }) {
               <AppearanceProvider>
                 <TimerProvider>
                   <ProfileProvider>
-                    <WebSocketProvider
-                    url="ws://localhost:8000/ws/session/"
-                    autoConnect={true}  // disable if profile context doesn't have anything or smthin
-                    reconnectAttempts={5}
-                    reconnectDelay={3000}
-                    >
-                      <HeroUIProvider navigate={navigate} useHref={useHref}>
-                        {children}
-                      </HeroUIProvider>
-                    </WebSocketProvider>
+                    <ContextMenuProvider>
+                      <WebSocketProvider
+                      url="ws://localhost:8000/ws/session/"
+                      autoConnect={true}  // disable if profile context doesn't have anything or smthin
+                      reconnectAttempts={5}
+                      reconnectDelay={3000}
+                      >
+                        <HeroUIProvider navigate={navigate} useHref={useHref}>
+                          {children}
+                        </HeroUIProvider>
+                      </WebSocketProvider>
+                    </ContextMenuProvider>
                   </ProfileProvider>
                 </TimerProvider>
               </AppearanceProvider>

@@ -303,3 +303,382 @@ body.dark .profile-status.offline {
     box-shadow: 0 0 16px rgba(16, 185, 129, 0.6);
   }
 }
+
+/* Context Menu Styles */
+.profile-context-menu {
+  min-width: 200px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(24px);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  box-shadow: 
+    0 12px 32px rgba(0, 0, 0, 0.15),
+    0 6px 16px rgba(0, 0, 0, 0.1),
+    0 2px 8px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  padding: 8px;
+  animation: contextMenuSlideIn 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+  transform-origin: top left;
+  z-index: 9999; /* Ensure it appears above sidebar and other elements */
+  position: fixed;
+}
+
+body.dark .profile-context-menu {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    0 12px 32px rgba(0, 0, 0, 0.3),
+    0 6px 16px rgba(0, 0, 0, 0.2),
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Enhanced context menu positioning for sidebar states */
+.shrink .profile-context-menu {
+  min-width: 160px;
+  transform: translateX(-8px); /* Adjust position when sidebar is shrunk */
+}
+
+/* Ensure context menu stays above all sidebar elements */
+.profile-context-menu {
+  position: fixed !important;
+  z-index: 10000 !important;
+}
+
+/* Add smooth transition for context menu repositioning */
+.profile-context-menu {
+  transition: transform 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* Better handling of context menu near viewport edges */
+.profile-context-menu.position-left {
+  transform-origin: top right;
+}
+
+.profile-context-menu.position-above {
+  transform-origin: bottom left;
+}
+
+.profile-context-menu.position-above.position-left {
+  transform-origin: bottom right;
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-color);
+  position: relative;
+  overflow: hidden;
+}
+
+.context-menu-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--accent-color, #3b82f6), transparent);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: 12px;
+}
+
+.context-menu-item:hover::before {
+  opacity: 0.1;
+}
+
+.context-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateX(2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+body.dark .context-menu-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.context-menu-item.danger {
+  color: #ef4444;
+}
+
+.context-menu-item.danger::before {
+  background: linear-gradient(135deg, #ef4444, transparent);
+}
+
+.context-menu-item.danger:hover {
+  color: #ffffff;
+  background: rgba(239, 68, 68, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+body.dark .context-menu-item.danger:hover {
+  background: rgba(239, 68, 68, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.context-menu-icon {
+  width: 18px;
+  height: 18px;
+  opacity: 0.8;
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.context-menu-item:hover .context-menu-icon {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.context-menu-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  margin: 8px 12px;
+}
+
+body.dark .context-menu-divider {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+}
+
+@keyframes profileEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.8) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-5px) scale(1.05) rotate(1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes onlinePulse {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.6);
+  }
+}
+
+@keyframes contextMenuSlideIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Enhanced styles for context menu in shrink mode */
+.shrink .profile-context-menu {
+  min-width: 180px;
+}
+
+/* Add subtle pulse animation for context menu appearance */
+.profile-context-menu {
+  animation: contextMenuSlideIn 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* Improved hover states with better visual feedback */
+.context-menu-item:active {
+  transform: translateX(2px) scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+/* Add focus styles for keyboard navigation */
+.context-menu-item:focus {
+  outline: 2px solid var(--accent-color, #3b82f6);
+  outline-offset: 2px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+body.dark .context-menu-item:focus {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Improved animation timing for smoother interactions */
+.profile-tile {
+  transition: all 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* Add subtle bounce to context menu icons */
+@keyframes iconBounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+.context-menu-item:hover .context-menu-icon {
+  animation: iconBounce 0.3s ease;
+}
+
+/* Add visual feedback for right-click context menu trigger */
+.profile-tile:active {
+  transform: translateX(2px) translateY(-1px) scale(1.01);
+}
+
+/* Add a subtle border highlight when context menu is open */
+.profile-tile.context-menu-open {
+  border-color: var(--accent-color, rgba(59, 130, 246, 0.4)) !important;
+  box-shadow: 
+    0 8px 20px rgba(0, 0, 0, 0.1), 
+    0 0 0 2px var(--accent-color, rgba(59, 130, 246, 0.2));
+}
+
+body.dark .profile-tile.context.menu-open {
+  box-shadow: 
+    0 8px 20px rgba(0, 0, 0, 0.2), 
+    0 0 0 2px var(--accent-color, rgba(59, 130, 246, 0.3));
+}
+
+/* Add pointer events control for better interaction */
+.profile-context-menu {
+  pointer-events: all;
+  user-select: none;
+}
+
+/* Ensure context menu is always interactive */
+.profile-context-menu * {
+  pointer-events: all;
+}
+
+/* Add subtle entrance delay for smoother UX */
+.profile-context-menu {
+  animation-delay: 0.05s;
+  animation-fill-mode: both;
+}
+
+/* Enhanced visibility in all themes */
+body.dark .profile-context-menu {
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.6);
+}
+
+/* Add backdrop click area for mobile */
+@media (max-width: 768px) {
+  .profile-context-menu::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    background: transparent;
+    pointer-events: all;
+  }
+}
+
+/* Profile Menu Button */
+.profile-menu-button {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%) scale(0.8);
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-color);
+  z-index: 5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+body.dark .profile-menu-button {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.profile-menu-icon {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.2s ease;
+}
+
+.profile-tile:hover .profile-menu-button {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+.profile-menu-button:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+body.dark .profile-menu-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.profile-menu-button:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+/* Hide menu button in shrink mode */
+.shrink .profile-menu-button {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Special styling when context menu is open */
+.profile-tile.context-menu-open .profile-menu-button {
+  opacity: 1;
+  background: var(--accent-color, #3b82f6);
+  color: white;
+  border-color: var(--accent-color, #3b82f6);
+  box-shadow: 0 0 16px var(--accent-color, rgba(59, 130, 246, 0.5));
+  transform: translateY(-50%) scale(1);
+}
+
+/* Enhanced context menu hover behavior */
+.profile-context-menu:hover {
+  /* Ensure menu stays visible when hovered */
+  opacity: 1 !important;
+  pointer-events: all !important;
+}
+
+/* Prevent menu from closing during hover transitions */
+.profile-context-menu {
+  /* Add a small invisible border around the menu for better mouse tracking */
+  padding: 12px 8px 8px 8px;
+  margin: -4px;
+}
+
+/* Adjust menu items to account for extra padding */
+.context-menu-item:first-child {
+  margin-top: 0;
+}
+
+/* Enhanced z-index for portal rendering */
+.profile-context-menu {
+  z-index: 10000 !important;
+}
+
+/* Ensure menu appears above everything */
+body .profile-context-menu {
+  position: fixed !important;
+  z-index: 10000 !important;
+}

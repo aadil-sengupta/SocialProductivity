@@ -5,16 +5,63 @@ import { useDarkMode } from "@/contexts/DarkModeContext";
 import { FaPlus } from "react-icons/fa6";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useAccentColorManager } from "@/contexts/AccentColorContext";
+import { useContextMenu } from "@/contexts/ContextMenuContext";
 
 const SideBar = () => {
   const [isShrinkView, setIsShrinkView] = React.useState(true);
+  const [isMouseOverSidebar, setIsMouseOverSidebar] = React.useState(false);
   const { isDarkMode, toggleTheme } = useDarkMode();
   const { userName, profilePhoto } = useProfile();
   const { accentColor } = useAccentColorManager();
+  const { isAnyMenuOpen } = useContextMenu();
 
   const handleThemeChange = () => {
     toggleTheme();
   };
+
+  const handleMouseEnter = () => {
+    setIsMouseOverSidebar(true);
+    setIsShrinkView(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsMouseOverSidebar(false);
+    // Only allow shrinking if no context menu is open
+    if (!isAnyMenuOpen) {
+      setIsShrinkView(true);
+    }
+  };
+
+  // Effect to handle sidebar state when context menus close
+  React.useEffect(() => {
+    // When all context menus are closed and mouse is not over sidebar, shrink it
+    if (!isAnyMenuOpen && !isMouseOverSidebar && !isShrinkView) {
+      const timeout = setTimeout(() => {
+        // Double-check conditions before shrinking
+        if (!isAnyMenuOpen && !isMouseOverSidebar) {
+          setIsShrinkView(true);
+        }
+      }, 100); // Reduced delay for more responsive behavior
+
+      return () => clearTimeout(timeout);
+    }
+  }, [isAnyMenuOpen, isMouseOverSidebar, isShrinkView]);
+
+  // Additional immediate response effect for when menus close
+  React.useEffect(() => {
+    // If any menu closes and mouse is not over sidebar, immediately start shrinking process
+    if (!isAnyMenuOpen && !isMouseOverSidebar) {
+      // Small delay to allow for any mouse movement
+      const quickTimeout = setTimeout(() => {
+        if (!isAnyMenuOpen && !isMouseOverSidebar) {
+          setIsShrinkView(true);
+        }
+      }, 50);
+
+      return () => clearTimeout(quickTimeout);
+    }
+  }, [isAnyMenuOpen]);
+
   const mainUser = {
     id: "0",
     name: userName || "You",
@@ -56,7 +103,7 @@ const SideBar = () => {
   // };
 
   return (
-    <div className={`sidebar-container ${isShrinkView ? "shrink" : ""} z-10`} onMouseEnter={() => setIsShrinkView(false)} onMouseLeave={() => setIsShrinkView(true)}>
+    <div className={`sidebar-container ${isShrinkView ? "shrink" : ""} z-10`} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
       {/* <button
         className="sidebar-viewButton"
         type="button"
