@@ -11,10 +11,10 @@ export default function MainLayout({
 
   return (
     <div className={`relative flex h-screen bg-${isDarkMode ? 'black' : 'white'}`}> {/*bg-[var(--main-bg)]*/}
+      <Wallpaper />
       <SideBar />
-      <main className="flex-grow px-6 pt-4 relative">        
+      <main className="flex-grow px-6 pt-4 relative pl-0 z-10">        
         {children}
-        <Wallpaper />
       </main>
 
     </div>

@@ -129,7 +129,7 @@ const SideBar = () => {
       <div className="sidebar-wrapper">
         <div className="sidebar-list flex flex-col justify-between h-full">
           <div>
-          <div className={`relative overflow-hidden transition-all duration-500 ease-in-out flex ${isShrinkView ? 'h-0 mb-0' : 'h-10 mb-6 ml-4'}`}>
+          <div className={`relative  transition-all duration-500 ease-in-out flex ${isShrinkView ? 'h-0 mb-0' : 'h-10 mb-6 ml-4'}`}>
             <h2 className={`absolute top-0 left-0 w-full text-xl font-bold transition-all duration-500 ease-in-out transform text-accent ${
               isShrinkView 
                 ? 'opacity-0 translate-y-[-100%] scale-95' 

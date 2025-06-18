@@ -7,13 +7,14 @@ export default function Wallpaper() {
     const { selectedWallpaper, wallpaperBlur } = useWallpaper();
 
   return (
-    <div className="absolute inset-0 z-0">
+    <div className="fixed inset-0 z-0">
       <style>{`
         .wallpaper-container {
           border: 12px solid ${isDarkMode ? 'black' : 'white'};
-          border-left: 0;
           border-radius: 12px;
           overflow: hidden;
+          width: 100%;
+          height: 100%;
         }
         .wallpaper-image {
           width: 100%;
@@ -22,7 +23,7 @@ export default function Wallpaper() {
           border-radius: 8px;
         }
       `}</style>
-      <div className="wallpaper-container absolute inset-0">
+      <div className="wallpaper-container">
         <img
           src={`/wallpapers/${selectedWallpaper}`}
           alt="Wallpaper"
