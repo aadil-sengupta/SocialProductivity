@@ -15,6 +15,28 @@ import { useWallpaper } from "@/contexts/WallpaperContext";
 import { apiClient } from "@/services/apiClient";
 import WallpaperPicker from "@/components/WallpaperPicker";
 
+// Add custom styles for animations
+const avatarAnimationStyles = `
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`;
+
+// Inject styles
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.type = 'text/css';
+  styleSheet.innerText = avatarAnimationStyles;
+  document.head.appendChild(styleSheet);
+}
+
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -208,30 +230,58 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
                 </div>
                 
                 <div className="flex flex-col items-center space-y-6">
-                  {/* Profile Photo Picker */}
+                  {/* Enhanced Profile Photo Picker */}
                   <div className="flex flex-col items-center space-y-4">
                     <div 
                       className="relative cursor-pointer group"
                       onClick={() => setShowAvatarPicker(true)}
                     >
+                      {/* Glow Effect Background */}
+                      <div 
+                        className="absolute inset-0 rounded-3xl blur-xl opacity-40 transition-all duration-300 group-hover:opacity-60"
+                        style={{ backgroundColor: accentColor, transform: 'scale(1.1)' }}
+                      />
+                      
                       <div className="relative">
                         <img 
                           src={profilePhoto} 
                           alt="Profile" 
-                          className="w-24 h-24 object-cover transition-all duration-300 group-hover:scale-105 shadow-lg"
-                          style={{ borderRadius: '20px' }}
+                          className="w-32 h-32 object-cover transition-all duration-300 group-hover:scale-105 shadow-2xl"
+                          style={{ 
+                            borderRadius: '24px',
+                            border: `3px solid ${accentColor}60`
+                          }}
                         />
-                        <div className={`absolute inset-0 rounded-[20px] bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center`}>
-                          <span className="text-white text-sm font-medium text-center">Choose Avatar</span>
+                        <div className={`absolute inset-0 rounded-[24px] bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center backdrop-blur-sm`}>
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2"
+                            style={{ backgroundColor: accentColor }}
+                          >
+                            <span className="text-white text-xl">✨</span>
+                          </div>
+                          <span className="text-white text-sm font-medium text-center">Change Avatar</span>
                         </div>
-                        <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-accent rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-200">
-                          <span className="text-white text-lg">✨</span>
+                        <div className="absolute -bottom-3 -right-3 w-10 h-10 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300"
+                          style={{ backgroundColor: accentColor }}
+                        >
+                          <span className="text-white text-xl">🎭</span>
                         </div>
                       </div>
                     </div>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} text-center`}>
-                      Click to choose from amazing avatars
-                    </p>
+                    <div className="text-center">
+                      <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} mb-2`}>
+                        Click to explore our amazing avatar collection
+                      </p>
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="text-xs px-3 py-1 rounded-full"
+                          style={{ 
+                            backgroundColor: `${accentColor}20`,
+                            color: accentColor
+                          }}
+                        >
+                          {avatarCategories.find(cat => profilePhoto.includes(cat.id))?.name || 'Custom'} Style
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Name Field */}
@@ -1165,7 +1215,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
         backdrop: "bg-black/50 backdrop-blur-sm",
       }}
     >
-      <ModalContent className={`${isDarkMode ? 'bg-black/95 border border-gray-800' : 'bg-white/95 border border-gray-100'} shadow-2xl backdrop-blur-md h-5/6`}  >
+      <ModalContent className={`${isDarkMode ? 'bg-gray-900/60 border border-gray-800' : 'bg-white/85 border border-gray-100'} shadow-2xl backdrop-blur-3xl h-5/6`}  >
         <ModalHeader className={`flex flex-col gap-1 ${isDarkMode ? 'border-b border-gray-800' : 'border-b border-gray-100'}`}>
           <h2 className="text-primary text-xl font-semibold">
             Settings
@@ -1177,7 +1227,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
         <ModalBody className={`${isDarkMode ? 'text-white' : 'text-gray-800'} p-0`}>
           <div className="flex h-full">
             {/* Left Sidebar - Categories */}
-            <div className={`w-64 ${isDarkMode ? 'bg-black/50 border-r border-gray-800' : 'bg-gray-50 border-r border-gray-200'} p-4`}>
+            <div className={`w-64 ${isDarkMode ? ' border-r border-gray-800' : 'border-r border-gray-200'} p-4`}>
               <h4 className={`text-sm font-medium mb-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} uppercase tracking-wide`}>
                 Categories
               </h4>
@@ -1239,117 +1289,204 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
       </ModalContent>
     </Modal>
 
-    {/* Avatar Picker Modal */}
+    {/* Enhanced Avatar Picker Modal */}
     <Modal 
       isOpen={showAvatarPicker} 
       onClose={() => setShowAvatarPicker(false)}
-      size="4xl"
+      size="5xl"
       scrollBehavior="inside"
-      className="max-h-[90vh]"
+      backdrop="blur"
+      classNames={{
+        base: "bg-transparent",
+        backdrop: "bg-black/60 backdrop-blur-md",
+      }}
     >
-      <ModalContent className={`${isDarkMode ? 'bg-black border-gray-800' : 'bg-white border-gray-200'} border`}>
-        <ModalHeader className="flex flex-col gap-3 p-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
-              <span className="text-2xl">🎭</span>
-            </div>
-            <div>
-              <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                Choose Your Avatar
-              </h3>
-              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Select from our collection of beautiful avatars
-              </p>
-            </div>
-          </div>
-          
-          {/* Category Tabs */}
-          <div className="flex gap-2 mt-4 flex-wrap">
-            {avatarCategories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedAvatarCategory(category.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
-                  selectedAvatarCategory === category.id
-                    ? 'bg-accent text-accent-foreground shadow-md scale-105'
-                    : isDarkMode
-                    ? 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800'
-                }`}
+      <ModalContent className={`${isDarkMode ? 'bg-black/95 border border-gray-800' : 'bg-white/95 border border-gray-100'} shadow-2xl backdrop-blur-md`}>
+        <ModalHeader className="p-8 pb-6">
+          <div className="text-center space-y-6 w-full">
+            {/* Enhanced Header */}
+            <div className="flex items-center justify-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center shadow-lg"
+                style={{ 
+                  background: `linear-gradient(135deg, ${accentColor}20, ${accentColor}40)`,
+                  border: `2px solid ${accentColor}30`
+                }}
               >
-                <span className="text-base">{category.emoji}</span>
-                <span>{category.name}</span>
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  selectedAvatarCategory === category.id
-                    ? 'bg-white/20'
-                    : isDarkMode
-                    ? 'bg-gray-700'
-                    : 'bg-gray-200'
-                }`}>
-                  {category.count}
-                </span>
-              </button>
-            ))}
+                <span className="text-3xl">🎭</span>
+              </div>
+              <div>
+                <h3 className={`text-3xl font-bold bg-gradient-to-r bg-clip-text text-transparent`}
+                  style={{ backgroundImage: `linear-gradient(135deg, ${accentColor}, ${accentColor}80)` }}
+                >
+                  Choose Your Avatar
+                </h3>
+                <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Pick a style that represents your unique personality
+                </p>
+              </div>
+            </div>
+            
+            {/* Enhanced Avatar Preview with Glow Effect */}
+            <div className="relative mx-auto w-32 h-32">
+              <div 
+                className="absolute inset-0 rounded-3xl blur-xl opacity-60"
+                style={{ backgroundColor: accentColor }}
+              />
+              <div className="relative w-full h-full">
+                <img 
+                  src={profilePhoto} 
+                  alt="Current Avatar" 
+                  className="w-full h-full object-cover rounded-3xl shadow-2xl transition-all duration-300"
+                  style={{ border: `3px solid ${accentColor}60` }}
+                />
+                <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full flex items-center justify-center shadow-lg"
+                  style={{ backgroundColor: accentColor }}
+                >
+                  <span className="text-white text-lg">✨</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Enhanced Category Tabs */}
+            <div className="flex gap-3 justify-center flex-wrap">
+              {avatarCategories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => setSelectedAvatarCategory(category.id)}
+                  className={`px-6 py-3 rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 flex items-center gap-3 ${
+                    selectedAvatarCategory === category.id
+                      ? 'text-white shadow-lg transform scale-105'
+                      : isDarkMode
+                      ? 'bg-gray-800/70 text-gray-300 hover:bg-gray-700/70 border border-gray-700'
+                      : 'bg-gray-100/70 text-gray-600 hover:bg-gray-200/70 border border-gray-200'
+                  }`}
+                  style={selectedAvatarCategory === category.id ? {
+                    backgroundColor: accentColor,
+                    borderColor: accentColor,
+                    boxShadow: `0 8px 32px ${accentColor}40`
+                  } : {}}
+                >
+                  <span className="text-lg">{category.emoji}</span>
+                  <span>{category.name}</span>
+                  <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
+                    selectedAvatarCategory === category.id
+                      ? 'bg-white/20 text-white'
+                      : isDarkMode
+                      ? 'bg-gray-700 text-gray-300'
+                      : 'bg-gray-200 text-gray-600'
+                  }`}>
+                    {category.count}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         </ModalHeader>
         
-        <ModalBody className="p-6 pt-0">
-          {/* Avatar Grid */}
-          <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-3">
-            {getAvatarsForCategory(selectedAvatarCategory).map((avatarPath, index) => (
-              <div
-                key={avatarPath}
-                className={`relative cursor-pointer group transition-all duration-200 hover:scale-110 ${
-                  profilePhoto === avatarPath ? 'ring-3 ring-accent ring-offset-2 ring-offset-background scale-110' : ''
-                }`}
-                onClick={() => {
-                  setProfilePhoto(avatarPath);
-                  setShowAvatarPicker(false);
-                }}
-              >
-                <img
-                  src={avatarPath}
-                  alt={`Avatar ${index + 1}`}
-                  className="w-16 h-16 object-cover rounded-xl shadow-md group-hover:shadow-lg transition-shadow duration-200"
-                  onError={(e) => {
-                    // Fallback if image doesn't exist
-                    e.currentTarget.style.display = 'none';
+        <ModalBody className="px-8 pb-6">
+          {/* Enhanced Avatar Grid */}
+          <div 
+            className="p-6 rounded-2xl max-h-80 overflow-y-auto"
+            style={{ 
+              backgroundColor: isDarkMode ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.3)',
+              backdropFilter: 'blur(10px)',
+              border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`
+            }}
+          >
+            <div className="grid grid-cols-6 gap-4">
+              {getAvatarsForCategory(selectedAvatarCategory).slice(0, 18).map((avatarPath, index) => (
+                <div
+                  key={avatarPath}
+                  className={`relative cursor-pointer group transition-all duration-300 hover:scale-110 hover:z-10 ${
+                    profilePhoto === avatarPath ? 'scale-110 z-10' : ''
+                  }`}
+                  style={{
+                    animationDelay: `${index * 50}ms`,
+                    animation: showAvatarPicker ? 'fadeInUp 0.6s ease-out forwards' : 'none'
                   }}
-                />
-                {profilePhoto === avatarPath && (
-                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-accent rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-white text-xs">✓</span>
+                  onClick={() => {
+                    setProfilePhoto(avatarPath);
+                    setShowAvatarPicker(false);
+                  }}
+                >
+                  <div className={`relative rounded-2xl overflow-hidden transition-all duration-300 ${
+                    profilePhoto === avatarPath 
+                      ? 'shadow-2xl' 
+                      : 'hover:shadow-xl'
+                  }`}
+                    style={profilePhoto === avatarPath ? {
+                      boxShadow: `0 0 0 3px ${accentColor}, 0 12px 32px ${accentColor}40`
+                    } : {}}
+                  >
+                    <img
+                      src={avatarPath}
+                      alt={`Avatar ${index + 1}`}
+                      className="w-full h-full object-cover transition-all duration-300"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                    {profilePhoto === avatarPath && (
+                      <div className="absolute inset-0 flex items-center justify-center"
+                        style={{ backgroundColor: `${accentColor}20` }}
+                      >
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center"
+                          style={{ backgroundColor: accentColor }}
+                        >
+                          <span className="text-white text-lg font-bold">✓</span>
+                        </div>
+                      </div>
+                    )}
+                    <div className={`absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
                   </div>
-                )}
-                <div className={`absolute inset-0 rounded-xl bg-accent/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${
-                  profilePhoto === avatarPath ? 'opacity-100' : ''
-                }`} />
-              </div>
-            ))}
+                </div>
+              ))}
+            </div>
           </div>
         </ModalBody>
         
-        <ModalFooter className="p-6 pt-0 flex justify-between">
+        <ModalFooter className="p-8 pt-4 flex justify-between items-center">
           <Button 
             variant="light" 
+            size="lg"
             onPress={() => setShowAvatarPicker(false)}
-            className={`${isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'}`}
+            className={`${isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'} font-medium`}
           >
             Cancel
           </Button>
           
-          {/* Surprise Me Button */}
-          <Button
-            onPress={() => {
-              const allAvatars = getAvatarsForCategory(selectedAvatarCategory);
-              const randomAvatar = allAvatars[Math.floor(Math.random() * allAvatars.length)];
-              setProfilePhoto(randomAvatar);
-              setShowAvatarPicker(false);
-            }}
-            className="bg-accent hover:bg-accent/80 text-accent-foreground font-medium px-6 transition-all hover:scale-105"
-          >
-            🎲 Surprise Me!
-          </Button>
+          <div className="flex gap-4">
+            {/* Random Avatar Button */}
+            <Button
+              variant="bordered"
+              size="lg"
+              onPress={() => {
+                const allAvatars = getAvatarsForCategory(selectedAvatarCategory);
+                const randomAvatar = allAvatars[Math.floor(Math.random() * allAvatars.length)];
+                setProfilePhoto(randomAvatar);
+              }}
+              className={`font-medium border-2 transition-all hover:scale-105 ${
+                isDarkMode 
+                  ? 'border-gray-600 text-gray-300 hover:border-accent hover:text-accent' 
+                  : 'border-gray-300 text-gray-600 hover:border-accent hover:text-accent'
+              }`}
+            >
+              🎲 Surprise Me
+            </Button>
+            
+            {/* Done Button */}
+            <Button
+              size="lg"
+              onPress={() => setShowAvatarPicker(false)}
+              className="font-medium px-8 transition-all hover:scale-105 text-white shadow-lg"
+              style={{ 
+                backgroundColor: accentColor,
+                boxShadow: `0 4px 20px ${accentColor}40`
+              }}
+            >
+              Perfect! ✨
+            </Button>
+          </div>
         </ModalFooter>
       </ModalContent>
     </Modal>

@@ -85,7 +85,7 @@ body.dark .sidebar-container::after {
 /* Sidebar container styles */
 .sidebar-container {
   background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(24px);
+  backdrop-filter: blur(64px);
   border: 1.5px solid rgba(255, 255, 255, 0.15);
   border-radius: 20px;
   box-shadow: 
@@ -104,7 +104,7 @@ body.dark .sidebar-container::after {
 }
 
 body.dark .sidebar-container {
-  background: rgba(0, 0, 0, 0.4);
+  background: #10182860;
   border: 1.5px solid rgba(255, 255, 255, 0.12);
   box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.3),

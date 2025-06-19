@@ -87,7 +87,7 @@ interface AccentColorProviderProps {
 }
 
 const STORAGE_KEY = 'seika-accent-color';
-const DEFAULT_COLOR = PRESET_COLORS.blue;
+const DEFAULT_COLOR = PRESET_COLORS.emerald;
 
 export function AccentColorProvider({ children }: AccentColorProviderProps) {
   const [accentColor, setAccentColorState] = useState<string>(DEFAULT_COLOR);

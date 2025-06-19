@@ -9,12 +9,12 @@ export interface Wallpaper {
 
 // Available wallpapers data
 export const wallpapers: Wallpaper[] = [
+  { name: "Tropical Leaves", fileName: "leaves.jpg", author: "Pikisuperstar" },
   { name: "Purple Gradient", fileName: "purple-gradient.jpg", author: "Milad Fakurian" },
   { name: "Japan Sunset", fileName: "japan-sunset.jpg", author: "AI Generated" },
   { name: "Japan Coastal Landscape", fileName: "japan-coastal-landscape.jpg", author: "AI Generated" },
   { name: "Japan Street", fileName: "japan-street.jpg", author: "AI Generated" },
   { name: "Japan Mountain", fileName: "japan-mountain.jpg", author: "AI Generated" },
-  { name: "Tropical Leaves", fileName: "leaves.jpg", author: "Pikisuperstar" },
   { name: "Lake and Mountain", fileName: "pexels-eberhardgross-443446.jpg", author: "Eberhard Grossgasteiger" },
   { name: "Tree Nature View", fileName: "photorealistic-view-tree-nature-with-branches-trunk.jpg", author: "Freepik" },
   { name: "Mountain Lake Painting", fileName: "painting-mountain-lake-with-mountain-background.jpg", author: "AI Generated" },

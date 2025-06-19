@@ -6,6 +6,7 @@ import PricingPage from "@/pages/pricing";
 import BlogPage from "@/pages/blog";
 import AboutPage from "@/pages/about";
 import DashboardPage from "./pages/dashboard";
+import OnBoarding from "./pages/onboarding";
 
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
       <Routes>
         <Route element={<IndexPage />} path="/" />
         <Route element={<DashboardPage />} path="/dashboard" />
+        <Route element={<OnBoarding />} path="/onboarding" />
 
         <Route element={<DocsPage />} path="/docs" />
         <Route element={<PricingPage />} path="/pricing" />

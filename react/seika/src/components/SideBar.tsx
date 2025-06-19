@@ -179,7 +179,7 @@ const SideBar = () => {
           </div>
           <div>
           <ProfileTile user={mainUser} accentColor={accentColor} />
-          <div className="sidebar-themeContainer mt-2">
+          {/* <div className="sidebar-themeContainer mt-2">
           <label
             htmlFor="theme-toggle"
             className={`sidebar-themeLabel${isDarkMode ? " switched" : ""}`}
@@ -226,7 +226,7 @@ const SideBar = () => {
               <span className="sidebar-themeInputText">Dark</span>
             </div>
           </label>
-        </div>
+        </div> */}
           </div>
         </div>
       </div>
