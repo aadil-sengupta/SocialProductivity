@@ -1215,7 +1215,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
         backdrop: "bg-black/50 backdrop-blur-sm",
       }}
     >
-      <ModalContent className={`${isDarkMode ? 'bg-gray-900/60 border border-gray-800' : 'bg-white/85 border border-gray-100'} shadow-2xl backdrop-blur-3xl h-5/6`}  >
+      <ModalContent className={`${isDarkMode ? 'bg-gray-900/60 border border-gray-800  backdrop-blur-3xl' : 'bg-white/80 border border-gray-100  backdrop-blur-xl'} shadow-2xl h-5/6`}  >
         <ModalHeader className={`flex flex-col gap-1 ${isDarkMode ? 'border-b border-gray-800' : 'border-b border-gray-100'}`}>
           <h2 className="text-primary text-xl font-semibold">
             Settings

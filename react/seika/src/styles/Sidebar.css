@@ -84,7 +84,7 @@ body.dark .sidebar-container::after {
 
 /* Sidebar container styles */
 .sidebar-container {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(162, 162, 162, 0.1);
   backdrop-filter: blur(64px);
   border: 1.5px solid rgba(255, 255, 255, 0.15);
   border-radius: 20px;
@@ -534,7 +534,8 @@ body.dark .sidebar-profileSection img {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--text-color);
+  /* color: var(--text-color); */
+  color: white;
   transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
   width: 100%;
   font-weight: 600;
@@ -543,7 +544,7 @@ body.dark .sidebar-profileSection img {
 }
 
 .sidebar-container:hover .sidebar-profileSection span {
-  color: var(--text-color);
+  /* color: var(--text-color); */
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
@@ -561,7 +562,7 @@ body.dark .sidebar-profileSection span {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: rgba(107, 114, 128, 0.8);
+  color: rgba(107, 114, 128, 1);
   transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
   margin-top: -2px;
   line-height: 1.4;
@@ -569,7 +570,7 @@ body.dark .sidebar-profileSection span {
 }
 
 .sidebar-container:hover .sidebar-profileSection p {
-  color: rgba(107, 114, 128, 0.9);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 body.dark .sidebar-container:hover .sidebar-profileSection p {
@@ -689,16 +690,16 @@ body.dark .sidebar-container:hover .sidebar-addButton .fa-plus {
 
 /* ProfileTile light mode hover effects */
 .sidebar-container:hover .profile-tile {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0);
   border-color: rgba(255, 255, 255, 0.15);
 }
 
-.sidebar-container:hover .profile-tile .profile-name {
+/* .sidebar-container:hover .profile-tile .profile-name {
   color: var(--text-color);
-}
+} */
 
 .sidebar-container:hover .profile-tile .profile-activity {
-  color: rgba(107, 114, 128, 0.9);
+  color: rgba(156, 163, 175, 0.8);
 }
 
 .sidebar-container:hover .profile-tile .profile-status.online {

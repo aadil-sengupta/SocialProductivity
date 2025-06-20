@@ -6,6 +6,8 @@ import { Progress } from "@heroui/progress";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiArrowLeft, FiArrowRight, FiCheck, FiStar, FiSettings, FiBell, FiClock, FiUser, FiImage } from "react-icons/fi";
 import { IoIosColorPalette } from "react-icons/io";
+import { apiClient } from "@/services/apiClient";
+
 // Components
 import FormOption from "@/components/FormOption";
 import ColorPicker from "@/components/ColorPicker";
@@ -622,412 +624,770 @@ export default function OnboardingPage() {
     </motion.div>
   ));
 
-  // Timer Settings Step
-  const TimerStep = React.memo(() => {
-        const { 
-    pomodoroMinutes, 
-    setPomodoroMinutes, 
-    shortBreakMinutes, 
-    setShortBreakMinutes,
-    longBreakMinutes,
-    setLongBreakMinutes,
-    longBreakInterval,
-    setLongBreakInterval,
-    countPauseTime,
-    setCountPauseTime
-  } = useTimer();
+  // Focus Duration Step
+  const FocusDurationStep = React.memo(() => {
+    const { pomodoroMinutes, setPomodoroMinutes } = useTimer();
+    
     return (
-    <motion.div 
-      className="space-y-8 lg:w-[90%] mx-auto"
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.5 }}
-    >   
-    <div className="space-y-8 w-full">
+      <motion.div 
+        className="space-y-10"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         <div className="text-center mb-12 mt-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
             <h2 className={`text-3xl font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-            ⏱️ Timer Settings
+              🎯 Focus Session Duration
             </h2>
-            <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            Customize your focus sessions and break intervals
+            <p className={`text-xl ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              How long should your deep work sessions be?
             </p>
-      </div>
+          </motion.div>
+        </div>
 
-          
-            
-            {/* Duration Settings Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">
-              {/* Focus Duration Card */}
-              <div className={`p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg  ${
-                isDarkMode ? 'bg-gray-900/50 border-gray-700 hover:border-accent/50' : 'bg-gray-50/50 border-gray-200 hover:border-accent/50'
-              }`}>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
-                    <span className="text-2xl">🎯</span>
-                  </div>
-                  <div>
-                    <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                      Focus Session
-                    </h4>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Deep work time
-                    </p>
-                  </div>
+        <div className="max-w-2xl mx-auto space-y-10">
+          {/* Focus Duration Card - Enhanced */}
+          <motion.div 
+            className={`p-8 rounded-3xl border backdrop-blur-xl transition-all duration-500 hover:shadow-2xl ${
+              isDarkMode 
+                ? 'bg-gradient-to-br from-gray-900/40 to-gray-800/30 border-gray-700/50 hover:border-accent/30' 
+                : 'bg-gradient-to-br from-white/50 to-gray-50/30 border-gray-200/50 hover:border-accent/30'
+            }`}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <div className="text-center space-y-8">
+              <div className="flex items-center justify-center gap-4">
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${isDarkMode ? 'bg-gray-800/50' : 'bg-gray-100/50'}`}>
+                  <span className="text-4xl">🎯</span>
                 </div>
-                
-                <div className="flex items-center gap-4">
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    size="lg"
-                    onPress={() => {
-                      if (pomodoroMinutes > 1) setPomodoroMinutes(pomodoroMinutes - 1);
-                    }}
-                    className={`${isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'} transition-colors`}
-                  >
-                    <span className="text-xl font-bold">−</span>
-                  </Button>
-                  
-                  <div className="flex-1 text-center">
-                    <div className={`text-4xl font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                <div>
+                  <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                    Focus Session
+                  </h3>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Your main productivity time block
+                  </p>
+                </div>
+              </div>
+              
+              {/* Large Timer Display */}
+              <motion.div 
+                className="relative mx-auto w-48 h-48"
+                whileHover={{ scale: 1.05 }}
+              >
+                <div 
+                  className="absolute inset-0 rounded-full blur-xl opacity-30"
+                  style={{ backgroundColor: accentColor }}
+                />
+                <div 
+                  className="relative w-full h-full rounded-full flex items-center justify-center shadow-2xl border-4"
+                  style={{ 
+                    backgroundColor: `${accentColor}10`, 
+                    borderColor: `${accentColor}40` 
+                  }}
+                >
+                  <div className="text-center">
+                    <div className={`text-5xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                       {pomodoroMinutes}
                     </div>
-                    <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <div className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                       minutes
                     </div>
                   </div>
-                  
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    size="lg"
-                    onPress={() => {
-                      if (pomodoroMinutes < 120) setPomodoroMinutes(pomodoroMinutes + 1);
-                    }}
-                    className={`${isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'} transition-colors`}
-                  >
-                    <span className="text-xl font-bold">+</span>
-                  </Button>
                 </div>
+              </motion.div>
+
+              {/* Interactive Controls */}
+              <div className="flex items-center justify-center gap-6">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    if (pomodoroMinutes > 1) setPomodoroMinutes(pomodoroMinutes - 1);
+                  }}
+                  className={`w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold transition-all ${
+                    isDarkMode 
+                      ? 'bg-gray-800/70 text-white hover:bg-gray-700' 
+                      : 'bg-white/70 text-gray-800 hover:bg-gray-100'
+                  }`}
+                  style={{ boxShadow: `0 4px 16px ${accentColor}20` }}
+                >
+                  −
+                </motion.button>
                 
-                <div className="mt-4 flex gap-2">
-                  {[15, 25, 45, 60].map((preset) => (
-                    <Button
-                      key={preset}
-                      size="sm"
-                      variant={pomodoroMinutes === preset ? "solid" : "bordered"}
-                      color={pomodoroMinutes === preset ? "primary" : "default"}
-                      onPress={() => setPomodoroMinutes(preset)}
-                      className={`flex-1 ${pomodoroMinutes === preset ? 'bg-accent text-accent-foreground' : ''}`}
-                    >
-                      {preset}m
-                    </Button>
-                  ))}
-                </div>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    if (pomodoroMinutes < 120) setPomodoroMinutes(pomodoroMinutes + 1);
+                  }}
+                  className={`w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold transition-all ${
+                    isDarkMode 
+                      ? 'bg-gray-800/70 text-white hover:bg-gray-700' 
+                      : 'bg-white/70 text-gray-800 hover:bg-gray-100'
+                  }`}
+                  style={{ boxShadow: `0 4px 16px ${accentColor}20` }}
+                >
+                  +
+                </motion.button>
               </div>
 
-              {/* Short Break Card */}
-              <div className={`p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
-                isDarkMode ? 'bg-gray-900/50 border-gray-700 hover:border-accent/50' : 'bg-gray-50/50 border-gray-200 hover:border-accent/50'
-              }`}>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
-                    <span className="text-2xl">☕</span>
-                  </div>
-                  <div>
-                    <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                      Short Break
-                    </h4>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Quick refresh
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    size="lg"
-                    onPress={() => {
-                      if (shortBreakMinutes > 1) setShortBreakMinutes(shortBreakMinutes - 1);
-                    }}
-                    className={`${isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'} transition-colors`}
-                  >
-                    <span className="text-xl font-bold">−</span>
-                  </Button>
-                  
-                  <div className="flex-1 text-center">
-                    <div className={`text-4xl font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                      {shortBreakMinutes}
-                    </div>
-                    <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      minutes
-                    </div>
-                  </div>
-                  
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    size="lg"
-                    onPress={() => {
-                      if (shortBreakMinutes < 30) setShortBreakMinutes(shortBreakMinutes + 1);
-                    }}
-                    className={`${isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'} transition-colors`}
-                  >
-                    <span className="text-xl font-bold">+</span>
-                  </Button>
-                </div>
-                
-                <div className="mt-4 flex gap-2">
-                  {[3, 5, 10, 15].map((preset) => (
-                    <Button
+              {/* Quick Presets */}
+              <div className="space-y-4">
+                <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                  Popular Durations
+                </h4>
+                <div className="grid grid-cols-4 gap-3">
+                  {[15, 25, 45, 60].map((preset, index) => (
+                    <motion.button
                       key={preset}
-                      size="sm"
-                      variant={shortBreakMinutes === preset ? "solid" : "bordered"}
-                      color={shortBreakMinutes === preset ? "primary" : "default"}
-                      onPress={() => setShortBreakMinutes(preset)}
-                      className={`flex-1 ${shortBreakMinutes === preset ? 'bg-accent text-accent-foreground' : ''}`}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 + index * 0.1 }}
+                      onClick={() => setPomodoroMinutes(preset)}
+                      className={`px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 ${
+                        pomodoroMinutes === preset
+                          ? 'text-white shadow-lg'
+                          : isDarkMode
+                          ? 'bg-gray-800/70 text-gray-300 hover:bg-gray-700/70'
+                          : 'bg-gray-100/70 text-gray-600 hover:bg-gray-200/70'
+                      }`}
+                      style={pomodoroMinutes === preset ? {
+                        backgroundColor: accentColor,
+                        boxShadow: `0 4px 16px ${accentColor}40`
+                      } : {}}
                     >
                       {preset}m
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Long Break Card */}
-              <div className={`p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
-                isDarkMode ? 'bg-gray-900/50 border-gray-700 hover:border-accent/50' : 'bg-gray-50/50 border-gray-200 hover:border-accent/50'
-              }`}>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                    <span className="text-2xl">🌴</span>
-                  </div>
-                  <div>
-                    <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                      Long Break
-                    </h4>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Extended rest
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    size="lg"
-                    onPress={() => {
-                      if (longBreakMinutes > 1) setLongBreakMinutes(longBreakMinutes - 1);
-                    }}
-                    className={`${isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'} transition-colors`}
-                  >
-                    <span className="text-xl font-bold">−</span>
-                  </Button>
-                  
-                  <div className="flex-1 text-center">
-                    <div className={`text-4xl font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                      {longBreakMinutes}
-                    </div>
-                    <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      minutes
-                    </div>
-                  </div>
-                  
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    size="lg"
-                    onPress={() => {
-                      if (longBreakMinutes < 60) setLongBreakMinutes(longBreakMinutes + 1);
-                    }}
-                    className={`${isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'} transition-colors`}
-                  >
-                    <span className="text-xl font-bold">+</span>
-                  </Button>
-                </div>
-                
-                <div className="mt-4 flex gap-2">
-                  {[15, 20, 30, 45].map((preset) => (
-                    <Button
-                      key={preset}
-                      size="sm"
-                      variant={longBreakMinutes === preset ? "solid" : "bordered"}
-                      color={longBreakMinutes === preset ? "primary" : "default"}
-                      onPress={() => setLongBreakMinutes(preset)}
-                      className={`flex-1 ${longBreakMinutes === preset ? 'bg-accent text-accent-foreground' : ''}`}
-                    >
-                      {preset}m
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Break Interval Card */}
-              <div className={`p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
-                isDarkMode ? 'bg-gray-900/50 border-gray-700 hover:border-accent/50' : 'bg-gray-50/50 border-gray-200 hover:border-accent/50'
-              }`}>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                    <span className="text-2xl">🔄</span>
-                  </div>
-                  <div>
-                    <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                      Break Cycle
-                    </h4>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Sessions before long break
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    size="lg"
-                    onPress={() => {
-                      if (longBreakInterval > 2) setLongBreakInterval(longBreakInterval - 1);
-                    }}
-                    className={`${isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'} transition-colors`}
-                  >
-                    <span className="text-xl font-bold">−</span>
-                  </Button>
-                  
-                  <div className="flex-1 text-center">
-                    <div className={`text-4xl font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                      {longBreakInterval}
-                    </div>
-                    <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      sessions
-                    </div>
-                  </div>
-                  
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    size="lg"
-                    onPress={() => {
-                      if (longBreakInterval < 10) setLongBreakInterval(longBreakInterval + 1);
-                    }}
-                    className={`${isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'} transition-colors`}
-                  >
-                    <span className="text-xl font-bold">+</span>
-                  </Button>
-                </div>
-                
-                <div className="mt-4 flex gap-2">
-                  {[3, 4, 5, 6].map((preset) => (
-                    <Button
-                      key={preset}
-                      size="sm"
-                      variant={longBreakInterval === preset ? "solid" : "bordered"}
-                      color={longBreakInterval === preset ? "primary" : "default"}
-                      onPress={() => setLongBreakInterval(preset)}
-                      className={`flex-1 ${longBreakInterval === preset ? 'bg-accent text-accent-foreground' : ''}`}
-                    >
-                      {preset}
-                    </Button>
+                    </motion.button>
                   ))}
                 </div>
               </div>
             </div>
+          </motion.div>
 
-            {/* Quick Presets Section */}
-            <div className={`p-6 rounded-2xl border ${
-              isDarkMode ? 'bg-gradient-to-r from-gray-900/30 to-gray-800/30 border-gray-700' : 'bg-gradient-to-r from-gray-50/30 to-gray-100/30 border-gray-200'
-            }`}>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
-                  <span className="text-xl">⚡</span>
+          {/* Duration Info */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className={`p-6 rounded-3xl border backdrop-blur-xl ${
+              isDarkMode 
+                ? 'bg-gradient-to-br from-gray-900/30 to-gray-800/20 border-gray-700/40' 
+                : 'bg-gradient-to-br from-white/30 to-gray-50/20 border-gray-200/40'
+            }`}
+          >
+            <div className="text-center">
+              <h5 className={`text-lg font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                💡 Tip: Find Your Sweet Spot
+              </h5>
+              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                {pomodoroMinutes <= 20 
+                  ? "Short sessions are great for beginners or when you have trouble focusing."
+                  : pomodoroMinutes <= 30 
+                  ? "The classic 25-minute Pomodoro technique - proven to boost productivity!"
+                  : pomodoroMinutes <= 50
+                  ? "Longer sessions work well for deep work and complex tasks."
+                  : "Extended sessions for those who can maintain long periods of concentration."
+                }
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      </motion.div>
+    );
+  });
+
+  // Break Settings Step
+  const BreakSettingsStep = React.memo(() => {
+    const { 
+      shortBreakMinutes, 
+      setShortBreakMinutes,
+      longBreakMinutes,
+      setLongBreakMinutes 
+    } = useTimer();
+    
+    return (
+      <motion.div 
+        className="space-y-10"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="text-center mb-12 mt-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <h2 className={`text-3xl font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+              ☕ Break Time Settings
+            </h2>
+            <p className={`text-xl ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              Configure your rest periods for optimal recovery
+            </p>
+          </motion.div>
+        </div>
+
+        <div className="max-w-4xl mx-auto space-y-8">
+          {/* Short Break Card */}
+          <motion.div 
+            className={`p-8 rounded-3xl border backdrop-blur-xl transition-all duration-500 hover:shadow-2xl ${
+              isDarkMode 
+                ? 'bg-gradient-to-br from-gray-900/40 to-gray-800/30 border-gray-700/50' 
+                : 'bg-gradient-to-br from-white/50 to-gray-50/30 border-gray-200/50'
+            }`}
+            style={{ 
+              borderColor: isDarkMode 
+                ? `${accentColor}30` 
+                : `${accentColor}30`
+            }}
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <div className="flex items-center gap-6 mb-6">
+              <div 
+                className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                style={{ backgroundColor: `${accentColor}10` }}
+              >
+                <span className="text-4xl">☕</span>
+              </div>
+              <div>
+                <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                  Short Break
+                </h3>
+                <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Quick refresh between focus sessions
+                </p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="text-center">
+                <div className={`text-6xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                  {shortBreakMinutes}
+                </div>
+                <div className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} mb-4`}>
+                  minutes
+                </div>
+                
+                <div className="flex items-center justify-center gap-4">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      if (shortBreakMinutes > 1) setShortBreakMinutes(shortBreakMinutes - 1);
+                    }}
+                    className="w-12 h-12 rounded-xl font-bold text-xl transition-all"
+                    style={{ 
+                      backgroundColor: `${accentColor}20`, 
+                      color: accentColor
+                    }}
+                    onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = `${accentColor}30`}
+                    onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = `${accentColor}20`}
+                  >
+                    −
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      if (shortBreakMinutes < 30) setShortBreakMinutes(shortBreakMinutes + 1);
+                    }}
+                    className="w-12 h-12 rounded-xl font-bold text-xl transition-all"
+                    style={{ 
+                      backgroundColor: `${accentColor}20`, 
+                      color: accentColor
+                    }}
+                    onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = `${accentColor}30`}
+                    onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = `${accentColor}20`}
+                  >
+                    +
+                  </motion.button>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                  Quick Presets
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  {[3, 5, 10, 15].map((preset) => (
+                    <button
+                      key={preset}
+                      onClick={() => setShortBreakMinutes(preset)}
+                      className={`px-4 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105 ${
+                        shortBreakMinutes === preset
+                          ? 'text-white shadow-lg'
+                          : isDarkMode
+                          ? 'bg-gray-800/70 text-gray-300'
+                          : 'bg-gray-100/70 text-gray-600'
+                      }`}
+                      style={{
+                        backgroundColor: shortBreakMinutes === preset 
+                          ? accentColor 
+                          : shortBreakMinutes !== preset 
+                            ? (isDarkMode ? 'rgba(31, 41, 55, 0.7)' : 'rgba(243, 244, 246, 0.7)')
+                            : undefined
+                      }}
+                      onMouseEnter={(e) => {
+                        if (shortBreakMinutes !== preset) {
+                          (e.target as HTMLElement).style.backgroundColor = `${accentColor}20`;
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (shortBreakMinutes !== preset) {
+                          (e.target as HTMLElement).style.backgroundColor = isDarkMode ? 'rgba(31, 41, 55, 0.7)' : 'rgba(243, 244, 246, 0.7)';
+                        }
+                      }}
+                    >
+                      {preset}m
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Long Break Card */}
+          <motion.div 
+            className={`p-8 rounded-3xl border backdrop-blur-xl transition-all duration-500 hover:shadow-2xl ${
+              isDarkMode 
+                ? 'bg-gradient-to-br from-gray-900/40 to-gray-800/30 border-gray-700/50' 
+                : 'bg-gradient-to-br from-white/50 to-gray-50/30 border-gray-200/50'
+            }`}
+            style={{ 
+              borderColor: isDarkMode 
+                ? `${accentColor}30` 
+                : `${accentColor}30`
+            }}
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <div className="flex items-center gap-6 mb-6">
+              <div 
+                className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                style={{ backgroundColor: `${accentColor}10` }}
+              >
+                <span className="text-4xl">🌴</span>
+              </div>
+              <div>
+                <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                  Long Break
+                </h3>
+                <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Extended rest after multiple sessions
+                </p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="text-center">
+                <div className={`text-6xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                  {longBreakMinutes}
+                </div>
+                <div className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} mb-4`}>
+                  minutes
+                </div>
+                
+                <div className="flex items-center justify-center gap-4">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      if (longBreakMinutes > 1) setLongBreakMinutes(longBreakMinutes - 1);
+                    }}
+                    className="w-12 h-12 rounded-xl font-bold text-xl transition-all"
+                    style={{ 
+                      backgroundColor: `${accentColor}20`, 
+                      color: accentColor
+                    }}
+                    onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = `${accentColor}30`}
+                    onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = `${accentColor}20`}
+                  >
+                    −
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      if (longBreakMinutes < 60) setLongBreakMinutes(longBreakMinutes + 1);
+                    }}
+                    className="w-12 h-12 rounded-xl font-bold text-xl transition-all"
+                    style={{ 
+                      backgroundColor: `${accentColor}20`, 
+                      color: accentColor
+                    }}
+                    onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = `${accentColor}30`}
+                    onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = `${accentColor}20`}
+                  >
+                    +
+                  </motion.button>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                  Quick Presets
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  {[15, 20, 30, 45].map((preset) => (
+                    <button
+                      key={preset}
+                      onClick={() => setLongBreakMinutes(preset)}
+                      className={`px-4 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105 ${
+                        longBreakMinutes === preset
+                          ? 'text-white shadow-lg'
+                          : isDarkMode
+                          ? 'bg-gray-800/70 text-gray-300'
+                          : 'bg-gray-100/70 text-gray-600'
+                      }`}
+                      style={{
+                        backgroundColor: longBreakMinutes === preset 
+                          ? accentColor 
+                          : longBreakMinutes !== preset 
+                            ? (isDarkMode ? 'rgba(31, 41, 55, 0.7)' : 'rgba(243, 244, 246, 0.7)')
+                            : undefined
+                      }}
+                      onMouseEnter={(e) => {
+                        if (longBreakMinutes !== preset) {
+                          (e.target as HTMLElement).style.backgroundColor = `${accentColor}20`;
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (longBreakMinutes !== preset) {
+                          (e.target as HTMLElement).style.backgroundColor = isDarkMode ? 'rgba(31, 41, 55, 0.7)' : 'rgba(243, 244, 246, 0.7)';
+                        }
+                      }}
+                    >
+                      {preset}m
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Break Tips */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className={`p-6 rounded-3xl border backdrop-blur-xl ${
+              isDarkMode 
+                ? 'bg-gradient-to-br from-gray-900/30 to-gray-800/20 border-gray-700/40' 
+                : 'bg-gradient-to-br from-white/30 to-gray-50/20 border-gray-200/40'
+            }`}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="text-center">
+                <h5 className={`text-lg font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                  ☕ Short Break Ideas
+                </h5>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Stretch, grab water, take deep breaths, or step outside for fresh air
+                </p>
+              </div>
+              <div className="text-center">
+                <h5 className={`text-lg font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                  🌴 Long Break Ideas
+                </h5>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Take a walk, have a meal, call a friend, or engage in a hobby
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </motion.div>
+    );
+  });
+
+  // Advanced Timer Step
+  const AdvancedTimerStep = React.memo(() => {
+    const { 
+      longBreakInterval,
+      setLongBreakInterval,
+      countPauseTime,
+      setCountPauseTime,
+      setPomodoroMinutes,
+      setShortBreakMinutes,
+      setLongBreakMinutes
+    } = useTimer();
+    
+    return (
+      <motion.div 
+        className="space-y-10"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="text-center mb-12 mt-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <h2 className={`text-3xl font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+              ⚙️ Advanced Settings
+            </h2>
+            <p className={`text-xl ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              Fine-tune your productivity workflow
+            </p>
+          </motion.div>
+        </div>
+
+        <div className="max-w-4xl mx-auto space-y-8">
+          {/* Break Cycle Card */}
+          <motion.div 
+            className={`p-8 rounded-3xl border backdrop-blur-xl transition-all duration-500 hover:shadow-2xl ${
+              isDarkMode 
+                ? 'bg-gradient-to-br from-gray-900/40 to-gray-800/30 border-gray-700/50' 
+                : 'bg-gradient-to-br from-white/50 to-gray-50/30 border-gray-200/50'
+            }`}
+            style={{ 
+              borderColor: isDarkMode 
+                ? `${accentColor}30` 
+                : `${accentColor}30`
+            }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <div className="text-center space-y-6">
+              <div className="flex items-center justify-center gap-4">
+                <div 
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                  style={{ backgroundColor: `${accentColor}10` }}
+                >
+                  <span className="text-4xl">🔄</span>
                 </div>
                 <div>
-                  <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                  <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                    Break Cycle
+                  </h3>
+                  <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Sessions before taking a long break
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-center gap-8">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    if (longBreakInterval > 2) setLongBreakInterval(longBreakInterval - 1);
+                  }}
+                  className="w-16 h-16 rounded-2xl font-bold text-2xl transition-all"
+                  style={{ 
+                    backgroundColor: `${accentColor}20`, 
+                    color: accentColor
+                  }}
+                  onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = `${accentColor}30`}
+                  onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = `${accentColor}20`}
+                >
+                  −
+                </motion.button>
+                
+                <div className="text-center">
+                  <div className={`text-7xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                    {longBreakInterval}
+                  </div>
+                  <div className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    sessions
+                  </div>
+                </div>
+                
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    if (longBreakInterval < 10) setLongBreakInterval(longBreakInterval + 1);
+                  }}
+                  className="w-16 h-16 rounded-2xl font-bold text-2xl transition-all"
+                  style={{ 
+                    backgroundColor: `${accentColor}20`, 
+                    color: accentColor
+                  }}
+                  onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = `${accentColor}30`}
+                  onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = `${accentColor}20`}
+                >
+                  +
+                </motion.button>
+              </div>
+
+              <div className="grid grid-cols-4 gap-3">
+                {[3, 4, 5, 6].map((preset) => (
+                  <button
+                    key={preset}
+                    onClick={() => setLongBreakInterval(preset)}
+                    className={`px-4 py-3 rounded-xl text-sm font-medium transition-all hover:scale-105 ${
+                      longBreakInterval === preset
+                        ? 'text-white shadow-lg'
+                        : isDarkMode
+                        ? 'bg-gray-800/70 text-gray-300'
+                        : 'bg-gray-100/70 text-gray-600'
+                    }`}
+                    style={{
+                      backgroundColor: longBreakInterval === preset 
+                        ? accentColor 
+                        : longBreakInterval !== preset 
+                          ? (isDarkMode ? 'rgba(31, 41, 55, 0.7)' : 'rgba(243, 244, 246, 0.7)')
+                          : undefined
+                    }}
+                    onMouseEnter={(e) => {
+                      if (longBreakInterval !== preset) {
+                        (e.target as HTMLElement).style.backgroundColor = `${accentColor}20`;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (longBreakInterval !== preset) {
+                        (e.target as HTMLElement).style.backgroundColor = isDarkMode ? 'rgba(31, 41, 55, 0.7)' : 'rgba(243, 244, 246, 0.7)';
+                      }
+                    }}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Timer Behavior Card */}
+          <motion.div 
+            className={`p-8 rounded-3xl border backdrop-blur-xl transition-all duration-500 hover:shadow-2xl ${
+              isDarkMode 
+                ? 'bg-gradient-to-br from-gray-900/40 to-gray-800/30 border-gray-700/50' 
+                : 'bg-gradient-to-br from-white/50 to-gray-50/30 border-gray-200/50'
+            }`}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <div className="flex items-center gap-6 mb-6">
+              <div className="w-16 h-16 rounded-2xl bg-orange-500/10 flex items-center justify-center">
+                <span className="text-4xl">⚙️</span>
+              </div>
+              <div>
+                <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                  Timer Behavior
+                </h3>
+                <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Customize how your timer works
+                </p>
+              </div>
+            </div>
+            
+            <FormOption
+              title="Paused time counts as break"
+              description="Include paused timer duration in break calculations (Highly Recommended)."
+              isSelected={countPauseTime}
+              onChange={setCountPauseTime}
+            />
+          </motion.div>
+
+          {/* Quick Presets Section */}
+          <motion.div 
+            className={`p-8 rounded-3xl border backdrop-blur-xl transition-all duration-500 hover:shadow-2xl ${
+              isDarkMode 
+                ? 'bg-gradient-to-br from-gray-900/40 to-gray-800/30 border-gray-700/50' 
+                : 'bg-gradient-to-br from-white/50 to-yellow-50/30 border-gray-200/50'
+            }`}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <div className="text-center space-y-6">
+              <div className="flex items-center justify-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-yellow-500/10 flex items-center justify-center">
+                  <span className="text-4xl">⚡</span>
+                </div>
+                <div>
+                  <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                     Quick Presets
-                  </h4>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  </h3>
+                  <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                     Popular timer configurations
                   </p>
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Button
-                  variant="bordered"
-                  size="lg"
-                  onPress={() => {
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
                     setPomodoroMinutes(25);
                     setShortBreakMinutes(5);
                     setLongBreakMinutes(15);
                     setLongBreakInterval(4);
                   }}
-                  className={`h-20 flex-col gap-1 ${isDarkMode ? 'border-gray-600 hover:border-accent text-gray-300 hover:bg-gray-800/50' : 'border-gray-300 hover:border-accent text-gray-700 hover:bg-gray-50'} transition-all hover:scale-105`}
+                  className={`p-6 rounded-2xl border-2 transition-all ${
+                    isDarkMode 
+                      ? 'border-gray-600 hover:border-accent bg-gray-800/50 text-gray-300 hover:bg-gray-700/50' 
+                      : 'border-gray-300 hover:border-accent bg-white/50 text-gray-700 hover:bg-gray-50'
+                  }`}
                 >
-                  <div className="font-bold text-lg">Classic Pomodoro</div>
-                  <div className="text-xs opacity-70">25 • 5 • 15 • 4</div>
-                </Button>
+                  <div className="text-2xl mb-2">📚</div>
+                  <div className="font-bold text-lg mb-1">Classic Pomodoro</div>
+                  <div className="text-sm opacity-70">25 • 5 • 15 • 4</div>
+                </motion.button>
                 
-                <Button
-                  variant="bordered"
-                  size="lg"
-                  onPress={() => {
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
                     setPomodoroMinutes(50);
                     setShortBreakMinutes(10);
                     setLongBreakMinutes(20);
                     setLongBreakInterval(3);
                   }}
-                  className={`h-20 flex-col gap-1 ${isDarkMode ? 'border-gray-600 hover:border-accent text-gray-300 hover:bg-gray-800/50' : 'border-gray-300 hover:border-accent text-gray-700 hover:bg-gray-50'} transition-all hover:scale-105`}
+                  className={`p-6 rounded-2xl border-2 transition-all ${
+                    isDarkMode 
+                      ? 'border-gray-600 hover:border-accent bg-gray-800/50 text-gray-300 hover:bg-gray-700/50' 
+                      : 'border-gray-300 hover:border-accent bg-white/50 text-gray-700 hover:bg-gray-50'
+                  }`}
                 >
-                  <div className="font-bold text-lg">Deep Work</div>
-                  <div className="text-xs opacity-70">50 • 10 • 20 • 3</div>
-                </Button>
+                  <div className="text-2xl mb-2">💼</div>
+                  <div className="font-bold text-lg mb-1">Deep Work</div>
+                  <div className="text-sm opacity-70">50 • 10 • 20 • 3</div>
+                </motion.button>
                 
-                <Button
-                  variant="bordered"
-                  size="lg"
-                  onPress={() => {
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
                     setPomodoroMinutes(15);
                     setShortBreakMinutes(3);
                     setLongBreakMinutes(10);
                     setLongBreakInterval(4);
                   }}
-                  className={`h-20 flex-col gap-1 ${isDarkMode ? 'border-gray-600 hover:border-accent text-gray-300 hover:bg-gray-800/50' : 'border-gray-300 hover:border-accent text-gray-700 hover:bg-gray-50'} transition-all hover:scale-105`}
+                  className={`p-6 rounded-2xl border-2 transition-all ${
+                    isDarkMode 
+                      ? 'border-gray-600 hover:border-accent bg-gray-800/50 text-gray-300 hover:bg-gray-700/50' 
+                      : 'border-gray-300 hover:border-accent bg-white/50 text-gray-700 hover:bg-gray-50'
+                  }`}
                 >
-                  <div className="font-bold text-lg">Sprint Mode</div>
-                  <div className="text-xs opacity-70">15 • 3 • 10 • 4</div>
-                </Button>
+                  <div className="text-2xl mb-2">⚡</div>
+                  <div className="font-bold text-lg mb-1">Sprint Mode</div>
+                  <div className="text-sm opacity-70">15 • 3 • 10 • 4</div>
+                </motion.button>
               </div>
             </div>
-
-            {/* Timer Behavior Section */}
-            <div className={`p-6 rounded-2xl border ${
-              isDarkMode ? 'bg-gray-900/30 border-gray-700' : 'bg-gray-50/30 border-gray-200'
-            }`}>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
-                  <span className="text-xl">⚙️</span>
-                </div>
-                <div>
-                  <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                    Timer Behavior
-                  </h4>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Customize how your timer works
-                  </p>
-                </div>
-              </div>
-              
-            <FormOption
-                  title="Paused time counts as break"
-                  description="Include paused timer duration in break calculations (Highly Recommended)."
-                  isSelected={countPauseTime}
-                  onChange={setCountPauseTime}
-            /> 
-            </div>
-          </div>
-    </motion.div>
-  )});
+          </motion.div>
+        </div>
+      </motion.div>
+    );
+  });
 
   // Notifications Step
   const NotificationsStep = React.memo(() => (
@@ -1243,8 +1603,12 @@ export default function OnboardingPage() {
         return <ThemeStep />;
       case 'wallpaper':
         return <WallpaperStep />;
-      case 'timer':
-        return <TimerStep />;
+      case 'focus-duration':
+        return <FocusDurationStep />;
+      case 'break-settings':
+        return <BreakSettingsStep />;
+      case 'advanced-timer':
+        return <AdvancedTimerStep />;
       case 'notifications':
         return <NotificationsStep />;
       case 'complete':
@@ -1292,10 +1656,24 @@ export default function OnboardingPage() {
       component: null
     },
     {
-      id: "timer",
-      title: "Timer Settings",
-      subtitle: "Configure your focus sessions",
+      id: "focus-duration",
+      title: "Focus Duration",
+      subtitle: "Set your main work session length",
       icon: <FiClock className="w-5 h-5" />,
+      component: null
+    },
+    {
+      id: "break-settings",
+      title: "Break Settings",
+      subtitle: "Configure your rest periods",
+      icon: <FiClock className="w-5 h-5" />,
+      component: null
+    },
+    {
+      id: "advanced-timer",
+      title: "Advanced Timer",
+      subtitle: "Fine-tune your workflow",
+      icon: <FiSettings className="w-5 h-5" />,
       component: null
     },
     {
@@ -1333,11 +1711,51 @@ export default function OnboardingPage() {
     }
   }, [currentStep]);
 
-  const completeOnboarding = useCallback(() => {
-    // Save onboarding completion to localStorage
+  const completeOnboarding = useCallback(async () => {
+    const { profilePhoto, privacySettings } = useProfile();
+    const {selectedWallpaper, wallpaperBlur} = useWallpaper();
+
+    const {pomodoroMinutes, shortBreakMinutes, longBreakMinutes, longBreakInterval, countPauseTime} = useTimer();
+
+
     localStorage.setItem('onboardingCompleted', 'true');
-    // Navigate to main app
-    navigate('/');
+    try {
+        
+          // POST settings to API
+          await apiClient.post('/users/settings/', {
+            // Profile settings
+            profilePhoto,
+            showOnlineStatus: privacySettings.showOnlineStatus,
+            showTimeSpendStudying: privacySettings.showTimeSpentStudying,
+            
+            // Theme settings (map React state to Django field names)
+            accentColor,
+            wallpaper: selectedWallpaper,
+            backgroundBlur: wallpaperBlur,
+            //font, not in the onboarding form
+            darkMode: isDarkMode,
+    
+            // Timer settings (map React state to Django field names)
+            focusDuration: pomodoroMinutes,
+            shortBreakDuration: shortBreakMinutes,
+            longBreakDuration: longBreakMinutes,
+            longBreakInterval,
+            pauseIsBreak: countPauseTime,
+            
+            // Notification settings (map React state to Django field names)
+            desktopNotifications,
+            playSoundOnNotification: soundNotifications,
+            breakReminders,
+            standUpReminders,
+          });
+          
+          console.log("Settings saved successfully");
+        } catch (error) {
+          console.error("Failed to save settings:", error);
+          // Still call onSave to close modal even if API fails, since localStorage is already updated
+        }
+
+    navigate('/dashboard');
   }, [navigate]);
 
   const progress = ((currentStep + 1) / steps.length) * 100;

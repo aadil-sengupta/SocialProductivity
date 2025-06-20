@@ -10,14 +10,14 @@ import { useContextMenu } from "@/contexts/ContextMenuContext";
 const SideBar = () => {
   const [isShrinkView, setIsShrinkView] = React.useState(true);
   const [isMouseOverSidebar, setIsMouseOverSidebar] = React.useState(false);
-  const { isDarkMode, toggleTheme } = useDarkMode();
+  const { isDarkMode } = useDarkMode();
   const { userName, profilePhoto } = useProfile();
   const { accentColor } = useAccentColorManager();
   const { isAnyMenuOpen } = useContextMenu();
 
-  const handleThemeChange = () => {
-    toggleTheme();
-  };
+  // const handleThemeChange = () => {
+  //   toggleTheme();
+  // };
 
   const handleMouseEnter = () => {
     setIsMouseOverSidebar(true);
