@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@heroui/button";
 import { Progress } from "@heroui/progress";
@@ -45,6 +45,15 @@ export default function OnboardingPage() {
 
   // Profile setup state
     const {userName} = useProfile();
+      useEffect(() => {
+        document.title = 'Seika - Onboarding';
+        if (!localStorage.getItem('token')) {
+          navigate('/login');
+        }
+        if (localStorage.getItem('onboardingCompleted') === 'true') {
+          navigate('/dashboard');
+        }
+      }, []);
   
 
 

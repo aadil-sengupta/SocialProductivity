@@ -19,10 +19,11 @@ import RandomGreeting from "@/components/RandomGreeting";
 import { BsCupHotFill } from "react-icons/bs";
 import { HiMiniVideoCamera } from "react-icons/hi2";
 import { useWebSocket, useWebSocketListener } from "@/contexts/WebSocketContext";
+import { useNavigate } from 'react-router-dom';
 
 export default function DashboardPage() {
   // document.title = "Dashboard | Seika";
-
+  const navigate = useNavigate();
   const pomoTimerRef = useRef<TimerRef>(null);
   const freeTimerRef = useRef<TimerRef>(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -96,7 +97,12 @@ export default function DashboardPage() {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
-
+    if (!localStorage.getItem('token')) {
+          navigate('/login');
+        }
+    if (localStorage.getItem('onboardingCompleted') === 'true') {
+          navigate('/dashboard');
+        }
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);

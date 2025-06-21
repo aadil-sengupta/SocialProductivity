@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import "../styles/Sidebar.css";
 import ProfileTile, { User } from "./ProfileTile";
 import { useDarkMode } from "@/contexts/DarkModeContext";
@@ -6,18 +6,40 @@ import { FaPlus } from "react-icons/fa6";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useAccentColorManager } from "@/contexts/AccentColorContext";
 import { useContextMenu } from "@/contexts/ContextMenuContext";
+import { useWebSocketListener } from "@/contexts/WebSocketContext";
 
 const SideBar = () => {
   const [isShrinkView, setIsShrinkView] = React.useState(true);
   const [isMouseOverSidebar, setIsMouseOverSidebar] = React.useState(false);
   const { isDarkMode } = useDarkMode();
   const { userName, profilePhoto } = useProfile();
+
   const { accentColor } = useAccentColorManager();
   const { isAnyMenuOpen } = useContextMenu();
+  const [studyTimeText, setStudyTimeText] = useState('0 hrs 0 mins');
 
   // const handleThemeChange = () => {
   //   toggleTheme();
   // };
+  useWebSocketListener("online_friends", () => {
+    // Handle online friends update
+    console.log("Online friends updated");
+  });
+  useWebSocketListener("study_time", (data) => {
+    // Handle study time data
+    console.log("Study time data received:", data);
+    // format the study time text
+    const hours = Math.floor(data.studyTime / 60);
+    const minutes = data.studyTime % 60;
+
+    if (data.studyTime <= 0) {
+      setStudyTimeText(`No time logged today`);
+    } else if (hours > 0) {
+      setStudyTimeText(`${hours} hrs ${minutes} mins logged`);
+    } else {
+      setStudyTimeText(`${minutes} mins logged`);
+    }
+  });
 
   const handleMouseEnter = () => {
     setIsMouseOverSidebar(true);
@@ -62,16 +84,16 @@ const SideBar = () => {
     }
   }, [isAnyMenuOpen]);
 
-  const mainUser = {
+  let mainUser = {
     id: "0",
     name: userName || "You",
     avatar: profilePhoto || "https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_1.png",
-    activityTime: "4 hrs 22 mins",
+    activityTime: studyTimeText,
     isOnline: true,
     altText: userName || "Your Profile"
   }
   // Sample user data - in a real app, this would come from props or context
-  const users: User[] = [
+  let users: User[] = [
     {
       id: "1",
       name: "Aadil Sengupta",

@@ -14,6 +14,10 @@ type ProfileContextType = {
   userName: string;
   setUserName: (name: string) => void;
   
+  // Authentication
+  isLoggedIn: boolean;
+  setIsLoggedIn: (loggedIn: boolean) => void;
+  
   // Timezone
   selectedTimezone: string;
   setSelectedTimezone: (timezone: string) => void;
@@ -33,6 +37,8 @@ const ProfileContext = createContext<ProfileContextType>({
   setProfilePhoto: () => {},
   userName: "User",
   setUserName: () => {},
+  isLoggedIn: false,
+  setIsLoggedIn: () => {},
   selectedTimezone: "America/New_York",
   setSelectedTimezone: () => {},
   privacySettings: {
@@ -96,6 +102,14 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return "vibrent";
   });
 
+  const [isLoggedIn, setIsLoggedInState] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const savedLoginStatus = localStorage.getItem('isLoggedIn');
+      return savedLoginStatus === 'true';
+    }
+    return false;
+  });
+
   // Wrapper functions to update localStorage when state changes
   const setProfilePhoto = (photo: string) => {
     setProfilePhotoState(photo);
@@ -135,12 +149,21 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const setIsLoggedIn = (loggedIn: boolean) => {
+    setIsLoggedInState(loggedIn);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('isLoggedIn', String(loggedIn));
+    }
+  };
+
   // Context value
   const contextValue = {
     profilePhoto,
     setProfilePhoto,
     userName,
     setUserName,
+    isLoggedIn,
+    setIsLoggedIn,
     selectedTimezone,
     setSelectedTimezone,
     privacySettings,

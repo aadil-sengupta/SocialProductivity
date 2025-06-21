@@ -30,6 +30,7 @@ const ProfileTile: React.FC<ProfileTileProps> = ({ user, accentColor }) => {
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { setIsAnyMenuOpen } = useContextMenu();
 
+
   // Update global context menu state when local state changes
   useEffect(() => {
     setIsAnyMenuOpen(showContextMenu);

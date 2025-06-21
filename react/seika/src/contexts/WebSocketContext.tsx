@@ -19,6 +19,7 @@ interface WebSocketContextType {
   // Connection methods
   connect: () => void;
   disconnect: () => void;
+  connectWithToken: () => void; // Helper method to connect after login
   
   // Messaging
   sendMessage: (message: WebSocketMessage) => void;
@@ -163,22 +164,26 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       return;
     }
     
+    // Check if user token exists before connecting
+    const userToken = localStorage.getItem('userToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
+    if (!userToken) {
+      console.log('❌ [WebSocket] Cannot connect - no authentication token found');
+      setStatus('error');
+      return;
+    }
+    
     console.log(`🔌 [WebSocket] Attempting to connect to ${url} (attempt ${connectionAttempts + 1})`);
     setStatus('connecting');
     
     try {
       // Get user token from localStorage for authorization
-      const userToken = localStorage.getItem('userToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
+      // We already checked for token existence above
+      const userToken = localStorage.getItem('userToken') || localStorage.getItem('authToken') || localStorage.getItem('token')!;
       
-      // Construct WebSocket URL with token as query parameter if available
-      let wsUrl = url;
-      if (userToken) {
-        const separator = url.includes('?') ? '&' : '?';
-        wsUrl = `${url}${separator}token=${encodeURIComponent(userToken)}`;
-        console.log('🔑 [WebSocket] Including user token in connection');
-      } else {
-        console.log('⚠️ [WebSocket] No user token found in localStorage');
-      }
+      // Construct WebSocket URL with token as query parameter
+      const separator = url.includes('?') ? '&' : '?';
+      const wsUrl = `${url}${separator}token=${encodeURIComponent(userToken)}`;
+      console.log('🔑 [WebSocket] Including user token in connection');
       
       wsRef.current = new WebSocket(wsUrl);
       
@@ -247,6 +252,18 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     }
   }, [url, connectionAttempts, reconnectAttempts, reconnectDelay, clearReconnectTimeout, startHeartbeat, processMessageQueue]);
   
+  // Helper method to connect after login/token is available
+  const connectWithToken = useCallback(() => {
+    const userToken = localStorage.getItem('userToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
+    
+    if (userToken) {
+      console.log('🔑 [WebSocket] Token found, initiating connection');
+      connect();
+    } else {
+      console.log('❌ [WebSocket] No token available for connection');
+    }
+  }, [connect]);
+  
   // Disconnect from WebSocket
   const disconnect = useCallback(() => {
     console.log('🔌 [WebSocket] Manually disconnecting');
@@ -264,11 +281,18 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     messageQueueRef.current = [];
   }, [clearReconnectTimeout, clearHeartbeat]);
   
-  // Auto-connect on mount
+  // Auto-connect on mount (only if token exists)
   useEffect(() => {
     if (autoConnect) {
-      console.log('🚀 [WebSocket] Auto-connecting on mount');
-      connect();
+      // Check if user token exists before auto-connecting
+      const userToken = localStorage.getItem('userToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
+      
+      if (userToken) {
+        console.log('🚀 [WebSocket] Auto-connecting on mount (token found)');
+        connect();
+      } else {
+        console.log('⚠️ [WebSocket] Auto-connect skipped - no authentication token found');
+      }
     }
     
     // Cleanup on unmount
@@ -282,8 +306,15 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && status === 'disconnected' && autoConnect) {
-        console.log('👁️ [WebSocket] Page became visible, attempting reconnection');
-        connect();
+        // Check if user token exists before attempting reconnection
+        const userToken = localStorage.getItem('userToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
+        
+        if (userToken) {
+          console.log('👁️ [WebSocket] Page became visible, attempting reconnection (token found)');
+          connect();
+        } else {
+          console.log('⚠️ [WebSocket] Page became visible but no token found - skipping reconnection');
+        }
       }
     };
     
@@ -294,9 +325,17 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   // Handle online/offline events
   useEffect(() => {
     const handleOnline = () => {
-      console.log('🌐 [WebSocket] Network came online, attempting reconnection');
+      console.log('🌐 [WebSocket] Network came online, checking for reconnection');
       if (status === 'disconnected' && autoConnect) {
-        connect();
+        // Check if user token exists before attempting reconnection
+        const userToken = localStorage.getItem('userToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
+        
+        if (userToken) {
+          console.log('🌐 [WebSocket] Attempting reconnection (token found)');
+          connect();
+        } else {
+          console.log('⚠️ [WebSocket] Network online but no token found - skipping reconnection');
+        }
       }
     };
     
@@ -319,6 +358,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     status,
     connect,
     disconnect,
+    connectWithToken,
     sendMessage,
     joinRoom,
     leaveRoom,

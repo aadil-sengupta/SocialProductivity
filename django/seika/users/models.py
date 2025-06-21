@@ -27,6 +27,8 @@ class UserData(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     friends = models.ManyToManyField(User, related_name='friend_of', blank=True)
     isOnline = models.BooleanField(default=True)
+    timeZone = models.CharField(max_length=50, default='UTC', help_text="User's timezone, e.g., 'UTC', 'America/New_York'")
+    onboarded = models.BooleanField(default=False, help_text="Whether the user has completed the onboarding process")
     # countUp = models.BooleanField(default=True)
 
     # Profile

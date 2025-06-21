@@ -1166,6 +1166,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
         profilePhoto,
         showOnlineStatus: privacySettings.showOnlineStatus,
         showTimeSpendStudying: privacySettings.showTimeSpentStudying,
+        timeZone: selectedTimezone,
         
         // Theme settings (map React state to Django field names)
         accentColor,

@@ -7,6 +7,7 @@ from users.models import UserData
 from .serializers import SessionDataSerializer
 from .tasks import checkUserConnection
 from django_q.models import Schedule
+import pytz
 class SessionConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
@@ -15,8 +16,11 @@ class SessionConsumer(AsyncWebsocketConsumer):
         self.userData = await UserData.objects.aget(user=self.user)
         self.userData.isOnline = True
         await self.userData.asave()
-        
         print(f"Connecting user: {self.user}")
+        # get today's date
+
+        await self.sendTimeData()
+
         if self.user.is_anonymous:
             await self.send(text_data=json.dumps({
                 'type': 'anonymous_user',
@@ -120,6 +124,7 @@ class SessionConsumer(AsyncWebsocketConsumer):
                 'phase': self.session.phase,
                 'id': self.session.id,
             }))
+            await self.sendTimeData()
         except CurrentSession.DoesNotExist:
             await self.send(text_data=json.dumps({
                 'type': 'error',
@@ -170,9 +175,27 @@ class SessionConsumer(AsyncWebsocketConsumer):
     async def end_session(self): # add logic to mark session as inactive and allow users to reconnect
         try:
             await self.session.end_session()
+            await self.sendTimeData()
         except CurrentSession.DoesNotExist:
             await self.send(text_data=json.dumps({
                 'type': 'error',
                 'message': 'No active session to end.',
             }))
+
+    
+    async def sendTimeData(self):
         
+        timeZone = self.userData.timeZone
+        user_tz = pytz.timezone(timeZone)
+        user_now = timezone.now().astimezone(user_tz)
+        today = user_now.date()
+        sessions = SessionData.objects.filter(user=self.user, endTime__date=today)
+        # calculate total active time today
+        total_active_time = timezone.timedelta(seconds=0)
+        async for session in sessions.aiterator():
+            total_active_time  += session.activeTime
+        # get active time today
+        await self.send(text_data=json.dumps({
+            'type': 'study_time',
+            'studyTime': total_active_time.seconds // 60 % 60
+        }))
