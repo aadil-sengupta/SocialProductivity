@@ -57,7 +57,6 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
     setProfilePhoto,
     userName,
     setUserName,
-    isLoggedIn,
     setIsLoggedIn,
     selectedTimezone,
     setSelectedTimezone,
