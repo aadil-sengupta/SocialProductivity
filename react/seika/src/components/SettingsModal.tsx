@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
 import { ScrollShadow } from '@heroui/react';
 import { Button } from "@heroui/button";
@@ -12,6 +13,7 @@ import { useNotifications } from "@/contexts/NotificationContext";
 import { useNotificationReminders } from "@/contexts/NotificationRemindersContext";
 import { useAppearance, FONT_OPTIONS } from "@/contexts/AppearanceContext";
 import { useWallpaper } from "@/contexts/WallpaperContext";
+import { useWebSocket } from "@/contexts/WebSocketContext";
 import { apiClient } from "@/services/apiClient";
 import WallpaperPicker from "@/components/WallpaperPicker";
 
@@ -44,6 +46,7 @@ interface SettingsModalProps {
 }
 
 export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModalProps) {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = React.useState("profile");
   const [showAvatarPicker, setShowAvatarPicker] = React.useState(false);
   const [showAllFonts, setShowAllFonts] = React.useState(false);
@@ -54,6 +57,8 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
     setProfilePhoto,
     userName,
     setUserName,
+    isLoggedIn,
+    setIsLoggedIn,
     selectedTimezone,
     setSelectedTimezone,
     privacySettings,
@@ -86,6 +91,9 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
 
   // Use WallpaperContext for wallpaper settings
   const { selectedWallpaper: wallpaper, wallpaperBlur } = useWallpaper();
+
+  // Use WebSocket context for connection management
+  const { disconnect } = useWebSocket();
   
   // Avatar categories and data
   const avatarCategories = [
@@ -154,6 +162,38 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
     setLongBreakInterval,
     setCountPauseTime
   } = useTimer();
+
+  // Logout function
+  const handleLogout = () => {
+    try {
+      // Clear all authentication tokens
+
+      apiClient.post('/users/logout/');
+
+      localStorage.removeItem('token');
+      localStorage.removeItem('onboarded');
+      localStorage.removeItem('userName');
+      localStorage.removeItem('seika_users');
+      
+      // Update profile context
+      setIsLoggedIn(false);
+      setUserName('User');
+      
+      // Disconnect WebSocket
+      disconnect();
+      
+      // Close settings modal
+      onClose();
+      
+
+      // Redirect to login page
+      navigate('/login');
+      
+      console.log('✅ User logged out successfully');
+    } catch (error) {
+      console.error('❌ Error during logout:', error);
+    }
+  };
 
   const categories = [
    {
@@ -431,6 +471,56 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
                       <option value="Africa/Johannesburg">SAST (Johannesburg)</option>
                     </optgroup>
                   </select>
+                </div>
+              </div>
+
+              {/* Logout Section */}
+              <div className={`p-6 rounded-2xl border ${
+                isDarkMode ? 'bg-gray-900/30 border-gray-700' : 'bg-gray-50/30 border-gray-200'
+              }`}>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
+                    <span className="text-xl">🚪</span>
+                  </div>
+                  <div>
+                    <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                      Account Actions
+                    </h4>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Manage your session and account
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className={`p-4 rounded-xl border ${
+                    isDarkMode ? 'bg-red-900/10 border-red-800/30' : 'bg-red-50/50 border-red-200/50'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h5 className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                          Sign Out
+                        </h5>
+                        <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          End your current session and return to login
+                        </p>
+                      </div>
+                      <Button
+                        onPress={handleLogout}
+                        className={`px-4 py-2 text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                          isDarkMode 
+                            ? 'bg-red-600 hover:bg-red-700 text-white border-red-500' 
+                            : 'bg-red-500 hover:bg-red-600 text-white border-red-400'
+                        } shadow-lg hover:shadow-xl`}
+                        size="sm"
+                      >
+                        <span className="flex items-center gap-2">
+                          <span>🚪</span>
+                          Logout
+                        </span>
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

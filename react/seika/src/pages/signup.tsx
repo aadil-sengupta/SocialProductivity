@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@heroui/button';
@@ -9,6 +9,8 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { useDarkMode } from '@/contexts/DarkModeContext';
 import { useAccentColorManager } from '@/contexts/AccentColorContext';
 import { useWallpaper } from '@/contexts/WallpaperContext';
+import apiClient from '@/services/apiClient';
+import { useUserSettings } from '@/hooks/useUserSettings';
 
 export default function SignUpPage() {
   const navigate = useNavigate();
@@ -16,6 +18,7 @@ export default function SignUpPage() {
   const { accentColor } = useAccentColorManager();
   const { selectedWallpaper, wallpaperBlur } = useWallpaper();
   const { setIsLoggedIn, setUserName } = useProfile();
+  const { loadUserSettings, fetchUserSettings } = useUserSettings();  
   
   const [formData, setFormData] = useState({
     name: '',
@@ -28,6 +31,13 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+useEffect(() => {
+      document.title = 'Seika - Sign Up';
+      if (localStorage.getItem('token')) {
+        navigate('/dashboard');
+      }
+    }, []);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -58,58 +68,72 @@ export default function SignUpPage() {
     return true;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
+    // Basic validation
     if (!validateForm()) {
       setIsLoading(false);
       return;
     }
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Get existing users from localStorage
-      const existingUsers = JSON.parse(localStorage.getItem('seika_users') || '[]');
-      
-      // Check if email already exists
-      const emailExists = existingUsers.some((user: any) => user.email === formData.email);
-      if (emailExists) {
-        setError('An account with this email already exists');
-        setIsLoading(false);
-        return;
+        console.log('Submitting login with:', formData);
+        const response = await apiClient.post('/users/signup/', {
+            fullName: formData.name,
+            email: formData.email,
+            password: formData.password
+        }) as { 
+            user: { 
+                user: { 
+                    first_name: string; 
+                    username: string;
+                    email: string;
+                }
+            }, 
+            token: string 
+        };
+
+        const user = response.user;
+        const token = response.token;
+        if (token) {
+            // Store token in localStorage
+            localStorage.setItem('token', token);
+        }
+        console.log('Login response:', response);
+        if (user) {
+          loadUserSettings(user);
+        } else {
+          // Fetch user settings from the API
+          fetchUserSettings();
+        }
+      if (user) {
+        setSuccess(true);
+        // Access firstName from the nested user object
+        setUserName(user.user.first_name || user.user.username);
+        setIsLoggedIn(true);
+        localStorage.setItem('onboarded', 'false');
+        // Redirect after success animation
+        setTimeout(() => {
+          navigate('/onboarding');
+        }, 1500);
+      } else {
+        setError('Invalid email or password');
       }
-
-      // Create new user object
-      const newUser = {
-        id: Date.now().toString(),
-        name: formData.name,
-        email: formData.email,
-        password: formData.password, // In a real app, this would be hashed
-        createdAt: new Date().toISOString()
-      };
-
-      // Add to users array and save to localStorage
-      const updatedUsers = [...existingUsers, newUser];
-      localStorage.setItem('seika_users', JSON.stringify(updatedUsers));
-
-      setSuccess(true);
-      setUserName(newUser.name);
-      setIsLoggedIn(true);
-      
-      // Redirect after success animation
-      setTimeout(() => {
-        navigate('/onboarding');
-      }, 1500);
     } catch (err) {
-      setError('Registration failed. Please try again.');
+      console.error('Login error:', err);
+      if (err instanceof Error) {
+        setError(err.message || 'Login failed. Please try again.');
+      } else {
+        setError('Login failed. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
   };
+
 
   const handleGoogleSignUp = async () => {
     // try {
@@ -207,14 +231,10 @@ export default function SignUpPage() {
             </div>
           </div>
           
-          <h1 className={`text-3xl font-bold mb-2 ${
-            isDarkMode ? 'text-white' : 'text-gray-800'
-          }`}>
+          <h1 className={`text-3xl font-bold mb-2 text-white`}>
             Join Seika
           </h1>
-          <p className={`text-lg ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
+          <p className={`text-lg text-white`}>
             Start your productivity journey today
           </p>
         </motion.div>

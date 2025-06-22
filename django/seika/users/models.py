@@ -32,7 +32,7 @@ class UserData(models.Model):
     # countUp = models.BooleanField(default=True)
 
     # Profile
-    profilePhoto = models.CharField(max_length=255, blank=True, null=True)
+    profilePhoto = models.CharField(max_length=255, blank=True, null=True, default='/avatars/vibrent_1.png')
     showOnlineStatus = models.BooleanField(default=True)
     showTimeSpendStudying = models.BooleanField(default=True)
 

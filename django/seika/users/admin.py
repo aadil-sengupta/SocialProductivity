@@ -2,7 +2,7 @@ from django.contrib import admin
 from users.models import UserData
 
 class UserDataAdmin(admin.ModelAdmin):
-    list_display = ('user', 'isOnline', 'darkMode', 'font', 'accentColor', 'focusDuration', 'desktopNotifications')
+    list_display = ('user', 'isOnline', 'darkMode', 'font', 'accentColor', 'focusDuration', 'desktopNotifications', 'onboarded', 'profilePhoto', 'timeZone')
     list_filter = ('darkMode', 'isOnline', 'showOnlineStatus', 'showTimeSpendStudying', 'backgroundBlur', 'pauseIsBreak', 'desktopNotifications', 'playSoundOnNotification', 'breakReminders', 'standUpReminders')
     search_fields = ('user__username', 'user__email')
     readonly_fields = ('activeTime', 'totalTime', 'isWorking')
@@ -12,7 +12,7 @@ class UserDataAdmin(admin.ModelAdmin):
             'fields': ('user',)
         }),
         ('Profile Settings', {
-            'fields': ('profilePhoto', 'showOnlineStatus', 'showTimeSpendStudying')
+            'fields': ('profilePhoto', 'showOnlineStatus', 'showTimeSpendStudying', 'timeZone', 'onboarded')
         }),
         ('Theme & Appearance', {
             'fields': ('accentColor', 'wallpaper', 'backgroundBlur', 'font', 'darkMode')

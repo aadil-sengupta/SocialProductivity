@@ -9,6 +9,7 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { useDarkMode } from '@/contexts/DarkModeContext';
 import { useAccentColorManager } from '@/contexts/AccentColorContext';
 import { useWallpaper } from '@/contexts/WallpaperContext';
+import { useUserSettings } from '@/hooks/useUserSettings';
 import { apiClient } from '@/services';
 
 export default function LoginPage() {
@@ -17,6 +18,7 @@ export default function LoginPage() {
   const { accentColor } = useAccentColorManager();
   const { selectedWallpaper, wallpaperBlur } = useWallpaper();
   const { setIsLoggedIn, setUserName } = useProfile();
+  const { loadUserSettings, fetchUserSettings } = useUserSettings();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -55,9 +57,7 @@ export default function LoginPage() {
       setError('Please enter a valid email address');
       setIsLoading(false);
       return;
-    }
-
-    try {
+    }    try {
         console.log('Submitting login with:', formData);
         const response = await apiClient.post('/users/login/', {
             email: formData.email,
@@ -70,21 +70,31 @@ export default function LoginPage() {
                     email: string;
                 }
             }, 
-            token: string 
+            token: string,
         };
 
         const user = response.user;
         const token = response.token;
+        
         if (token) {
             // Store token in localStorage
             localStorage.setItem('token', token);
         }
         console.log('Login response:', response);
+        
       if (user) {
         setSuccess(true);
         // Access firstName from the nested user object
         setUserName(user.user.first_name || user.user.username);
         setIsLoggedIn(true);
+        
+        // Load user settings if they exist in the response, otherwise fetch them
+        if (user) {
+          loadUserSettings(user);
+        } else {
+          // Fetch user settings from the API
+          fetchUserSettings();
+        }
         
         // Redirect after success animation
         setTimeout(() => {
@@ -197,14 +207,10 @@ export default function LoginPage() {
             </div>
           </div>
           
-          <h1 className={`text-3xl font-bold mb-2 ${
-            isDarkMode ? 'text-white' : 'text-gray-800'
-          }`}>
+          <h1 className={`text-3xl font-bold mb-2 text-white`}>
             Welcome Back
           </h1>
-          <p className={`text-lg ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
+          <p className={`text-lg text-white`}>
             Sign in to continue your productivity journey
           </p>
         </motion.div>

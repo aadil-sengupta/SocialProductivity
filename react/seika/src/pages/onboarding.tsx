@@ -50,7 +50,7 @@ export default function OnboardingPage() {
         if (!localStorage.getItem('token')) {
           navigate('/login');
         }
-        if (localStorage.getItem('onboardingCompleted') === 'true') {
+        if (localStorage.getItem('onboarded') === 'true') {
           navigate('/dashboard');
         }
       }, []);
