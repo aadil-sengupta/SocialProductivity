@@ -13,7 +13,8 @@ class SessionConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         await self.accept()
         self.user = self.scope['user']
-        if self.user.is_anonymous:
+        print(f"User connected: {self.user}")
+        if not self.user.is_authenticated:
             print("Anonymous user connected, closing connection.")
             await self.close(code=4100)
             return
@@ -25,7 +26,7 @@ class SessionConsumer(AsyncWebsocketConsumer):
 
         await self.sendTimeData()
 
-        if self.user.is_anonymous:
+        if not self.user.is_authenticated:
             await self.send(text_data=json.dumps({
                 'type': 'anonymous_user',
                 'message': 'You must be logged in to start a session.',
@@ -61,7 +62,7 @@ class SessionConsumer(AsyncWebsocketConsumer):
         print(f"Disconnecting user: {self.user} with code: {code}")
         
         # Update user online status
-        if self.user.is_anonymous:
+        if not self.user.is_authenticated:
             print("Anonymous user disconnected, no user data to update.")
             return
         self.userData.isOnline = False

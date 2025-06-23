@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback, ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // WebSocket connection states
 export type WebSocketStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error';
@@ -47,9 +48,10 @@ interface WebSocketProviderProps {
 // Create context
 const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined);
 
+
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   children,
-  url = 'wss://localhost:8000/ws/session/',
+  url = 'wss://server.seika.fun/ws/session/',
   autoConnect = true,
   reconnectAttempts = 5,
   reconnectDelay = 3000,
@@ -61,7 +63,8 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   const [currentRoom, setCurrentRoom] = useState<string | null>(null);
   const [connectionAttempts, setConnectionAttempts] = useState(0);
   const [lastConnectedAt, setLastConnectedAt] = useState<Date | null>(null);
-  
+  const navigate = useNavigate();
+
   // Refs
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -224,6 +227,34 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         
         setStatus('disconnected');
         clearHeartbeat();
+        
+        // Handle 410 Gone - token is no longer valid
+        if (event.code === 4100 || event.code === 410) {
+          console.log('🔑 [WebSocket] Received 410 Gone - clearing invalid authentication token');
+          
+          // Remove all possible token storage keys
+          localStorage.removeItem('token');
+          
+          // Set status to error to prevent reconnection attempts
+          setStatus('error');
+          setConnectionAttempts(0);
+          
+          // Dispatch custom event to notify the app that token is invalid
+          // window.dispatchEvent(new CustomEvent('websocket-token-invalid', { 
+          //   detail: { 
+          //     code: event.code, 
+          //     reason: event.reason 
+          //   } 
+          // }));
+          navigate('/login', { 
+            replace: true,
+            state: { 
+              message: 'Your session has expired. Please log in again.',
+              reason: 'token_expired'
+            }
+          });
+          return; // Don't attempt reconnection
+        }
         
         // Attempt reconnection if it wasn't a clean close and we haven't exceeded max attempts
         if (!event.wasClean && connectionAttempts < reconnectAttempts) {
@@ -403,6 +434,24 @@ export const useWebSocketListener = (
       window.removeEventListener('websocket-message', handleMessage as EventListener);
     };
   }, [messageType, ...deps]);
+};
+
+// Hook to listen for token invalidation events
+export const useWebSocketTokenInvalidation = (
+  callback: (details: { code: number; reason: string }) => void,
+  deps: React.DependencyList = []
+) => {
+  useEffect(() => {
+    const handleTokenInvalid = (event: CustomEvent) => {
+      callback(event.detail);
+    };
+    
+    window.addEventListener('websocket-token-invalid', handleTokenInvalid as EventListener);
+    
+    return () => {
+      window.removeEventListener('websocket-token-invalid', handleTokenInvalid as EventListener);
+    };
+  }, [callback, ...deps]);
 };
 
 export default WebSocketContext;
