@@ -51,7 +51,7 @@ const WebSocketContext = createContext<WebSocketContextType | undefined>(undefin
 
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   children,
-  url = 'ws://localhost:8000/ws/session/',
+  url = 'ws://server.seika.fun/ws/session/',
   autoConnect = true,
   reconnectAttempts = 5,
   reconnectDelay = 3000,
@@ -64,7 +64,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   const [connectionAttempts, setConnectionAttempts] = useState(0);
   const [lastConnectedAt, setLastConnectedAt] = useState<Date | null>(null);
   const navigate = useNavigate();
-  
+
   // Refs
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);

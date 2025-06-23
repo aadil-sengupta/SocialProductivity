@@ -97,9 +97,7 @@ export default function DashboardPage() {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
-    if (!localStorage.getItem('token')) {
-          navigate('/login');
-        }
+
     if (localStorage.getItem('onboardingCompleted') === 'true') {
           navigate('/dashboard');
         }

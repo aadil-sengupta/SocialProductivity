@@ -130,3 +130,12 @@ websocket-client==1.8.0
 whisper==1.1.10
 wsproto==1.2.0
 zope.interface==7.2
+
+
+django
+djangorestframework
+daphne
+"Twisted[tls,http2]"
+django-cors-headers
+django-q2
+pytz

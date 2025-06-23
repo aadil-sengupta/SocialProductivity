@@ -32,7 +32,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
                   <ProfileProvider>
                     <ContextMenuProvider>
                       <WebSocketProvider
-                      url="ws://localhost:8000/ws/session/"
+                      url="ws://server.seika.fun/ws/session/"
                       autoConnect={true}  // disable if profile context doesn't have anything or smthin
                       reconnectAttempts={5}
                       reconnectDelay={3000}
