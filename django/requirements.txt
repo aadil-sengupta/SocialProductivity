@@ -5,3 +5,4 @@ Twisted[tls,http2]
 django-cors-headers
 django-q2
 pytz
+channels
