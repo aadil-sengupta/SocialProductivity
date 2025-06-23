@@ -14,6 +14,7 @@ class SessionConsumer(AsyncWebsocketConsumer):
         await self.accept()
         self.user = self.scope['user']
         print(f"User connected: {self.user}")
+        print(f"User authenticated: {self.user.is_authenticated}")
         if not self.user.is_authenticated:
             print("Anonymous user connected, closing connection.")
             await self.close(code=4100)
