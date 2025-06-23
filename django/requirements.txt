@@ -1,3 +1,10 @@
+django
+djangorestframework
+daphne
+Twisted[tls,http2]
+django-cors-headers
+django-q2
+pytz
 amqp==5.3.1
 annotated-types==0.6.0
 anyio==3.7.1
@@ -132,10 +139,3 @@ wsproto==1.2.0
 zope.interface==7.2
 
 
-django
-djangorestframework
-daphne
-"Twisted[tls,http2]"
-django-cors-headers
-django-q2
-pytz

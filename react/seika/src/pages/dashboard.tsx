@@ -20,6 +20,7 @@ import { BsCupHotFill } from "react-icons/bs";
 import { HiMiniVideoCamera } from "react-icons/hi2";
 import { useWebSocket, useWebSocketListener } from "@/contexts/WebSocketContext";
 import { useNavigate } from 'react-router-dom';
+import { useProfile } from "@/contexts/ProfileContext";
 
 export default function DashboardPage() {
   // document.title = "Dashboard | Seika";
@@ -38,6 +39,7 @@ export default function DashboardPage() {
   const [sessionPhase, setSessionPhase] = useState<'focus' | 'break' | 'focus-overtime' | 'break-overtime'>('focus'); // Track current session phase
   const [pomodoroCount, setPomodoroCount] = useState(0); // Track completed pomodoros for long break
   const { colorVariations } = useAccentColorManager();
+  const { userName } = useProfile();
   const { 
       pomodoroMinutes, 
       shortBreakMinutes, 
@@ -588,7 +590,7 @@ export default function DashboardPage() {
       {/* Random Greeting - Top Right, below clock */}
       <div className="absolute top-20 right-8 z-30">
         <RandomGreeting 
-          firstName="Aadil" // You can replace this with actual user data
+          firstName={userName} // You can replace this with actual user data
           className="backdrop-blur-sm bg-white/5 px-3 py-2 rounded-lg border border-white/10"
         />
       </div>
