@@ -19,6 +19,7 @@ import RandomGreeting from "@/components/RandomGreeting";
 import { BsCupHotFill } from "react-icons/bs";
 import { HiMiniVideoCamera } from "react-icons/hi2";
 import { useWebSocket, useWebSocketListener } from "@/contexts/WebSocketContext";
+import { useOfflineMode } from "@/contexts/OfflineModeContext";
 import { useNavigate } from 'react-router-dom';
 import { useProfile } from "@/contexts/ProfileContext";
 
@@ -48,6 +49,7 @@ export default function DashboardPage() {
     } = useTimer();
     const { isConnected, sendMessage } = useWebSocket();
     const { alertState, showError, hideAlert, showConfirm, showInfo } = useAlert();
+    const { isOfflineMode } = useOfflineMode();
 
     useWebSocketListener('session_exists', (data)=> {
       console.log('Session exists:', data);
@@ -230,10 +232,13 @@ export default function DashboardPage() {
       'Are you sure you want to reset your current timer session? This will end your current progress.',
       () => {
 
-        sendMessage({
-          type: 'end_session',
-          payload: {}
-        });
+        // Only send WebSocket message if not in offline mode
+        if (!isOfflineMode) {
+          sendMessage({
+            type: 'end_session',
+            payload: {}
+          });
+        }
       
       resetTimer();
     },
@@ -289,7 +294,7 @@ export default function DashboardPage() {
   const handleStart = () => {
     setIsTransitioning(true);
 
-    if (!isConnected) {
+    if (!isConnected && !isOfflineMode) {
       showError(
         'Connection Lost!', 
         'Server is not connected. Please check your connection or refresh the page to try again.',
@@ -297,6 +302,15 @@ export default function DashboardPage() {
       );
       setIsTransitioning(false);
       return;
+    }
+
+    // Show offline mode info on first timer start
+    if (isOfflineMode && !started) {
+      showInfo(
+        'Offline Mode Active',
+        'Time tracking is disabled for now. Your timer and settings will work normally, but study time won\'t be synced to the server.',
+        { size: 'lg' }
+      );
     }
 
     // Small delay to allow transition animation to begin
@@ -316,30 +330,40 @@ export default function DashboardPage() {
           durationInSeconds = shouldBeLongBreak ? longBreakMinutes * 60 : shortBreakMinutes * 60;
           newPhase = 'break';
 
-          sendMessage({ type: 'break_start', payload: { break_type: shouldBeLongBreak ? 'longBreak' : 'shortBreak' } });
+          // Only send WebSocket message if not in offline mode
+          if (!isOfflineMode) {
+            sendMessage({ type: 'break_start', payload: { break_type: shouldBeLongBreak ? 'longBreak' : 'shortBreak' } });
+          }
 
           console.log(`Starting ${shouldBeLongBreak ? 'long' : 'short'} break. PomodoroCount: ${pomodoroCount}, LongBreakInterval: ${longBreakInterval}, Duration: ${durationInSeconds / 60} minutes, Should be long break: ${shouldBeLongBreak}`);
         } else if (sessionPhase === 'break-overtime') {
           // Starting a focus session after break overtime
 
-          sendMessage({ type: 'break_end', payload: {} });
+          // Only send WebSocket message if not in offline mode
+          if (!isOfflineMode) {
+            sendMessage({ type: 'break_end', payload: {} });
+          }
 
           durationInSeconds = pomodoroMinutes * 60;
           newPhase = 'focus';
 
         } else if (sessionPhase === 'break') {
           // This shouldn't happen, but handle it
-          sendMessage({ type: 'break_end', payload: {} });
+          if (!isOfflineMode) {
+            sendMessage({ type: 'break_end', payload: {} });
+          }
           durationInSeconds = pomodoroMinutes * 60;
           newPhase = 'focus';
         } else {
           // Starting a focus session (default)
-          sendMessage({
-            type: 'start_session',
-            payload: {
-              mode: 'pomodoro',
-            }
-          });
+          if (!isOfflineMode) {
+            sendMessage({
+              type: 'start_session',
+              payload: {
+                mode: 'pomodoro',
+              }
+            });
+          }
           durationInSeconds = pomodoroMinutes * 60;
           newPhase = 'focus';
         }
@@ -369,20 +393,26 @@ export default function DashboardPage() {
   };
 
   const handlePause = () => {
-    sendMessage({
-      type: 'pause_session',
-      payload: {}
-    });
+    // Only send WebSocket message if not in offline mode
+    if (!isOfflineMode) {
+      sendMessage({
+        type: 'pause_session',
+        payload: {}
+      });
+    }
 
     getActiveTimerRef().current?.pause();
     setRunning(false);
   };
 
   const handleResume = () => {
-    sendMessage({
-      type: 'resume_session',
-      payload: {}
-    });
+    // Only send WebSocket message if not in offline mode
+    if (!isOfflineMode) {
+      sendMessage({
+        type: 'resume_session',
+        payload: {}
+      });
+    }
 
     getActiveTimerRef().current?.resume();
     setRunning(true);
@@ -517,7 +547,10 @@ export default function DashboardPage() {
       
       console.log(`Skipping to ${shouldBeLongBreak ? 'long' : 'short'} break. PomodoroCount: ${newPomodoroCount}, Duration: ${breakDuration / 60} minutes`);
 
-      sendMessage({ type: 'break_start', payload: { break_type: shouldBeLongBreak ? 'longBreak' : 'shortBreak' } });  
+      // Send WebSocket message only if not in offline mode
+      if (!isOfflineMode) {
+        sendMessage({ type: 'break_start', payload: { break_type: shouldBeLongBreak ? 'longBreak' : 'shortBreak' } });
+      }  
 
       // Reset timer and start break countdown
       setTimeout(() => {
@@ -594,6 +627,17 @@ export default function DashboardPage() {
           className="backdrop-blur-sm bg-white/5 px-3 py-2 rounded-lg border border-white/10"
         />
       </div>
+
+      {/* Offline Mode Status Indicator */}
+      {isOfflineMode && (
+        <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-30">
+          <div className="backdrop-blur-sm bg-orange-500/10 border border-orange-400/30 px-4 py-2 rounded-lg flex items-center gap-2 animate-pulse">
+            <span className="text-orange-400">🔌</span>
+            <span className="text-orange-400 text-sm font-medium">Offline Mode</span>
+            <span className="text-orange-300 text-xs">(Time tracking disabled)</span>
+          </div>
+        </div>
+      )}
 
       <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10 z-20 h-full relative">
         <div className="justify-center flex flex-col">

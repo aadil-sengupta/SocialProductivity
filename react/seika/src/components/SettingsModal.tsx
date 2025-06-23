@@ -14,6 +14,7 @@ import { useNotificationReminders } from "@/contexts/NotificationRemindersContex
 import { useAppearance, FONT_OPTIONS } from "@/contexts/AppearanceContext";
 import { useWallpaper } from "@/contexts/WallpaperContext";
 import { useWebSocket } from "@/contexts/WebSocketContext";
+import { useOfflineMode } from "@/contexts/OfflineModeContext";
 import { apiClient } from "@/services/apiClient";
 import WallpaperPicker from "@/components/WallpaperPicker";
 
@@ -93,6 +94,9 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
 
   // Use WebSocket context for connection management
   const { disconnect } = useWebSocket();
+
+  // Use OfflineMode context for offline functionality
+  const { isOfflineMode, toggleOfflineMode } = useOfflineMode();
   
   // Avatar categories and data
   const avatarCategories = [
@@ -218,6 +222,12 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
       name: "Notifications",
       icon: "🔔",
       description: "Sound and desktop alerts"
+    },
+    {
+      id: "offline",
+      name: "Offline Mode",
+      icon: "🔌",
+      description: "Work without internet"
     }
   ];
 
@@ -1239,6 +1249,128 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
                 onChange={() => {}}
               />
             </div> */}
+          </div>
+        );
+      
+      case "offline":
+        return (
+          <div className="space-y-8">
+            <div className="text-center mb-8">
+              <h3 className="text-primary text-2xl font-bold mb-2">
+                🔌 Offline Mode Settings
+              </h3>
+              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Work without internet connection when needed
+              </p>
+            </div>
+
+            {/* Offline Mode Toggle Card */}
+            <div className={`p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
+              isDarkMode ? 'bg-gray-900/50 border-gray-700 hover:border-accent/50' : 'bg-gray-50/50 border-gray-200 hover:border-accent/50'
+            }`}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                  isOfflineMode ? 'bg-orange-500/10' : 'bg-green-500/10'
+                }`}>
+                  <span className="text-2xl">{isOfflineMode ? '🔌' : '🌐'}</span>
+                </div>
+                <div>
+                  <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                    Offline Mode
+                  </h4>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {isOfflineMode ? 'Currently working offline' : 'Connected and syncing'}
+                  </p>
+                </div>
+              </div>
+              
+              <FormOption
+                title="Enable Offline Mode"
+                description="Disable internet connectivity and work locally. Time tracking will be paused."
+                isSelected={isOfflineMode}
+                onChange={toggleOfflineMode}
+              />
+            </div>
+
+            {/* Offline Mode Information Card */}
+            <div className={`p-6 rounded-2xl border ${
+              isDarkMode ? 'bg-gradient-to-r from-amber-900/20 to-orange-900/20 border-amber-800/30' : 'bg-gradient-to-r from-amber-50/50 to-orange-50/50 border-amber-200/50'
+            }`}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                  <span className="text-2xl">ℹ️</span>
+                </div>
+                <div>
+                  <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                    What happens in Offline Mode?
+                  </h4>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Understanding offline functionality
+                  </p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-green-500 text-sm">✓</span>
+                  </div>
+                  <div>
+                    <h5 className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                      Timer Functions Continue
+                    </h5>
+                    <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      All timer, break, and settings functionality works normally
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-amber-500 text-sm">⚠</span>
+                  </div>
+                  <div>
+                    <h5 className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                      Time Tracking Paused
+                    </h5>
+                    <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Study time won't be tracked to your account (for now)
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-blue-500 text-sm">🔌</span>
+                  </div>
+                  <div>
+                    <h5 className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                      No Server Connection
+                    </h5>
+                    <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      WebSocket connection disabled, working purely locally
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Status Indicator */}
+            {isOfflineMode && (
+              <div className={`p-4 rounded-xl border-l-4 ${
+                isDarkMode 
+                  ? 'bg-orange-900/20 border-orange-500 text-orange-300' 
+                  : 'bg-orange-50 border-orange-400 text-orange-700'
+              }`}>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🔌</span>
+                  <div>
+                    <p className="font-medium text-sm">Offline Mode Active</p>
+                    <p className="text-xs opacity-75">You're working locally without internet connectivity</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       

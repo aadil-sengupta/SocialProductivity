@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useOfflineMode } from './OfflineModeContext';
 
 // WebSocket connection states
 export type WebSocketStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error';
@@ -64,6 +65,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   const [connectionAttempts, setConnectionAttempts] = useState(0);
   const [lastConnectedAt, setLastConnectedAt] = useState<Date | null>(null);
   const navigate = useNavigate();
+  
+  // Get offline mode context
+  const { isOfflineMode } = useOfflineMode();
 
   // Refs
   const wsRef = useRef<WebSocket | null>(null);
@@ -157,6 +161,13 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   
   // Connect to WebSocket
   const connect = useCallback(() => {
+    // Check if offline mode is enabled
+    if (isOfflineMode) {
+      console.log('🔌 [WebSocket] Connection blocked - offline mode is enabled');
+      setStatus('disconnected');
+      return;
+    }
+    
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       console.log('⚠️ [WebSocket] Already connected, skipping connection attempt');
       return;
@@ -281,10 +292,16 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       console.error('❌ [WebSocket] Failed to create WebSocket:', error);
       setStatus('error');
     }
-  }, [url, connectionAttempts, reconnectAttempts, reconnectDelay, clearReconnectTimeout, startHeartbeat, processMessageQueue]);
+  }, [url, connectionAttempts, reconnectAttempts, reconnectDelay, clearReconnectTimeout, startHeartbeat, processMessageQueue, isOfflineMode]);
   
   // Helper method to connect after login/token is available
   const connectWithToken = useCallback(() => {
+    // Don't connect if offline mode is enabled
+    if (isOfflineMode) {
+      console.log('🔌 [WebSocket] Connection blocked - offline mode is enabled');
+      return;
+    }
+    
     const userToken = localStorage.getItem('userToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
     
     if (userToken) {
@@ -293,7 +310,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     } else {
       console.log('❌ [WebSocket] No token available for connection');
     }
-  }, [connect]);
+  }, [connect, isOfflineMode]);
   
   // Disconnect from WebSocket
   const disconnect = useCallback(() => {
@@ -312,9 +329,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     messageQueueRef.current = [];
   }, [clearReconnectTimeout, clearHeartbeat]);
   
-  // Auto-connect on mount (only if token exists)
+  // Auto-connect on mount (only if token exists and not in offline mode)
   useEffect(() => {
-    if (autoConnect) {
+    if (autoConnect && !isOfflineMode) {
       // Check if user token exists before auto-connecting
       const userToken = localStorage.getItem('userToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
       
@@ -324,6 +341,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       } else {
         console.log('⚠️ [WebSocket] Auto-connect skipped - no authentication token found');
       }
+    } else if (isOfflineMode) {
+      console.log('🔌 [WebSocket] Auto-connect skipped - offline mode is enabled');
+      setStatus('disconnected');
     }
     
     // Cleanup on unmount
@@ -331,12 +351,12 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       console.log('🧹 [WebSocket] Cleaning up on unmount');
       disconnect();
     };
-  }, [autoConnect]); // Only run on mount and when autoConnect changes
+  }, [autoConnect, disconnect, isOfflineMode]); // Only run on mount and when autoConnect/isOfflineMode changes
   
   // Handle page visibility changes (reconnect when page becomes visible)
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && status === 'disconnected' && autoConnect) {
+      if (document.visibilityState === 'visible' && status === 'disconnected' && autoConnect && !isOfflineMode) {
         // Check if user token exists before attempting reconnection
         const userToken = localStorage.getItem('userToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
         
@@ -351,13 +371,13 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [status, autoConnect, connect]);
+  }, [status, autoConnect, connect, isOfflineMode]);
   
   // Handle online/offline events
   useEffect(() => {
     const handleOnline = () => {
       console.log('🌐 [WebSocket] Network came online, checking for reconnection');
-      if (status === 'disconnected' && autoConnect) {
+      if (status === 'disconnected' && autoConnect && !isOfflineMode) {
         // Check if user token exists before attempting reconnection
         const userToken = localStorage.getItem('userToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
         
@@ -382,7 +402,29 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [status, autoConnect, connect]);
+  }, [status, autoConnect, connect, isOfflineMode]);
+  
+  // Handle offline mode changes
+  useEffect(() => {
+    if (isOfflineMode) {
+      console.log('🔌 [WebSocket] Offline mode enabled - disconnecting if connected');
+      if (wsRef.current?.readyState === WebSocket.OPEN || wsRef.current?.readyState === WebSocket.CONNECTING) {
+        disconnect();
+      }
+      setStatus('disconnected');
+    } else {
+      console.log('🔌 [WebSocket] Offline mode disabled - attempting reconnection if needed');
+      if (autoConnect && status === 'disconnected') {
+        const userToken = localStorage.getItem('userToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
+        
+        if (userToken) {
+          setTimeout(() => {
+            connect();
+          }, 500); // Small delay to ensure clean state
+        }
+      }
+    }
+  }, [isOfflineMode, autoConnect, status, connect, disconnect]);
   
   const contextValue: WebSocketContextType = {
     isConnected,

@@ -147,6 +147,10 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     "https://localhost:5173",  # Common React dev port
     "https://127.0.0.1:5173",
+    'https://server.seika.fun',
+    'http://server.seika.fun',
+    'http://seika.fun',
+    'https://seika.fun'
 ]
 
 CORS_ALLOW_CREDENTIALS = True
