@@ -3,6 +3,7 @@ import { useRef, useState, useEffect } from "react";
 import MainLayout from "@/layouts/main";
 import { Button } from "@heroui/button";
 import SettingsModal from "@/components/SettingsModal";
+import ProfileModal from "@/components/profileModal";
 import AlertModal from "@/components/AlertModal";
 import { useAlert } from "@/hooks/useAlert";
 import AnimatedIconButton from "@/components/AnimatedIconButton";
@@ -40,7 +41,7 @@ export default function DashboardPage() {
   const [sessionPhase, setSessionPhase] = useState<'focus' | 'break' | 'focus-overtime' | 'break-overtime'>('focus'); // Track current session phase
   const [pomodoroCount, setPomodoroCount] = useState(0); // Track completed pomodoros for long break
   const { colorVariations } = useAccentColorManager();
-  const { userName } = useProfile();
+  const { userName, profilePhoto } = useProfile();
   const { 
       pomodoroMinutes, 
       shortBreakMinutes, 
@@ -49,7 +50,7 @@ export default function DashboardPage() {
     } = useTimer();
     const { isConnected, sendMessage } = useWebSocket();
     const { alertState, showError, hideAlert, showConfirm, showInfo } = useAlert();
-    const { isOfflineMode } = useOfflineMode();
+    const { isOfflineMode, setOfflineMode } = useOfflineMode();
 
     useWebSocketListener('session_exists', (data)=> {
       console.log('Session exists:', data);
@@ -90,6 +91,10 @@ export default function DashboardPage() {
 
   // Check if settings modal should be open based on URL
   const isSettingsOpen = searchParams.get('modal') === 'settings';
+  
+  // Check if profile modal should be open based on URL
+  const isProfileModalOpen = searchParams.get('modal') === 'profile';
+  const profileUserId = searchParams.get('userId') || 'current-user';
 
   // Helper function to get the active timer ref based on selected mode
   const getActiveTimerRef = () => {
@@ -109,7 +114,29 @@ export default function DashboardPage() {
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
-  }, []);
+  }, [navigate]);
+
+  // Handle direct URL navigation to profile modal
+  useEffect(() => {
+    if (isProfileModalOpen && !profileUserId) {
+      // If profile modal should be open but no userId is provided, default to current user
+      setSearchParams({ modal: 'profile', userId: 'current-user' });
+    }
+  }, [isProfileModalOpen, profileUserId, setSearchParams]);
+
+  // Listen for custom profile modal events from ProfileTile components
+  useEffect(() => {
+    const handleOpenProfileModal = (event: any) => {
+      const userId = event.detail?.userId || 'current-user';
+      // Update URL to show profile modal with user ID
+      setSearchParams({ modal: 'profile', userId });
+    };
+
+    window.addEventListener('openProfileModal', handleOpenProfileModal);
+    return () => {
+      window.removeEventListener('openProfileModal', handleOpenProfileModal);
+    };
+  }, [setSearchParams]);
 
   // Handle page unload - run handleResetButton when page is unloaded
   useEffect(() => {
@@ -295,10 +322,18 @@ export default function DashboardPage() {
     setIsTransitioning(true);
 
     if (!isConnected && !isOfflineMode) {
-      showError(
+      showConfirm(
         'Connection Lost!', 
-        'Server is not connected. Please check your connection or refresh the page to try again.',
-        { size: 'lg' }
+        'Unable to connect to the server. Would you like to continue in offline mode? In offline mode, you can use the timer and settings, but your study time won\'t be tracked.',
+        () => {
+          setOfflineMode(true);
+        },
+        { 
+          size: 'lg',
+          confirmText: 'Continue Offline',
+          cancelText: 'Retry Connection',
+          type: 'warning'
+        }
       );
       setIsTransitioning(false);
       return;
@@ -505,6 +540,16 @@ export default function DashboardPage() {
     setSearchParams({});
   };
 
+  const handleOpenProfile = (userId: string = 'current-user') => {
+    // Update URL to show profile modal with user ID
+    setSearchParams({ modal: 'profile', userId });
+  };
+
+  const handleCloseProfile = () => {
+    // Remove modal parameters from URL
+    setSearchParams({});
+  };
+
   const handleSaveSettings = () => {
     // Here you would typically save the settings to localStorage, context, or API
     // For now, we'll just close the modal
@@ -599,8 +644,24 @@ export default function DashboardPage() {
 
   return (
     <MainLayout>
-      {/* Fullscreen Button - Top Left Corner */}
-      <div className="absolute top-6 left-6 z-30">
+      {/* Profile Button and Fullscreen Button - Top Left Corner */}
+      <div className="absolute top-6 left-6 z-30 flex gap-3 items-center">
+        {/* Profile Avatar Button */}
+        <button
+          onClick={() => handleOpenProfile('current-user')}
+          className="group relative w-12 h-12 rounded-2xl overflow-hidden border-2 border-white/20 hover:border-white/40 transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50 shadow-lg backdrop-blur-sm"
+          title={`View ${userName}'s Profile`}
+        >
+          <img
+            src={profilePhoto || "https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_1.png"}
+            alt={`${userName}'s Avatar`}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+          />
+          {/* Profile indicator dot */}
+          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full shadow-sm"></div>
+        </button>
+        
+        {/* Fullscreen Button */}
         <AnimatedIconButton
           onClick={handleFullscreenToggle}
           icon={isFullscreen ? <MdFullscreenExit /> : <MdFullscreen />}
@@ -863,6 +924,12 @@ export default function DashboardPage() {
         isOpen={isSettingsOpen}
         onClose={handleCloseSettings}
         onSave={handleSaveSettings}
+      />
+      
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={handleCloseProfile}
+        userId={profileUserId}
       />
       
       <AlertModal 

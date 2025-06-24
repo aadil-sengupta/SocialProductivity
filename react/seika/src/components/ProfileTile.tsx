@@ -158,6 +158,10 @@ const ProfileTile: React.FC<ProfileTileProps> = ({ user, accentColor }) => {
     switch (action) {
       case 'view-profile':
         // Navigate to profile or open profile modal
+        const event = new CustomEvent('openProfileModal', { 
+          detail: { userId: user.id } 
+        });
+        window.dispatchEvent(event);
         break;
       case 'send-message':
         // Open chat/message interface
