@@ -31,7 +31,8 @@ ALLOWED_HOSTS = [
     "server.seika.fun",
     "seika.fun",
     "localhost",
-    "127.0.0.1"
+    "127.0.0.1",
+"www.seika.fun"
 ]
 
 
@@ -173,11 +174,14 @@ CORS_ALLOWED_ORIGINS = [
 
 CSRF_TRUSTED_ORIGINS = [
     "https://server.seika.fun",
-    "https://seika.fun"
+    "https://seika.fun",
+"http://seika.fun",
+"http://server.seika.fun"
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
+WEBSOCKET_DISABLE_ORIGIN_CHECK = True
 
 # Allow all origins during development (remove in production)
 CORS_ALLOW_ALL_ORIGINS = True
