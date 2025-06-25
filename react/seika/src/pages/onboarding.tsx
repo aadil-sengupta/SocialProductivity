@@ -1720,13 +1720,11 @@ export default function OnboardingPage() {
     }
   }, [currentStep]);
 
+  // Get all context values at the top level
+  const { profilePhoto, privacySettings } = useProfile();
+  const { pomodoroMinutes, shortBreakMinutes, longBreakMinutes, longBreakInterval, countPauseTime } = useTimer();
+
   const completeOnboarding = useCallback(async () => {
-    const { profilePhoto, privacySettings } = useProfile();
-    const {selectedWallpaper, wallpaperBlur} = useWallpaper();
-
-    const {pomodoroMinutes, shortBreakMinutes, longBreakMinutes, longBreakInterval, countPauseTime} = useTimer();
-
-
     localStorage.setItem('onboardingCompleted', 'true');
     try {
         
@@ -1765,7 +1763,7 @@ export default function OnboardingPage() {
         }
 
     navigate('/dashboard');
-  }, [navigate]);
+  }, [navigate, profilePhoto, privacySettings, accentColor, selectedWallpaper, wallpaperBlur, isDarkMode, pomodoroMinutes, shortBreakMinutes, longBreakMinutes, longBreakInterval, countPauseTime, desktopNotifications, soundNotifications, breakReminders, standUpReminders]);
 
   const progress = ((currentStep + 1) / steps.length) * 100;
 
