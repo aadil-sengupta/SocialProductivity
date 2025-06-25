@@ -25,7 +25,14 @@ SECRET_KEY = 'django-insecure-cmm)c6e#2@uqxgl*6+%1@c_@#@m+a3k%5(!lr8aoagsfjm-ehb
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+#ALLOWED_HOSTS = ['*']
+
+ALLOWED_HOSTS = [
+    "server.seika.fun",
+    "seika.fun",
+    "localhost",
+    "127.0.0.1"
+]
 
 
 # Application definition
@@ -85,13 +92,23 @@ TEMPLATES = [
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': BASE_DIR / 'db.sqlite3',
+#    }
+#}
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'seika',
+        'USER': 'aadils',
+        'PASSWORD': '200727',
+        'HOST': 'localhost',
+        'PORT': '3306',
     }
 }
-
 
 
 # Password validation
@@ -129,6 +146,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = "static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -153,7 +171,13 @@ CORS_ALLOWED_ORIGINS = [
     'https://seika.fun'
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://server.seika.fun",
+    "https://seika.fun"
+]
+
 CORS_ALLOW_CREDENTIALS = True
+
 
 # Allow all origins during development (remove in production)
 CORS_ALLOW_ALL_ORIGINS = True
