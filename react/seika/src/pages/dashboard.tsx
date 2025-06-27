@@ -415,6 +415,7 @@ export default function DashboardPage() {
         }, 50);
       } else {
         // Free mode - start count up timer without duration
+        console.log('Starting free mode timer');
         setSessionPhase('focus');
         setTotalTime(0); // No total time for free mode
         getActiveTimerRef().current?.start(); // Start count up timer

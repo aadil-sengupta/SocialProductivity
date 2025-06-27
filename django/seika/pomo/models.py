@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone # Added for timezone.now() and timedelta
+import pytz # Added for timezone handling
 
 # def generate_unique_session_id():
 #     while True:
@@ -65,7 +66,6 @@ class CurrentSession(models.Model):
             self.accumulatedBreakDuration += break_duration
             self.lastBreakStartTime = None
         self.lastPauseStartTime = timezone.now()
-        self.phase = 'paused'
         await self.asave()
 
     async def resume_session(self):
@@ -113,7 +113,7 @@ class CurrentSession(models.Model):
             self.accumulatedPauseDuration += pause_duration
             self.lastPauseStartTime = None
         
-        self.asave()
+        await self.asave()
 
         end_time = timezone.now()
         total_time = end_time - self.startTime
@@ -130,6 +130,22 @@ class CurrentSession(models.Model):
             startTime=self.startTime
         )
         
+        # Get UserData using get_model to avoid circular import
+        from django.apps import apps
+        UserData = apps.get_model('users', 'UserData')
+        
+        try:
+            userData = await UserData.objects.aget(user=self.user)
+            timeZone = userData.timeZone
+            user_tz = pytz.timezone(timeZone)
+            user_now = timezone.now().astimezone(user_tz)
+            today = user_now.date()
+
+            userData.lastWorked = today
+            await userData.addExpTime(active_time)
+        except UserData.DoesNotExist:
+            print(f"UserData not found for user {self.user.username}")
+
         print(f"Session ended for user {self.user.username}. Duration: {total_time}, Active: {active_time}")
         
         # Delete the current session

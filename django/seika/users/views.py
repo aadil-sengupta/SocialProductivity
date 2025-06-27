@@ -108,3 +108,24 @@ def signupView(request):
     
     except Exception as e:
         return Response({"error": str(e)}, status=400)
+    
+
+def profileView(request):
+    data = request.data
+    id = data.get('id', None)
+
+    if id:
+        try:
+            user = User.objects.get(id=id)
+            serializer = UserDataSerializer(user)
+            return Response(serializer.data, status=200)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=404)
+    else:
+        try:
+            user = request.user
+            serializer = UserDataSerializer(user)
+            return Response(serializer.data, status=200)
+        except User.DoesNotExist:
+            pass
+    return Response({"error": "User ID is required."}, status=400)

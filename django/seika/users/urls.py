@@ -1,6 +1,6 @@
 from django.urls import path
 #from rest_framework.authtoken.views import obtain_auth_token
-from .views import userSettings, loginView, logoutView, signupView # Added import for protected_functional_view
+from .views import userSettings, loginView, logoutView, signupView, profileView
 
 urlpatterns = [
     # path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
@@ -8,4 +8,5 @@ urlpatterns = [
     path('login/', loginView, name='login_view'), 
     path('logout/', logoutView, name='logout_view'),  
     path('signup/', signupView, name='signup_view'),
+    path('profile/', profileView, name='profile_view'),
 ]

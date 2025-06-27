@@ -117,6 +117,35 @@ class SessionConsumer(AsyncWebsocketConsumer):
             }))
             return
         self.session = await CurrentSession.objects.acreate(user=self.user, mode=data.get('payload').get('mode'), phase='focus')
+
+        timeZone = self.userData.timeZone
+        user_tz = pytz.timezone(timeZone)
+        user_now = timezone.now().astimezone(user_tz)
+        today = user_now.date()
+        yesterday = today - timedelta(days=1)
+        
+        # Check if user has worked today
+        if self.userData.lastWorked and self.userData.lastWorked.date() == today:
+            print(f"User {self.user} has already worked today, not incrementing streak.")
+        elif self.userData.lastWorked and self.userData.lastWorked.date() == yesterday:
+            print(f"User {self.user} worked yesterday, incrementing streak.")
+            self.userData.streak += 1
+            self.userData.maxStreak = max(self.userData.maxStreak, self.userData.streak)
+            self.userData.lastWorked = today
+            await self.userData.asave()
+        elif not self.userData.lastWorked:
+            print(f"User {self.user} is working for the first time, starting streak at 1.")
+            self.userData.streak = 1
+            self.userData.maxStreak = max(self.userData.maxStreak, self.userData.streak)
+            self.userData.lastWorked = today
+            await self.userData.asave()
+        else:
+            print(f"User {self.user} broke their streak, resetting to 1.")
+            self.userData.streak = 1
+            self.userData.maxStreak = max(self.userData.maxStreak, self.userData.streak)
+            self.userData.lastWorked = today
+            await self.userData.asave()
+
         print(f"Starting session for user: {self.user} with mode: {self.session.mode}")
         await self.send(text_data=json.dumps({
             'type': 'session_started',

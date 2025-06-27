@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import User
-from pomo.models import SessionData, CurrentSession
 from django.utils import timezone
 
 # Create your models here.
@@ -56,12 +55,22 @@ class UserData(models.Model):
     breakReminders = models.BooleanField(default=True, help_text="Enable break reminders")
     standUpReminders = models.BooleanField(default=True, help_text="Enable stand up reminders")
 
+    # Experience
+    experiencePoints = models.IntegerField(default=0, help_text="User's experience points")
+    level = models.IntegerField(default=1, help_text="User's level")
+
+    streak = models.IntegerField(default=0, help_text="Current streak of consecutive days working")
+    lastWorked = models.DateTimeField(null=True, blank=True, help_text="Last time the user worked")
+    maxStreak = models.IntegerField(default=0, help_text="Maximum streak of consecutive days working")
+
 
     def isWorking(self):
         """
         Check if the user is currently working.
         This can be determined by checking if there are any active CurrentSessions.
         """
+        from django.apps import apps
+        CurrentSession = apps.get_model('pomo', 'CurrentSession')
         return CurrentSession.objects.filter(user=self.user).exists()
     
     def activeTime(self):
@@ -69,6 +78,8 @@ class UserData(models.Model):
         Calculate the total active time for the user across all sessions.
         This can be determined by summing the durations of all active sessions.
         """
+        from django.apps import apps
+        SessionData = apps.get_model('pomo', 'SessionData')
         total_active_time = timezone.timedelta(seconds=0)
         for session in SessionData.objects.filter(user=self.user):
             total_active_time += session.activeTime
@@ -79,6 +90,8 @@ class UserData(models.Model):
         Calculate the total time for the user across all sessions.
         This can be determined by summing the durations of all sessions.
         """
+        from django.apps import apps
+        SessionData = apps.get_model('pomo', 'SessionData')
         total_time = timezone.timedelta(seconds=0)
         for session in SessionData.objects.filter(user=self.user):
                 total_time += session.totalTime
@@ -87,6 +100,30 @@ class UserData(models.Model):
     def __str__(self):
         return f"UserData for {self.user.username}"
     
+    async def checkLevelUp(self):
+        """
+        Check if the user has enough experience points to level up.
+        The level up threshold can be defined as a function of the current level.
+        """
+        level_up_threshold = 50 * (1.2 ** self.level)
+        if self.experiencePoints >= level_up_threshold:
+            self.level += 1
+            self.experiencePoints = self.experiencePoints - level_up_threshold
+            await self.asave()
+            return True
+        return False
+
+    async def addExpTime(self, active_time):
+        """
+        Add experience points based on the active time spent working.
+        The formula can be adjusted as needed.
+        """
+        if active_time.total_seconds() > 0:
+            exp_points = int(active_time.total_seconds() / 60) * 2
+            self.experiencePoints += exp_points
+            await self.asave()
+        await self.checkLevelUp()
+
     def send_friend_request(self, to_user):
         """Send a friend request to another user"""
         if to_user == self.user:
