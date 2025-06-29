@@ -20,38 +20,8 @@ import {
   FiMessageCircle
 } from "react-icons/fi";
 //import { apiClient } from "@/services/apiClient";
-
-interface ProfileData {
-  id: string;
-  name: string;
-  email: string;
-  avatar: string;
-  joinDate: string;
-  totalStudyTime: number; // in minutes
-  totalSessions: number;
-  currentStreak: number;
-  longestStreak: number;
-  favoriteStudyTime: string;
-  level: number;
-  experience: number;
-  nextLevelExp: number;
-  achievements: Array<{
-    id: string;
-    name: string;
-    description: string;
-    icon: string;
-    unlockedAt: string;
-    rarity: 'common' | 'rare' | 'epic' | 'legendary';
-  }>;
-  weeklyStats: Array<{
-    day: string;
-    minutes: number;
-  }>;
-  monthlyGoal: number;
-  monthlyProgress: number;
-  rank: number;
-  totalUsers: number;
-}
+import { apiClient } from "@/services/apiClient";
+import type { ProfileApiResponse, ProfileData } from '@/types/profile';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -79,81 +49,47 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, userId }) 
     setError(null);
     
     try {
-      // Mock data for now - replace with actual API call
-      // Generate different data based on userId for demonstration
+      // Call the actual API
       const isCurrentUser = userId === 'current-user';
-      const userNames = ['Alex Chen', 'Sarah Johnson', 'Michael Brown', 'Emma Wilson', 'David Lee'];
-      const userEmails = ['alex.chen@example.com', 'sarah.j@example.com', 'michael.b@example.com', 'emma.w@example.com', 'david.l@example.com'];
+      const apiUrl = isCurrentUser ? '/users/profile/' : `/users/profile/?id=${userId}`;
       
-      // Use userId hash to get consistent but different data for each user
-      const userIndex = Math.abs(userId.split('').reduce((a, b) => a + b.charCodeAt(0), 0)) % userNames.length;
+      const response = await apiClient.get<ProfileApiResponse>(apiUrl);
       
-      const mockData: ProfileData = {
-        id: userId,
-        name: isCurrentUser ? "Alex Chen" : userNames[userIndex],
-        email: isCurrentUser ? "alex.chen@example.com" : userEmails[userIndex],
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}`,
-        joinDate: isCurrentUser ? "2024-01-15" : "2024-02-20",
-        totalStudyTime: isCurrentUser ? 12450 : 8750 + (userIndex * 1000), // Different study times
-        totalSessions: isCurrentUser ? 256 : 180 + (userIndex * 25),
-        currentStreak: isCurrentUser ? 12 : 8 + (userIndex * 2),
-        longestStreak: isCurrentUser ? 28 : 20 + (userIndex * 3),
-        favoriteStudyTime: isCurrentUser ? "14:30" : "09:30",
-        level: isCurrentUser ? 23 : 15 + userIndex,
-        experience: isCurrentUser ? 4580 : 3200 + (userIndex * 300),
-        nextLevelExp: isCurrentUser ? 5000 : 4000 + (userIndex * 200),
-        achievements: [
-          {
-            id: "first_session",
-            name: "First Steps",
-            description: "Complete your first study session",
-            icon: "🎯",
-            unlockedAt: "2024-01-15",
-            rarity: "common"
-          },
-          {
-            id: "week_warrior",
-            name: "Week Warrior",
-            description: "Study for 7 consecutive days",
-            icon: "⚡",
-            unlockedAt: "2024-02-01",
-            rarity: "rare"
-          },
-          {
-            id: "night_owl",
-            name: "Night Owl",
-            description: "Complete 10 sessions after 10 PM",
-            icon: "🦉",
-            unlockedAt: "2024-03-15",
-            rarity: "epic"
-          },
-          {
-            id: "legend",
-            name: "Study Legend",
-            description: "Reach 200 hours of total study time",
-            icon: "👑",
-            unlockedAt: "2024-06-20",
-            rarity: "legendary"
-          }
-        ],
+      // Transform API response to ProfileData format
+      const userData = response.userData;
+      const user = userData.user;
+      
+      const profileData: ProfileData = {
+        id: user.id.toString(),
+        name: user.first_name || user.username,
+        email: user.email,
+        avatar: userData.profilePhoto || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`,
+        joinDate: user.date_joined,
+        totalStudyTime: response.totalActiveTime,
+        totalSessions: response.totalSessions,
+        currentStreak: userData.streak,
+        longestStreak: userData.maxStreak,
+        level: userData.level,
+        experience: userData.experiencePoints,
+        nextLevelExp: response.nextLevelExp,
+        // Mock data for features not yet implemented
+        achievements: [],
         weeklyStats: [
-          { day: "Mon", minutes: 95 + (userIndex * 10) },
-          { day: "Tue", minutes: 120 + (userIndex * 8) },
-          { day: "Wed", minutes: 85 + (userIndex * 12) },
-          { day: "Thu", minutes: 110 + (userIndex * 5) },
-          { day: "Fri", minutes: 90 + (userIndex * 15) },
-          { day: "Sat", minutes: 75 + (userIndex * 7) },
-          { day: "Sun", minutes: 105 + (userIndex * 9) }
+          { day: "Mon", minutes: 0 },
+          { day: "Tue", minutes: 0 },
+          { day: "Wed", minutes: 0 },
+          { day: "Thu", minutes: 0 },
+          { day: "Fri", minutes: 0 },
+          { day: "Sat", minutes: 0 },
+          { day: "Sun", minutes: 0 }
         ],
-        monthlyGoal: isCurrentUser ? 2400 : 2000 + (userIndex * 200), // Different goals
-        monthlyProgress: isCurrentUser ? 1850 : 1500 + (userIndex * 150),
-        rank: isCurrentUser ? 157 : 200 + (userIndex * 50),
-        totalUsers: 12450
+        monthlyGoal: userData.dailyGoal * 30, // Convert daily to monthly
+        monthlyProgress: Math.min(response.totalActiveTime, userData.dailyGoal * 30),
+        rank: 0, // Not implemented yet
+        totalUsers: 0 // Not implemented yet
       };
-
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setProfileData(mockData);
+      
+      setProfileData(profileData);
     } catch (err) {
       setError('Failed to load profile data');
       console.error('Profile loading error:', err);
@@ -174,26 +110,6 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, userId }) 
       month: 'long',
       day: 'numeric'
     });
-  };
-
-  const getRarityColor = (rarity: string) => {
-    switch (rarity) {
-      case 'common': return 'text-gray-500';
-      case 'rare': return 'text-blue-500';
-      case 'epic': return 'text-purple-500';
-      case 'legendary': return 'text-yellow-500';
-      default: return 'text-gray-500';
-    }
-  };
-
-  const getRarityBg = (rarity: string) => {
-    switch (rarity) {
-      case 'common': return 'from-gray-500/20 to-gray-600/20';
-      case 'rare': return 'from-blue-500/20 to-blue-600/20';
-      case 'epic': return 'from-purple-500/20 to-purple-600/20';
-      case 'legendary': return 'from-yellow-500/20 to-yellow-600/20';
-      default: return 'from-gray-500/20 to-gray-600/20';
-    }
   };
 
   const tabVariants = {
@@ -392,14 +308,16 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, userId }) 
                         </div>
                       </div>
                       
-                      <div className="text-right">
-                        <div className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                          #{profileData.rank}
+                      {profileData.rank > 0 && profileData.totalUsers > 0 && (
+                        <div className="text-right">
+                          <div className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                            #{profileData.rank}
+                          </div>
+                          <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            of {profileData.totalUsers.toLocaleString()}
+                          </div>
                         </div>
-                        <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                          of {profileData.totalUsers.toLocaleString()}
-                        </div>
-                      </div>
+                      )}
                     </div>
                   </motion.div>
 
@@ -512,43 +430,32 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, userId }) 
                         initial="hidden"
                         animate="visible"
                         exit="exit"
-                        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                        className="flex flex-col items-center justify-center py-20"
                       >
-                        {profileData.achievements.map((achievement, index) => (
-                          <motion.div
-                            key={achievement.id}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.1 * index }}
-                            className={`p-4 rounded-xl border transition-all duration-300 hover:shadow-lg ${
-                              isDarkMode ? 'bg-gray-900/50 border-gray-700 hover:border-accent/50' : 'bg-gray-50/50 border-gray-200 hover:border-accent/50'
-                            }`}
-                          >
-                            <div className="flex items-start gap-4">
-                              <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${getRarityBg(achievement.rarity)} flex items-center justify-center text-2xl`}>
-                                {achievement.icon}
-                              </div>
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <h4 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                                    {achievement.name}
-                                  </h4>
-                                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${getRarityColor(achievement.rarity)} capitalize`}
-                                    style={{ backgroundColor: `${getRarityColor(achievement.rarity).replace('text-', '').replace('-500', '')}20` }}
-                                  >
-                                    {achievement.rarity}
-                                  </span>
-                                </div>
-                                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} mb-2`}>
-                                  {achievement.description}
-                                </p>
-                                <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-                                  Unlocked {formatDate(achievement.unlockedAt)}
-                                </p>
-                              </div>
-                            </div>
-                          </motion.div>
-                        ))}
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.2 }}
+                          className={`p-8 rounded-2xl border ${
+                            isDarkMode ? 'bg-gray-800/50 border-gray-700/50' : 'bg-gray-50/50 border-gray-200/50'
+                          } backdrop-blur-sm text-center max-w-md`}
+                        >
+                          <div className="text-6xl mb-4">🏆</div>
+                          <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
+                            Achievements Coming Soon!
+                          </h3>
+                          <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} mb-4`}>
+                            We're working on an exciting achievement system to celebrate your productivity milestones.
+                          </p>
+                          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${
+                            isDarkMode ? 'bg-gray-700/50' : 'bg-gray-200/50'
+                          }`}>
+                            <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: accentColor }} />
+                            <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                              In Development
+                            </span>
+                          </div>
+                        </motion.div>
                       </motion.div>
                     )}
 

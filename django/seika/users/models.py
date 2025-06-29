@@ -48,6 +48,7 @@ class UserData(models.Model):
     longBreakDuration = models.IntegerField(default=15, help_text="Long break duration in minutes")
     longBreakInterval = models.IntegerField(default=4, help_text="Number of pomodoros before a long break")
     pauseIsBreak = models.BooleanField(default=True, help_text="Whether to treat pause as a break")
+    dailyGoal = models.IntegerField(default=0, help_text="Daily goal in minutes, 0 means no goal")
 
     # Notification Settings
     desktopNotifications = models.BooleanField(default=True, help_text="Enable desktop notifications")

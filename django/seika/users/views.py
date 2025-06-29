@@ -4,8 +4,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from .models import UserData
+from pomo.models import SessionData
 from django.contrib.auth.models import User
 from .serializers import UserDataSerializer
+from django.db.models import Sum
 # Create your views here.
 
 @api_view(['GET', 'POST'])
@@ -110,22 +112,46 @@ def signupView(request):
         return Response({"error": str(e)}, status=400)
     
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def profileView(request):
-    data = request.data
-    id = data.get('id', None)
-
-    if id:
+    # Get user ID from query parameters for viewing other profiles, default to current user
+    user_id = request.GET.get('id', None)
+    
+    if user_id:
         try:
-            user = User.objects.get(id=id)
-            serializer = UserDataSerializer(user)
-            return Response(serializer.data, status=200)
+            user = User.objects.get(id=user_id)
         except User.DoesNotExist:
             return Response({"error": "User not found."}, status=404)
     else:
-        try:
-            user = request.user
-            serializer = UserDataSerializer(user)
-            return Response(serializer.data, status=200)
-        except User.DoesNotExist:
-            pass
-    return Response({"error": "User ID is required."}, status=400)
+        user = request.user
+    
+    try:
+        # Get UserData for the user
+        userData = UserData.objects.get(user=user)
+        
+        # Get session statistics
+        sessions = SessionData.objects.filter(user=user)
+        totalSessions = sessions.count()
+        
+        
+        totalActiveTime = sessions.aggregate(total=Sum('activeTime'))['total']
+        
+        totalActiveTimeMinutes = int(totalActiveTime.total_seconds() / 60) if totalActiveTime else 0
+        
+        # Serialize user data
+        serializer = UserDataSerializer(userData)
+        
+        # Calculate next level experience requirement
+        level = userData.level
+        nextLevelExp = int(50 * (1.2 ** level))
+        
+        return Response({
+            "userData": serializer.data,
+            "totalSessions": totalSessions,
+            "totalActiveTime": totalActiveTimeMinutes,
+            "nextLevelExp": nextLevelExp
+        }, status=200)
+        
+    except UserData.DoesNotExist:
+        return Response({"error": "User profile not found."}, status=404)
