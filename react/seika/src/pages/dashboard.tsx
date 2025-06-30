@@ -885,13 +885,12 @@ export default function DashboardPage() {
 
             <AnimatedIconButton
               onClick={() => {
-                getActiveTimerRef().current?.reset();
-                setStarted(false);
-                setRunning(false);
-                setCurrentTime(0);
-                setTotalTime(0);
-                setSessionPhase('focus');
-                setPomodoroCount(0); // Reset pomodoro count
+              showInfo(
+                'Coming soon!',
+                'Group video calls are not yet implemented. Stay tuned for updates!',
+                { size: 'lg' }
+              );
+
               }}
               icon={<HiMiniVideoCamera />}
               variant="break"
