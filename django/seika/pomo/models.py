@@ -179,6 +179,23 @@ class CurrentSession(models.Model):
             pauseTime=self.accumulatedPauseDuration,
             startTime=self.startTime
         )
+                # Get UserData using get_model to avoid circular import
+        from django.apps import apps
+        UserData = apps.get_model('users', 'UserData')
+        
+        try:
+            userData = UserData.objects.get(user=self.user)
+            timeZone = userData.timeZone
+            user_tz = pytz.timezone(timeZone)
+            user_now = timezone.now().astimezone(user_tz)
+            today = user_now.date()
+
+            userData.lastWorked = today
+            userData.addExpTime_sync(active_time)
+        except UserData.DoesNotExist:
+            print(f"UserData not found for user {self.user.username}")
+
+        print(f"Session ended for user {self.user.username}. Duration: {total_time}, Active: {active_time}")
         
         print(f"Session ended for user {self.user.username}. Duration: {total_time}, Active: {active_time}")
         

@@ -114,6 +114,19 @@ class UserData(models.Model):
             return True
         return False
 
+    async def checkLevelUp_sync(self):
+        """
+        Check if the user has enough experience points to level up.
+        The level up threshold can be defined as a function of the current level.
+        """
+        level_up_threshold = 50 * (1.2 ** self.level)
+        if self.experiencePoints >= level_up_threshold:
+            self.level += 1
+            self.experiencePoints = self.experiencePoints - level_up_threshold
+            self.save()
+            return True
+        return False
+
     async def addExpTime(self, active_time):
         """
         Add experience points based on the active time spent working.
@@ -124,6 +137,18 @@ class UserData(models.Model):
             self.experiencePoints += exp_points
             await self.asave()
         await self.checkLevelUp()
+
+    def addExpTime_sync(self, active_time):
+        """
+        Add experience points based on the active time spent working.
+        The formula can be adjusted as needed.
+        """
+        if active_time.total_seconds() > 0:
+            exp_points = int(active_time.total_seconds() / 60) * 2
+            self.experiencePoints += exp_points
+            self.save()
+        self.checkLevelUp_sync()
+
 
     def send_friend_request(self, to_user):
         """Send a friend request to another user"""

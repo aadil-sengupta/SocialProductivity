@@ -43,6 +43,7 @@ export interface UserData {
 }
 
 export interface ProfileApiResponse {
+  weeklyStats: { day: string; minutes: number; }[];
   userData: UserData;
   totalSessions: number;
   totalActiveTime: number; // in minutes
