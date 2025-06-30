@@ -74,7 +74,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, userId }) 
         nextLevelExp: response.nextLevelExp,
         // Mock data for features not yet implemented
         achievements: [],
-        weeklyStats: [
+        weeklyStats: response.weeklyStats || [
           { day: "Mon", minutes: 0 },
           { day: "Tue", minutes: 0 },
           { day: "Wed", minutes: 0 },

@@ -8,6 +8,8 @@ from pomo.models import SessionData
 from django.contrib.auth.models import User
 from .serializers import UserDataSerializer
 from django.db.models import Sum
+from datetime import datetime, timedelta
+from django.utils import timezone
 # Create your views here.
 
 @api_view(['GET', 'POST'])
@@ -134,10 +136,39 @@ def profileView(request):
         sessions = SessionData.objects.filter(user=user)
         totalSessions = sessions.count()
         
-        
         totalActiveTime = sessions.aggregate(total=Sum('activeTime'))['total']
-        
         totalActiveTimeMinutes = int(totalActiveTime.total_seconds() / 60) if totalActiveTime else 0
+        
+        # Calculate weekly statistics (last 7 days)
+        today = timezone.now().date()
+        week_start = today - timedelta(days=6)  # Last 7 days including today
+        
+        # Get sessions from the last 7 days
+        weekly_sessions = sessions.filter(
+            startTime__date__gte=week_start,
+            startTime__date__lte=today
+        )
+        
+        # Initialize weekly stats with all days
+        weekly_stats = []
+        day_names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+        
+        for i in range(7):
+            current_date = week_start + timedelta(days=i)
+            day_name = day_names[current_date.weekday()]
+            
+            # Get sessions for this specific day
+            day_sessions = weekly_sessions.filter(startTime__date=current_date)
+            
+            # Calculate total active time for this day
+            day_total = day_sessions.aggregate(total=Sum('activeTime'))['total']
+            day_minutes = int(day_total.total_seconds() / 60) if day_total else 0
+            
+            weekly_stats.append({
+                'day': day_name,
+                'minutes': day_minutes,
+                'date': current_date.isoformat()
+            })
         
         # Serialize user data
         serializer = UserDataSerializer(userData)
@@ -150,7 +181,8 @@ def profileView(request):
             "userData": serializer.data,
             "totalSessions": totalSessions,
             "totalActiveTime": totalActiveTimeMinutes,
-            "nextLevelExp": nextLevelExp
+            "nextLevelExp": nextLevelExp,
+            "weeklyStats": weekly_stats
         }, status=200)
         
     except UserData.DoesNotExist:
