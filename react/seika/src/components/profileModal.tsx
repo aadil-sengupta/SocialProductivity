@@ -130,6 +130,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, userId }) 
       size="5xl"
       scrollBehavior="inside"
       backdrop="blur"
+      hideCloseButton={true}
       classNames={{
         base: "bg-transparent",
         backdrop: "bg-black/50 backdrop-blur-sm",
@@ -160,10 +161,9 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, userId }) 
           isDarkMode ? 'bg-gray-900/60 border-gray-800 backdrop-blur-3xl' : 'bg-white/80 border-gray-100 backdrop-blur-xl'
         }`}
       >
-        {(onClose) => (
-          <>
-            {/* Header */}
-            <ModalHeader className="relative z-10 p-8 pb-4">
+        <>
+          {/* Header */}
+          <ModalHeader className="relative z-10 p-8 pb-4">
               <div className="flex items-center justify-between w-full">
                 <motion.h2 
                   initial={{ opacity: 0, x: -20 }}
@@ -184,6 +184,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, userId }) 
                     isIconOnly
                     variant="light"
                     size="sm"
+                    isDisabled
                     className={`${isDarkMode ? 'text-gray-400 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'} transition-colors`}
                   >
                     <FiShare2 size={18} />
@@ -192,6 +193,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, userId }) 
                     isIconOnly
                     variant="light"
                     size="sm"
+                    isDisabled
                     className={`${isDarkMode ? 'text-gray-400 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'} transition-colors`}
                   >
                     <FiMessageCircle size={18} />
@@ -544,7 +546,6 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, userId }) 
               ) : null}
             </ModalBody>
           </>
-        )}
       </ModalContent>
     </Modal>
   );

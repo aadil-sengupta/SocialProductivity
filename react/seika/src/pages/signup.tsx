@@ -115,6 +115,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         setUserName(user.user.first_name || user.user.username);
         setIsLoggedIn(true);
         localStorage.setItem('onboarded', 'false');
+        localStorage.setItem('onboardingCompleted', 'false');
         // Redirect after success animation
         setTimeout(() => {
           navigate('/onboarding');

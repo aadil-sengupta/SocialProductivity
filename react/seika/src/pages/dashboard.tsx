@@ -107,8 +107,8 @@ export default function DashboardPage() {
       setIsFullscreen(!!document.fullscreenElement);
     };
 
-    if (localStorage.getItem('onboardingCompleted') === 'true') {
-          navigate('/dashboard');
+    if (localStorage.getItem('onboardingCompleted') === 'false') {
+          navigate('/onboarding');
         }
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => {
@@ -203,7 +203,11 @@ export default function DashboardPage() {
   useEffect(() => {
     return () => {
       document.title = "Dashboard | Seika";
+      if (!localStorage.getItem('token')) {
+      navigate('/login');
+    }
     };
+     
   }, []);
 
   // Reset document title when timer is not running

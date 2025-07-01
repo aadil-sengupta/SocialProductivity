@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@heroui/button";
 import { Progress } from "@heroui/progress";
@@ -42,6 +42,9 @@ export default function OnboardingPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [showConfetti, setShowConfetti] = useState(false);
+  
+  // Ref for scroll container to reset scroll position
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Profile setup state
     const {userName} = useProfile();
@@ -54,6 +57,13 @@ export default function OnboardingPage() {
           navigate('/dashboard');
         }
       }, []);
+  
+  // Reset scroll position when step changes
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [currentStep]);
   
 
 
@@ -1823,7 +1833,11 @@ export default function OnboardingPage() {
         </div>
 
         {/* Scrollable Content */}
-        <ScrollShadow hideScrollBar className="flex-1 overflow-y-auto h-[calc(90vh-200px)] px-6">
+        <ScrollShadow 
+          ref={scrollRef}
+          // hideScrollBar 
+          className="flex-1 overflow-y-auto h-[calc(90vh-200px)] px-6"
+        >
           <div>
             <AnimatePresence mode="wait">
               <motion.div
