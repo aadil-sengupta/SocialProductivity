@@ -44,13 +44,15 @@ interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: () => void;
+  setIsNeighborhoodModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModalProps) {
+export default function SettingsModal({ isOpen, onClose, onSave, setIsNeighborhoodModalOpen }: SettingsModalProps) {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = React.useState("profile");
   const [showAvatarPicker, setShowAvatarPicker] = React.useState(false);
   const [showAllFonts, setShowAllFonts] = React.useState(false);
+
   
   // Use ProfileContext for profile-related state
   const {
@@ -63,6 +65,8 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
     setSelectedTimezone,
     privacySettings,
     updatePrivacySetting,
+    neighborhoodToken,
+    setNeighborhoodToken,
     selectedAvatarCategory,
     setSelectedAvatarCategory
   } = useProfile();
@@ -166,6 +170,52 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
     setCountPauseTime
   } = useTimer();
 
+  // HackClub Neighborhood Mode handler
+  const handleNeighborhoodModeToggle = (enabled: boolean) => {
+    if (enabled) {
+      console.log('🏘️ HackClub Neighborhood Mode enabled!');
+      
+      // Initialize neighborhood mode features
+      try {
+        
+        console.log('⏱️ Setting up stopwatch time tracking for HackClub Neighborhood event');
+        setIsNeighborhoodModalOpen(true);
+        
+        
+        if (!neighborhoodToken) {
+          return;
+        }
+        
+
+      } catch (error) {
+        console.error('❌ Error enabling HackClub Neighborhood Mode:', error);
+        return; // Don't update state if initialization failed
+      }
+    } else {
+      console.log('🏘️ HackClub Neighborhood Mode disabled');
+      
+      // Clean up neighborhood mode features
+      try {
+        // Disable stopwatch tracking
+        console.log('⏱️ Disabling HackClub event tracking');
+        
+        // Clean up any event listeners or connections
+        console.log('✅ Successfully left HackClub Neighborhood event');
+        
+      } catch (error) {
+        console.error('❌ Error disabling HackClub Neighborhood Mode:', error);
+      }
+    }
+    
+    // Update the context state - if enabled and no token, open modal; if disabled, clear token
+    if (enabled && !neighborhoodToken) {
+      // Modal will handle setting the token
+      return;
+    } else if (!enabled) {
+      setNeighborhoodToken(null);
+    }
+  };
+
   // Logout function
   const handleLogout = () => {
     try {
@@ -181,6 +231,9 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
       // Update profile context
       setIsLoggedIn(false);
       setUserName('User');
+      
+      // Clear neighborhood token
+      setNeighborhoodToken(null);
       
       // Disconnect WebSocket
       disconnect();
@@ -384,6 +437,77 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
                     isSelected={privacySettings.showOnlineStatus}
                     onChange={(value) => updatePrivacySetting('showOnlineStatus', value)}
                   />
+                </div>
+              </div>
+
+              {/* HackClub Neighborhood Mode */}
+              <div className={`p-6 rounded-2xl border-2 border-dashed transition-all duration-300 hover:shadow-lg ${
+                isDarkMode 
+                  ? 'bg-gradient-to-br from-orange-900/20 via-red-900/10 to-pink-900/20 border-orange-600/40 hover:border-orange-500/60' 
+                  : 'bg-gradient-to-br from-orange-50/60 via-red-50/40 to-pink-50/60 border-orange-300/60 hover:border-orange-400/80'
+              }`}>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/20 flex items-center justify-center ring-2 ring-orange-500/30">
+                    <span className="text-2xl">🏘️</span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                        HackClub Neighborhood Mode
+                      </h4>
+                      <div className="px-2 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-600 dark:text-orange-400 border border-orange-500/30">
+                        Special Event
+                      </div>
+                    </div>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Track HackClub Neighborhood stopwatch time through Seika!
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <FormOption
+                    title="Enable Neighborhood Mode"
+                    description="Participate in HackClub's special neighborhood event with stopwatch time tracking through Seika"
+                    isSelected={!!neighborhoodToken}
+                    onChange={handleNeighborhoodModeToggle}
+                  />
+                </div>
+
+                {/* Info Card */}
+                <div className={`mt-6 p-4 rounded-xl border ${
+                  isDarkMode 
+                    ? 'bg-gradient-to-r from-orange-900/10 to-red-900/10 border-orange-800/20' 
+                    : 'bg-gradient-to-r from-orange-50/80 to-red-50/80 border-orange-200/40'
+                }`}>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center flex-shrink-0">
+                      <span className="text-lg">🎯</span>
+                    </div>
+                    <div>
+                      <h5 className={`text-sm font-semibold mb-2 ${isDarkMode ? 'text-orange-300' : 'text-orange-700'}`}>
+                        About Neighborhood Mode
+                      </h5>
+                      <p className={`text-xs leading-relaxed mb-3 ${isDarkMode ? 'text-orange-400/80' : 'text-orange-600/80'}`}>
+                        This is a special event hosted by HackClub! When enabled, your stopwatch time will be tracked through Seika 
+                        and contribute to the neighborhood event.
+                      </p>
+                      <a 
+                        href="https://neighborhood.hackclub.com" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className={`inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg transition-all duration-200 hover:scale-105 ${
+                          isDarkMode 
+                            ? 'bg-orange-500/20 text-orange-300 hover:bg-orange-500/30 border border-orange-500/40' 
+                            : 'bg-orange-500/20 text-orange-700 hover:bg-orange-500/30 border border-orange-500/40'
+                        }`}
+                      >
+                        <span>🔗</span>
+                        Learn More about Neighborhood
+                        <span className="text-xs opacity-70">↗</span>
+                      </a>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1387,6 +1511,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
         profilePhoto,
         showOnlineStatus: privacySettings.showOnlineStatus,
         showTimeSpendStudying: privacySettings.showTimeSpentStudying,
+        isNeighborhood: !!neighborhoodToken,
         timeZone: selectedTimezone,
         
         // Theme settings (map React state to Django field names)
@@ -1665,6 +1790,8 @@ export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModal
               ))}
             </div>
           </div>
+
+
         </ModalBody>
         
         <ModalFooter className="p-8 pt-4 flex justify-between items-center">

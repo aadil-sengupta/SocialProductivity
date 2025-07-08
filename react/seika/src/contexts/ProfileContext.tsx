@@ -26,6 +26,10 @@ type ProfileContextType = {
   privacySettings: PrivacySettings;
   updatePrivacySetting: (key: keyof PrivacySettings, value: boolean) => void;
   
+  // HackClub Neighborhood Token
+  neighborhoodToken: string | null;
+  setNeighborhoodToken: (token: string | null) => void;
+  
   // Avatar Category
   selectedAvatarCategory: string;
   setSelectedAvatarCategory: (category: string) => void;
@@ -46,6 +50,8 @@ const ProfileContext = createContext<ProfileContextType>({
     showOnlineStatus: false,
   },
   updatePrivacySetting: () => {},
+  neighborhoodToken: null,
+  setNeighborhoodToken: () => {},
   selectedAvatarCategory: "vibrent",
   setSelectedAvatarCategory: () => {},
 });
@@ -110,6 +116,13 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return false;
   });
 
+  const [neighborhoodToken, setNeighborhoodTokenState] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('neighborhoodToken');
+    }
+    return null;
+  });
+
   // Wrapper functions to update localStorage when state changes
   const setProfilePhoto = (photo: string) => {
     setProfilePhotoState(photo);
@@ -156,6 +169,17 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const setNeighborhoodToken = (token: string | null) => {
+    setNeighborhoodTokenState(token);
+    if (typeof window !== 'undefined') {
+      if (token) {
+        localStorage.setItem('neighborhoodToken', token);
+      } else {
+        localStorage.removeItem('neighborhoodToken');
+      }
+    }
+  };
+
   // Context value
   const contextValue = {
     profilePhoto,
@@ -168,6 +192,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setSelectedTimezone,
     privacySettings,
     updatePrivacySetting,
+    neighborhoodToken,
+    setNeighborhoodToken,
     selectedAvatarCategory,
     setSelectedAvatarCategory,
   };

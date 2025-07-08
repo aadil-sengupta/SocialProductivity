@@ -2,7 +2,7 @@ from django.contrib import admin
 from users.models import UserData, FriendRequest
 
 class UserDataAdmin(admin.ModelAdmin):
-    list_display = ('user', 'isOnline', 'darkMode', 'font', 'accentColor', 'focusDuration', 'desktopNotifications', 'onboarded', 'profilePhoto', 'timeZone', 'level', 'experiencePoints', 'streak')
+    list_display = ('user', 'isOnline', 'darkMode', 'font', 'accentColor', 'focusDuration', 'desktopNotifications', 'onboarded', 'profilePhoto', 'timeZone', 'level', 'experiencePoints', 'streak', 'isNeighborhood')
     list_filter = ('darkMode', 'isOnline', 'showOnlineStatus', 'showTimeSpendStudying', 'backgroundBlur', 'pauseIsBreak', 'desktopNotifications', 'playSoundOnNotification', 'breakReminders', 'standUpReminders', 'onboarded', 'level')
     search_fields = ('user__username', 'user__email')
     readonly_fields = ('activeTime', 'totalTime', 'isWorking')
@@ -12,7 +12,7 @@ class UserDataAdmin(admin.ModelAdmin):
             'fields': ('user', 'friends')
         }),
         ('Profile Settings', {
-            'fields': ('profilePhoto', 'showOnlineStatus', 'showTimeSpendStudying', 'timeZone', 'onboarded')
+            'fields': ('profilePhoto', 'showOnlineStatus', 'showTimeSpendStudying', 'timeZone', 'onboarded', 'isNeighborhood')
         }),
         ('Theme & Appearance', {
             'fields': ('accentColor', 'wallpaper', 'backgroundBlur', 'font', 'darkMode')

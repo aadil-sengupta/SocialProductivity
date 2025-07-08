@@ -7,12 +7,15 @@ import { useProfile } from "@/contexts/ProfileContext";
 import { useAccentColorManager } from "@/contexts/AccentColorContext";
 import { useContextMenu } from "@/contexts/ContextMenuContext";
 import { useWebSocketListener } from "@/contexts/WebSocketContext";
+import { useSidebar } from "@/contexts/SidebarContext";
+import { MdClose } from "react-icons/md";
 
 const SideBar = () => {
   const [isShrinkView, setIsShrinkView] = React.useState(true);
   const [isMouseOverSidebar, setIsMouseOverSidebar] = React.useState(false);
   const { isDarkMode } = useDarkMode();
   const { userName, profilePhoto } = useProfile();
+  const { hideSidebar } = useSidebar();
 
   const { accentColor } = useAccentColorManager();
   const { isAnyMenuOpen } = useContextMenu();
@@ -127,6 +130,24 @@ const SideBar = () => {
 
   return (
     <div className={`sidebar-container ${isShrinkView ? "shrink" : ""} z-10`} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+      {/* Hide Sidebar Button - Top Right Corner */}
+      <button
+        onClick={hideSidebar}
+        className={`absolute top-3 right-3 z-20 w-8 h-8 rounded-lg flex items-center justify-center 
+          transition-all duration-300 hover:scale-110 active:scale-95
+          ${isDarkMode 
+            ? 'bg-gray-800/50 hover:bg-gray-700/60 text-gray-300 hover:text-white border border-gray-600/30 hover:border-gray-500/50' 
+            : 'bg-white/50 hover:bg-white/70 text-gray-600 hover:text-gray-800 border border-gray-300/30 hover:border-gray-400/50'
+          }
+          backdrop-blur-sm shadow-sm hover:shadow-md
+          ${isShrinkView ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'}
+        `}
+        title="Hide Sidebar"
+        aria-label="Hide Sidebar"
+      >
+        <MdClose size={16} />
+      </button>
+
       {/* <button
         className="sidebar-viewButton"
         type="button"

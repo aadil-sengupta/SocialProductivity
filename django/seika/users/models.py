@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+import pytz
 
 # Create your models here.
 class FriendRequest(models.Model):
@@ -34,6 +35,7 @@ class UserData(models.Model):
     profilePhoto = models.CharField(max_length=255, blank=True, null=True, default='/avatars/vibrent_1.png')
     showOnlineStatus = models.BooleanField(default=True)
     showTimeSpendStudying = models.BooleanField(default=True)
+    isNeighborhood = models.BooleanField(default=False, help_text="Whether the user is part of the HackClub Neighborhood")
 
     # Theme
     accentColor = models.CharField(max_length=20, default='#10b981')
@@ -148,6 +150,40 @@ class UserData(models.Model):
             self.experiencePoints += exp_points
             self.save()
         self.checkLevelUp_sync()
+
+    async def setIsOnline(self, is_online):
+        """
+        Set the user's online status.
+        This can be used to update the user's online status in real-time.
+        """
+        self.isOnline = is_online
+        await self.asave()
+        user = await User.objects.aget(id=self.user_id)
+        if self.isNeighborhood:
+            friends = UserData.objects.filter(isNeighborhood=True).exclude(user=user)
+            return friends
+        return None
+
+    async def activeTimeToday(self):
+        timeZone = self.timeZone
+        user_tz = pytz.timezone(timeZone)
+        user_now = timezone.now().astimezone(user_tz)
+        today = user_now.date()
+
+        from django.apps import apps
+        SessionData = apps.get_model('pomo', 'SessionData')
+
+        # Use user_id to avoid sync issues with foreign key access
+        user = await User.objects.aget(id=self.user_id)
+
+        sessions = SessionData.objects.filter(user=user, endTime__date=today)
+
+        # calculate total active time today
+        total_active_time = timezone.timedelta(seconds=0)
+        async for session in sessions.aiterator():
+            total_active_time += session.activeTime
+        # get active time today
+        return total_active_time
 
 
     def send_friend_request(self, to_user):

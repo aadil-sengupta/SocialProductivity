@@ -7,6 +7,7 @@ from users.models import UserData
 from .serializers import SessionDataSerializer
 from .tasks import checkUserConnection
 from django_q.models import Schedule
+from django.contrib.auth.models import User
 import pytz
 class SessionConsumer(AsyncWebsocketConsumer):
 
@@ -20,8 +21,24 @@ class SessionConsumer(AsyncWebsocketConsumer):
             await self.close(code=4100)
             return
         self.userData = await UserData.objects.aget(user=self.user)
-        self.userData.isOnline = True
-        await self.userData.asave()
+
+        friends = await self.userData.setIsOnline(True)
+        serializedFriends = []
+
+        async for userData in friends.aiterator():
+            user = await User.objects.aget(id=userData.user_id)
+            serializedUser = {
+                'id': user.id,
+                'username': user.username,
+                'profilePicture': userData.profilePhoto,
+                'isOnline': userData.isOnline,
+                'activeTimeToday': (await userData.activeTimeToday()).seconds // 60 % 60,
+                
+            }
+            serializedFriends.append(serializedUser)
+
+        print(serializedFriends)
+
         print(f"Connecting user: {self.user}")
         # get today's date
 
@@ -66,11 +83,20 @@ class SessionConsumer(AsyncWebsocketConsumer):
         if not self.user.is_authenticated:
             print("Anonymous user disconnected, no user data to update.")
             return
-        self.userData.isOnline = False
+        await self.userData.setIsOnline(False)
         await self.userData.asave()
         
-        # Handle session disconnection if user has an active session
+
+        # bypass default disconnect logic for now due to bugs
+        if hasattr(self, 'session'):
+            await self.end_session()
+        return
+        
         session = await CurrentSession.objects.filter(user=self.user).afirst()
+
+
+        # Handle session disconnection if user has an active session
+        
         if session:
             session.isConnected = False
             session.lastDisconnected = timezone.now()
@@ -223,16 +249,19 @@ class SessionConsumer(AsyncWebsocketConsumer):
     
     async def sendTimeData(self):
         
-        timeZone = self.userData.timeZone
-        user_tz = pytz.timezone(timeZone)
-        user_now = timezone.now().astimezone(user_tz)
-        today = user_now.date()
-        sessions = SessionData.objects.filter(user=self.user, endTime__date=today)
-        # calculate total active time today
-        total_active_time = timezone.timedelta(seconds=0)
-        async for session in sessions.aiterator():
-            total_active_time  += session.activeTime
-        # get active time today
+        # timeZone = self.userData.timeZone
+        # user_tz = pytz.timezone(timeZone)
+        # user_now = timezone.now().astimezone(user_tz)
+        # today = user_now.date()
+        # sessions = SessionData.objects.filter(user=self.user, endTime__date=today)
+        # # calculate total active time today
+        # total_active_time = timezone.timedelta(seconds=0)
+        # async for session in sessions.aiterator():
+        #     total_active_time  += session.activeTime
+        # # get active time today
+
+        total_active_time = await self.userData.activeTimeToday()
+
         await self.send(text_data=json.dumps({
             'type': 'study_time',
             'studyTime': total_active_time.seconds // 60 % 60

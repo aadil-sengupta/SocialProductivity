@@ -23,6 +23,9 @@ import { useWebSocket, useWebSocketListener } from "@/contexts/WebSocketContext"
 import { useOfflineMode } from "@/contexts/OfflineModeContext";
 import { useNavigate } from 'react-router-dom';
 import { useProfile } from "@/contexts/ProfileContext";
+import { useSidebar } from "@/contexts/SidebarContext";
+import { IoIosArrowForward } from "react-icons/io";
+import NeighborhoodLoginModal from "@/components/neighborhoodLoginModal";
 
 export default function DashboardPage() {
   // document.title = "Dashboard | Seika";
@@ -42,6 +45,8 @@ export default function DashboardPage() {
   const [pomodoroCount, setPomodoroCount] = useState(0); // Track completed pomodoros for long break
   const { colorVariations } = useAccentColorManager();
   const { userName, profilePhoto } = useProfile();
+  const { isSidebarVisible, showSidebar } = useSidebar();
+  const [isNeighborhoodModalOpen, setIsNeighborhoodModalOpen] = useState(false);
   const { 
       pomodoroMinutes, 
       shortBreakMinutes, 
@@ -649,8 +654,27 @@ export default function DashboardPage() {
 
   return (
     <MainLayout>
+      {!isSidebarVisible && (
+          <button
+            onClick={showSidebar}
+            className="group absolute top-1/2 left-4 -translate-y-1/2 w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 hover:border-white/40 transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white/30 shadow-sm hover:shadow-lg backdrop-blur-sm bg-white/5 hover:bg-white/15 z-40 opacity-60 hover:opacity-100 animate-[slideInFromLeft_0.5s_ease-out] hover:w-12 hover:h-12 hover:rounded-2xl active:scale-95"
+            title="Show Sidebar"
+            aria-label="Show Sidebar"
+          >
+            <IoIosArrowForward className="text-white/60 group-hover:text-white text-lg group-hover:text-xl transition-all duration-300 group-hover:translate-x-0.5 group-active:translate-x-1" />
+            
+            {/* Animated background gradient - only visible on hover */}
+            <div className="absolute inset-0 rounded-xl group-hover:rounded-2xl bg-gradient-to-r from-white/5 via-white/10 to-white/5 opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
+            
+            {/* Subtle glow effect - only on hover */}
+            <div className="absolute inset-0 rounded-xl group-hover:rounded-2xl bg-white/5 blur-md opacity-0 group-hover:opacity-40 transition-all duration-300 scale-110"></div>
+          </button>
+        )}
+
       {/* Profile Button and Fullscreen Button - Top Left Corner */}
       <div className="absolute top-6 left-6 z-30 flex gap-3 items-center">
+        {/* Show Sidebar Button - Only visible when sidebar is hidden */}
+        
         {/* Profile Avatar Button */}
         <button
           onClick={() => handleOpenProfile('current-user')}
@@ -928,7 +952,17 @@ export default function DashboardPage() {
         isOpen={isSettingsOpen}
         onClose={handleCloseSettings}
         onSave={handleSaveSettings}
+        setIsNeighborhoodModalOpen={setIsNeighborhoodModalOpen}
       />
+
+      <NeighborhoodLoginModal
+          isOpen={isNeighborhoodModalOpen}
+          onClose={() => setIsNeighborhoodModalOpen(false)}
+          onSuccess={() => {
+            setIsNeighborhoodModalOpen(false);
+            // Handle successful login
+          }}
+        />
       
       <ProfileModal
         isOpen={isProfileModalOpen}
@@ -949,7 +983,7 @@ export default function DashboardPage() {
         size={alertState.size}
       />
       
-      {/* CSS for shimmer animation */}
+      {/* CSS for shimmer and sidebar animations */}
       <style>{`
         @keyframes shimmer {
           0% {
@@ -957,6 +991,28 @@ export default function DashboardPage() {
           }
           100% {
             transform: translateX(100%);
+          }
+        }
+        
+        @keyframes slideInFromLeft {
+          0% {
+            opacity: 0;
+            transform: translateX(-20px) translateY(-50%);
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0) translateY(-50%);
+          }
+        }
+        
+        @keyframes fadeInScale {
+          0% {
+            opacity: 0;
+            transform: scale(0.8);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
           }
         }
       `}</style>

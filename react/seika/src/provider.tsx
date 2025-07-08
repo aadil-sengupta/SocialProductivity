@@ -12,6 +12,7 @@ import { NotificationRemindersProvider } from "@/contexts/NotificationRemindersC
 import { AppearanceProvider } from "@/contexts/AppearanceContext";
 import { ContextMenuProvider } from "@/contexts/ContextMenuContext";
 import { OfflineModeProvider } from "@/contexts/OfflineModeContext";
+import { SidebarProvider } from "@/contexts/SidebarContext";
 
 declare module "@react-types/shared" {
   interface RouterConfig {
@@ -30,23 +31,25 @@ export function Provider({ children }: { children: React.ReactNode }) {
             <NotificationRemindersProvider>
               <AppearanceProvider>
                 <OfflineModeProvider>
-                  <TimerProvider>
-                    <ProfileProvider>
-                      <ContextMenuProvider>
-                        <WebSocketProvider
-                        //url="wss://server.seika.fun/ws/session/"
-                        url={import.meta.env.VITE_WEBSOCKET_URL || "wss://server.seika.fun/ws/session/"}
-                        autoConnect={true}  // disable if profile context doesn't have anything or smthin
-                        reconnectAttempts={5}
-                        reconnectDelay={3000}
-                        >
-                          <HeroUIProvider navigate={navigate} useHref={useHref}>
-                            {children}
-                          </HeroUIProvider>
-                        </WebSocketProvider>
-                      </ContextMenuProvider>
-                    </ProfileProvider>
-                  </TimerProvider>
+                  <SidebarProvider>
+                    <TimerProvider>
+                      <ProfileProvider>
+                        <ContextMenuProvider>
+                          <WebSocketProvider
+                          //url="wss://server.seika.fun/ws/session/"
+                          url={import.meta.env.VITE_WEBSOCKET_URL || "wss://server.seika.fun/ws/session/"}
+                          autoConnect={true}  // disable if profile context doesn't have anything or smthin
+                          reconnectAttempts={5}
+                          reconnectDelay={3000}
+                          >
+                            <HeroUIProvider navigate={navigate} useHref={useHref}>
+                              {children}
+                            </HeroUIProvider>
+                          </WebSocketProvider>
+                        </ContextMenuProvider>
+                      </ProfileProvider>
+                    </TimerProvider>
+                  </SidebarProvider>
                 </OfflineModeProvider>
               </AppearanceProvider>
             </NotificationRemindersProvider>
