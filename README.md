@@ -1,15 +1,35 @@
-# SocialProductivity
+# Seika.Fun – Social Accountability Meets Productivity
 
-Tired of solo study marathons? SocialProductivity revolutionizes your study routine by transforming it into a collaborative and motivating experience. Connect with friends, crush your goals together, and actually enjoy the process! This app seamlessly blends powerful productivity tools with engaging social features, keeping you focused, accountable, and connected.
+## 🌟 Why Seika?
 
-## Features
+Forget the burnout of solo grinds. Seika introduces **Social Accountability** to your workflow. By showing you—and your friends—what you've accomplished, Seika keeps you on track, motivated, and part of a productive community.
 
-*   **Video Calls with Synced Pomodoro Timer:** Jump on a video call with your study buddies! Our synchronized Pomodoro timer keeps everyone on track, automatically muting microphones during focus sprints to eliminate distractions.
-*   **Spotify Integration:** Set the mood with shared Spotify playlists. Enjoy perfectly synced music playback with your friends, making study sessions more enjoyable.
-*   **Social Productivity Tracking:** Stay motivated by seeing your friends' progress! Track how much they've been studying and what subjects they're tackling.
-*   **Timelapse Recording:** Capture your study journey! Create inspiring timelapses of your work sessions to share or review your progress.
-*   **Productivity Tools:**
-    *   **Calendars:** Organize your schedule and plan study blocks.
-    *   **To-Do Lists:** Keep track of tasks and assignments.
-    *   **Focus Sessions:** Dedicated, customizable sessions to help you dive deep into your work.
-*   **Highly Customizable UI:** Make the app your own! Personalize the look and feel with a wide range of customization options.
+## ✅ Core Features (Working)
+
+- **Server-Side Timers:** All focus timers are managed server-side, ensuring reliable and consistent time tracking across devices and sessions.
+- **Session Continuity:** Seamlessly resume sessions from where you left off—even when switching devices.
+- **Profile Dashboard:** Track your progress with:
+  - Experience points earned
+  - Total time studied
+  - Unlocked badges and milestones
+- **User Authentication:** Secure login/signup with persistent session handling.
+- **Customizable UI:** Personalize the appearance and behavior of the app with a wide range of settings.
+- **Settings Panel:** Fine-tune everything from timer preferences to notification behavior.
+
+## 🛠️ Coming Soon
+
+The following features are actively in development:
+
+- **Video Calls with Synced Pomodoro Timer:** Join friends in real-time with synchronized focus intervals and automatic mic muting during work sessions.
+- **Spotify Integration:** Set the vibe with shared, synchronized playlists.
+- **Social Productivity Tracking:** Stay motivated by seeing friends’ study stats and subjects.
+- **Timelapse Recording:** Capture and replay your study progress as time-lapse videos.
+- **To-Do Lists & Calendars:** Integrated tools to plan your days and manage tasks effortlessly.
+
+## 📦 Tech Stack
+
+- **Frontend:** React + Vite.js
+- **Backend:** Django
+- **Background Jobs:** Django Q2
+- **Authentication:** Django Auth + REST integration
+- **Timers:** Fully server-side implementation
